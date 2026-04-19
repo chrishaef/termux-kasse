@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block trust %}
+<p class="trust-banner">{{ request.state.kiosk_notice | nl2br }}</p>
+{% endblock %}
 {% block content %}
 {% if groups %}
 <div class="k-tiles">

@@ -1,13 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<header class="page-head">
-  <p class="page-head__eyebrow">Schritt 2 · Mitglied</p>
-  <h1 class="page-head__title">{{ group['name'] }}</h1>
-  <p class="page-head__lead">Wer möchte etwas buchen?</p>
+<header class="page-head k-member-head">
+  <div class="k-member-head__main">
+    <p class="page-head__eyebrow">Schritt 2 · Mitglied</p>
+    <h1 class="page-head__title">{{ group['name'] }}</h1>
+    <p class="page-head__lead">Wer möchte etwas buchen?</p>
+  </div>
+  <div class="k-member-head__actions">
+    <a href="/" role="button" class="secondary">Alle Gruppen</a>
+  </div>
 </header>
-<div class="k-toolbar">
-  <a href="/" role="button" class="secondary">Alle Gruppen</a>
-</div>
 {% if users %}
 <div class="k-tiles">
   {% for u in users %}

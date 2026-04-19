@@ -21,9 +21,7 @@
     </div>
   </header>
   <main class="site-main container">
-    {% block trust %}
-    <p class="trust-banner">{{ request.state.kiosk_notice | nl2br }}</p>
-    {% endblock %}
+    {% block trust %}{% endblock %}
     {% block content %}{% endblock %}
   </main>
 </body>
