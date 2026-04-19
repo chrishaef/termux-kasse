@@ -52,7 +52,7 @@
 {% else %}
 <p class="k-empty">Keine aktiven Artikel. Bitte im Admin unter „Artikel“ anlegen.</p>
 {% endif %}
-<audio id="payment-sound" preload="auto" src="/static/payed.mp3"></audio>
+<audio id="payment-sound" preload="auto" src="/static/click.mp3"></audio>
 {% if debt_reminder_level == 1 %}
 <audio id="warn-level-sound" preload="auto" src="/static/warn1.mp3"></audio>
 {% elif debt_reminder_level == 2 %}
@@ -65,6 +65,8 @@
     const forms = document.querySelectorAll(".k-product-grid form");
     const paymentSound = document.getElementById("payment-sound");
     const warnLevelSound = document.getElementById("warn-level-sound");
+    const currentWarnLevel = {{ debt_reminder_level }};
+    const warnStateKey = "kasse_warn_level_user_{{ user['id'] }}";
     if (warnLevelSound && typeof warnLevelSound.play === "function") {
       let playedWarn1 = false;
       let playingWarn1 = false;
@@ -87,9 +89,19 @@
       const onFirstInteraction = function () {
         tryPlayWarn1();
       };
-      tryPlayWarn1();
-      document.addEventListener("pointerdown", onFirstInteraction, { once: true });
-      document.addEventListener("keydown", onFirstInteraction, { once: true });
+      let lastWarnLevel = 0;
+      try {
+        lastWarnLevel = parseInt(window.localStorage.getItem(warnStateKey) || "0", 10) || 0;
+      } catch (_e) {}
+
+      if (currentWarnLevel > 0 && currentWarnLevel > lastWarnLevel) {
+        tryPlayWarn1();
+        document.addEventListener("pointerdown", onFirstInteraction, { once: true });
+        document.addEventListener("keydown", onFirstInteraction, { once: true });
+      }
+      try {
+        window.localStorage.setItem(warnStateKey, String(currentWarnLevel));
+      } catch (_e) {}
     }
     forms.forEach(function (form) {
       form.addEventListener("submit", function (event) {
