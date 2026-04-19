@@ -1,27 +1,39 @@
 {% extends "base.html" %}
+{% block body_class %}app-admin{% endblock %}
 {% block trust %}{% endblock %}
 {% block content %}
-<h1>Warengruppen</h1>
-<p><a href="/admin">Admin</a> · <a href="/admin/products">Artikel</a></p>
-<form method="post" action="/admin/categories">
-  <label>Name <input type="text" name="name" required placeholder="z. B. Snacks" /></label>
-  <label>Sortierung (Zahl) <input type="number" name="sort_order" value="0" /></label>
-  <button type="submit">Anlegen</button>
-</form>
-<table role="grid">
-  <thead><tr><th>Name</th><th>Sortierung</th><th></th></tr></thead>
-  <tbody>
-    {% for c in categories %}
-    <tr>
-      <td>{{ c['name'] }}</td>
-      <td>{{ c['sort_order'] }}</td>
-      <td>
-        <form method="post" action="/admin/categories/{{ c['id'] }}/delete" onsubmit="return confirm('Warengruppe löschen?');">
-          <button type="submit" class="secondary">Löschen</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<header class="page-head">
+  <p class="page-head__eyebrow">Sortiment</p>
+  <h1 class="page-head__title">Warengruppen</h1>
+</header>
+<div class="k-toolbar">
+  <a href="/admin" class="admin-back" style="margin:0">← Admin</a>
+  <a href="/admin/products" role="button" class="outline">Artikel</a>
+</div>
+<article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">Neue Warengruppe</h2>
+  <form method="post" action="/admin/categories">
+    <label>Name <input type="text" name="name" required placeholder="z. B. Snacks" /></label>
+    <label>Sortierung (Zahl) <input type="number" name="sort_order" value="0" /></label>
+    <button type="submit">Anlegen</button>
+  </form>
+</article>
+<div class="table-wrap">
+  <table role="grid">
+    <thead><tr><th>Name</th><th>Sortierung</th><th></th></tr></thead>
+    <tbody>
+      {% for c in categories %}
+      <tr>
+        <td>{{ c['name'] }}</td>
+        <td>{{ c['sort_order'] }}</td>
+        <td>
+          <form method="post" action="/admin/categories/{{ c['id'] }}/delete" onsubmit="return confirm('Warengruppe löschen?');">
+            <button type="submit" class="secondary">Löschen</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}

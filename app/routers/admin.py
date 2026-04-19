@@ -121,6 +121,7 @@ def admin_dashboard(request: Request) -> Response:
             "groups": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM user_groups", ())["c"],
             "users": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM users", ())["c"],
             "products": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM products", ())["c"],
+            "categories": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM product_categories", ())["c"],
         }
     return TEMPLATES.TemplateResponse(
         request,

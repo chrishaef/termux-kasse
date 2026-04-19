@@ -8,3 +8,4 @@ def test_kiosk_home() -> None:
         r = c.get("/")
         assert r.status_code == 200
         assert "Nutzergruppe" in r.text
+        assert "kasse.css" in r.text

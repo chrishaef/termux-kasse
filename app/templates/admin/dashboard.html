@@ -1,15 +1,46 @@
 {% extends "base.html" %}
+{% block body_class %}app-admin{% endblock %}
 {% block trust %}{% endblock %}
 {% block content %}
-<h1>Admin</h1>
-<p>Angemeldet als {{ request.session.get('admin_user') }}</p>
-<form method="post" action="/admin/logout" style="display:inline"><button type="submit" class="secondary">Abmelden</button></form>
-
-<ul>
-  <li>Nutzergruppen: <strong>{{ stats.groups }}</strong> — <a href="/admin/groups">verwalten</a></li>
-  <li>Nutzer: <strong>{{ stats.users }}</strong> — <a href="/admin/users">verwalten</a></li>
-  <li>Artikel: <strong>{{ stats.products }}</strong> — <a href="/admin/products">verwalten</a> · <a href="/admin/categories">Warengruppen</a></li>
-  <li><a href="/admin/settlements">Abrechnungen</a> (XLS/PDF)</li>
+<header class="page-head">
+  <p class="page-head__eyebrow">Verwaltung</p>
+  <h1 class="page-head__title">Übersicht</h1>
+  <p class="page-head__lead">Angemeldet als <strong>{{ request.session.get('admin_user') }}</strong></p>
+</header>
+<div class="k-toolbar">
+  <form method="post" action="/admin/logout"><button type="submit" class="secondary">Abmelden</button></form>
+  <a href="/" role="button" class="outline">Zum Kiosk</a>
+</div>
+<ul class="admin-cards">
+  <li>
+    <a class="admin-card" href="/admin/groups">
+      <strong>{{ stats.groups }}</strong>
+      <span>Nutzergruppen</span>
+    </a>
+  </li>
+  <li>
+    <a class="admin-card" href="/admin/users">
+      <strong>{{ stats.users }}</strong>
+      <span>Nutzer</span>
+    </a>
+  </li>
+  <li>
+    <a class="admin-card" href="/admin/products">
+      <strong>{{ stats.products }}</strong>
+      <span>Artikel</span>
+    </a>
+  </li>
+  <li>
+    <a class="admin-card" href="/admin/categories">
+      <strong>{{ stats.categories }}</strong>
+      <span>Warengruppen</span>
+    </a>
+  </li>
+  <li>
+    <a class="admin-card" href="/admin/settlements">
+      <strong>PDF</strong>
+      <span>Abrechnungen &amp; Exporte</span>
+    </a>
+  </li>
 </ul>
-<p><a href="/">Zum Kiosk</a></p>
 {% endblock %}

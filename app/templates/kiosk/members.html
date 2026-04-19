@@ -1,17 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>{{ group['name'] }}</h1>
-<p><a href="/" role="button" class="secondary">Zurück zu Gruppen</a></p>
-<h2>Mitglied wählen</h2>
-<div class="grid-cards">
+<header class="page-head">
+  <p class="page-head__eyebrow">Schritt 2 · Mitglied</p>
+  <h1 class="page-head__title">{{ group['name'] }}</h1>
+  <p class="page-head__lead">Wer möchte etwas buchen?</p>
+</header>
+<div class="k-toolbar">
+  <a href="/" role="button" class="secondary">Alle Gruppen</a>
+</div>
+{% if users %}
+<div class="k-tiles">
   {% for u in users %}
-  <a class="card-link" href="/u/{{ u['id'] }}">
-    <article>
-      <header>{{ u['name'] }}</header>
-    </article>
+  <a class="k-tile" href="/u/{{ u['id'] }}">
+    <p class="k-tile__title">{{ u['name'] }}</p>
+    <p class="k-tile__hint">Konto &amp; Artikel →</p>
   </a>
-  {% else %}
-  <p>Keine Mitglieder in dieser Gruppe.</p>
   {% endfor %}
 </div>
+{% else %}
+<p class="k-empty">Keine Mitglieder in dieser Gruppe.</p>
+{% endif %}
 {% endblock %}

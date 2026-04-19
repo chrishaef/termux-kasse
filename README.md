@@ -1,6 +1,6 @@
 # Termux-Vertrauenskasse
 
-Lokal laufende Vertrauenskasse (FastAPI, SQLite, Jinja2). Keine CDN-Assets: `pico.min.css` liegt unter `app/static/`.
+Lokal laufende Vertrauenskasse (FastAPI, SQLite, Jinja2). UI: **Pico.css** plus eigenes **`app/static/kasse.css`** (Tablet-taugliche Kacheln, Admin-Karten, helles/dunkles Schema über Systemeinstellung) — alles ohne CDN.
 
 ## Voraussetzungen (Termux auf dem Tablet)
 

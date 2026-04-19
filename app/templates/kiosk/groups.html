@@ -1,16 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Nutzergruppe wählen</h1>
-<div class="grid-cards">
+<header class="page-head">
+  <p class="page-head__eyebrow">Schritt 1 · Gruppe</p>
+  <h1 class="page-head__title">Nutzergruppe wählen</h1>
+  <p class="page-head__lead">Tippe auf die passende Gruppe, z. B. Büro oder Team.</p>
+</header>
+{% if groups %}
+<div class="k-tiles">
   {% for g in groups %}
-  <a class="card-link" href="/g/{{ g['id'] }}">
-    <article>
-      <header>{{ g['name'] }}</header>
-      <p>Weiter zu den Mitgliedern</p>
-    </article>
+  <a class="k-tile" href="/g/{{ g['id'] }}">
+    <p class="k-tile__title">{{ g['name'] }}</p>
+    <p class="k-tile__hint">Mitglieder anzeigen →</p>
   </a>
-  {% else %}
-  <p>Keine Gruppen vorhanden. Bitte im Admin anlegen.</p>
   {% endfor %}
 </div>
+{% else %}
+<p class="k-empty">Keine Gruppen vorhanden. Bitte im Admin unter „Nutzergruppen“ anlegen.</p>
+{% endif %}
 {% endblock %}

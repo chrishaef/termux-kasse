@@ -1,15 +1,22 @@
 {% extends "base.html" %}
+{% block body_class %}app-admin{% endblock %}
 {% block trust %}{% endblock %}
 {% block content %}
-<h1>Admin einrichten</h1>
-<p>Legen Sie den ersten Administrator an. Dies geschieht nur, solange noch kein Admin existiert.</p>
+<header class="page-head">
+  <p class="page-head__eyebrow">Einmalig</p>
+  <h1 class="page-head__title">Admin einrichten</h1>
+  <p class="page-head__lead">Legen Sie den ersten Administrator an — nur solange noch kein Admin existiert.</p>
+</header>
 {% if error %}
 <article class="contrast">{{ error }}</article>
 {% endif %}
-<form method="post" action="/admin/setup">
-  <label>Benutzername <input type="text" name="username" required autocomplete="username" /></label>
-  <label>Passwort <input type="password" name="password" required autocomplete="new-password" /></label>
-  <label>Passwort wiederholen <input type="password" name="password2" required autocomplete="new-password" /></label>
-  <button type="submit">Speichern</button>
-</form>
+<article class="k-panel">
+  <form method="post" action="/admin/setup">
+    <label>Benutzername <input type="text" name="username" required autocomplete="username" /></label>
+    <label>Passwort <input type="password" name="password" required autocomplete="new-password" /></label>
+    <label>Passwort wiederholen <input type="password" name="password2" required autocomplete="new-password" /></label>
+    <button type="submit">Speichern</button>
+  </form>
+</article>
+<p><a href="/admin/login" class="admin-back">← Zurück zum Login</a></p>
 {% endblock %}

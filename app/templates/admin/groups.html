@@ -1,25 +1,34 @@
 {% extends "base.html" %}
+{% block body_class %}app-admin{% endblock %}
 {% block trust %}{% endblock %}
 {% block content %}
-<h1>Nutzergruppen</h1>
-<p><a href="/admin">Admin</a></p>
-<form method="post" action="/admin/groups">
-  <label>Neue Gruppe <input type="text" name="name" required placeholder="z. B. Büro 1" /></label>
-  <button type="submit">Anlegen</button>
-</form>
-<table role="grid">
-  <thead><tr><th>Name</th><th></th></tr></thead>
-  <tbody>
-    {% for g in groups %}
-    <tr>
-      <td>{{ g['name'] }}</td>
-      <td>
-        <form method="post" action="/admin/groups/{{ g['id'] }}/delete" onsubmit="return confirm('Gruppe wirklich löschen?');">
-          <button type="submit" class="secondary">Löschen</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<header class="page-head">
+  <p class="page-head__eyebrow">Stammdaten</p>
+  <h1 class="page-head__title">Nutzergruppen</h1>
+</header>
+<a href="/admin" class="admin-back">← Admin-Übersicht</a>
+<article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">Neue Gruppe</h2>
+  <form method="post" action="/admin/groups">
+    <label>Name <input type="text" name="name" required placeholder="z. B. Büro 1" /></label>
+    <button type="submit">Anlegen</button>
+  </form>
+</article>
+<div class="table-wrap">
+  <table role="grid">
+    <thead><tr><th>Name</th><th></th></tr></thead>
+    <tbody>
+      {% for g in groups %}
+      <tr>
+        <td>{{ g['name'] }}</td>
+        <td>
+          <form method="post" action="/admin/groups/{{ g['id'] }}/delete" onsubmit="return confirm('Gruppe wirklich löschen?');">
+            <button type="submit" class="secondary">Löschen</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}

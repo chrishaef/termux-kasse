@@ -1,0 +1,384 @@
+/* Vertrauenskasse — ergänzt Pico.css, offline, ohne externe Fonts */
+
+:root {
+  --kas-bg: #f2efe8;
+  --kas-surface: #ffffff;
+  --kas-surface-2: #faf8f4;
+  --kas-text: #1c2422;
+  --kas-muted: #5a6562;
+  --kas-accent: #0f6b5c;
+  --kas-accent-contrast: #f4fbfa;
+  --kas-accent-hover: #0a5549;
+  --kas-border: #e2ddd4;
+  --kas-radius: 14px;
+  --kas-radius-sm: 10px;
+  --kas-shadow: 0 6px 28px rgba(15, 107, 92, 0.07);
+  --kas-shadow-hover: 0 10px 36px rgba(15, 107, 92, 0.12);
+  --kas-step: #6b7c78;
+  --kas-danger: #9b2c2c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --kas-bg: #121816;
+    --kas-surface: #1a2220;
+    --kas-surface-2: #222b28;
+    --kas-text: #e8eeec;
+    --kas-muted: #9caaa6;
+    --kas-accent: #3ecfae;
+    --kas-accent-contrast: #062620;
+    --kas-accent-hover: #58dcc0;
+    --kas-border: #2d3835;
+    --kas-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    --kas-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.45);
+    --kas-step: #8a9a95;
+    --kas-danger: #f08080;
+  }
+}
+
+body {
+  background: var(--kas-bg);
+  color: var(--kas-text);
+}
+
+/* Pico: Primärfarbe an Theme anbinden */
+:root {
+  --pico-primary: var(--kas-accent);
+  --pico-primary-hover: var(--kas-accent-hover);
+  --pico-primary-focus: var(--kas-accent);
+  --pico-primary-inverse: var(--kas-accent-contrast);
+  --pico-background-color: var(--kas-bg);
+  --pico-card-background-color: var(--kas-surface);
+  --pico-border-radius: var(--kas-radius-sm);
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--kas-surface);
+  opacity: 1;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--kas-border);
+  margin-bottom: 1.25rem;
+}
+
+.site-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  max-width: 1100px;
+}
+
+.site-brand {
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  color: var(--kas-text);
+  text-decoration: none;
+}
+
+.site-brand:hover {
+  color: var(--kas-accent);
+}
+
+.site-nav {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.site-nav a {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--kas-muted);
+  border: 1px solid transparent;
+}
+
+.site-nav a:hover {
+  color: var(--kas-accent);
+  background: var(--kas-surface-2);
+  border-color: var(--kas-border);
+}
+
+.site-main {
+  max-width: 1100px;
+  padding-bottom: 2.5rem;
+}
+
+.trust-banner {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--kas-muted);
+  background: var(--kas-surface-2);
+  border: 1px solid var(--kas-border);
+  border-radius: var(--kas-radius-sm);
+  border-left: 4px solid var(--kas-accent);
+}
+
+.trust-banner::before {
+  content: "";
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.1rem;
+  border-radius: 50%;
+  border: 2px solid var(--kas-accent);
+  opacity: 0.7;
+}
+
+/* Seitenkopf */
+.page-head {
+  margin-bottom: 1.75rem;
+}
+
+.page-head__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--kas-step);
+}
+
+.page-head__title {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.page-head__lead {
+  margin: 0;
+  color: var(--kas-muted);
+  font-size: 1rem;
+}
+
+/* Kiosk-Kacheln */
+.k-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.k-tile {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--kas-surface);
+  border: 1px solid var(--kas-border);
+  border-radius: var(--kas-radius);
+  padding: 1.25rem 1.35rem;
+  box-shadow: var(--kas-shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  min-height: 5.5rem;
+}
+
+.k-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--kas-shadow-hover);
+  border-color: var(--kas-accent);
+}
+
+.k-tile:active {
+  transform: translateY(0);
+}
+
+.k-tile__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--kas-text);
+}
+
+.k-tile__hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--kas-muted);
+}
+
+.k-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.k-toolbar a[role="button"] {
+  margin: 0;
+}
+
+/* Kontostand */
+.k-balance {
+  background: linear-gradient(145deg, var(--kas-surface) 0%, var(--kas-surface-2) 100%);
+  border: 1px solid var(--kas-border);
+  border-radius: var(--kas-radius);
+  padding: 1.35rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--kas-shadow);
+}
+
+.k-balance__label {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--kas-step);
+}
+
+.k-balance__value {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--kas-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.k-balance__note {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: var(--kas-muted);
+}
+
+.k-panel {
+  background: var(--kas-surface);
+  border: 1px solid var(--kas-border);
+  border-radius: var(--kas-radius);
+  padding: 1.15rem 1.35rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--kas-shadow);
+}
+
+.k-panel h2,
+.k-panel h3 {
+  margin-top: 0;
+}
+
+.k-section-title {
+  margin: 1.75rem 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--kas-text);
+}
+
+/* Produkt-Buttons: groß für Touch */
+.k-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.65rem;
+}
+
+.k-product-grid form {
+  margin: 0;
+}
+
+.k-product-grid button {
+  width: 100%;
+  min-height: 3.25rem;
+  font-weight: 600;
+  border-radius: var(--kas-radius-sm);
+}
+
+/* Admin */
+.app-admin .page-head__title {
+  font-size: 1.65rem;
+}
+
+.admin-back {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.admin-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-cards li {
+  margin: 0;
+}
+
+.admin-card {
+  display: block;
+  height: 100%;
+  padding: 1.15rem 1.25rem;
+  background: var(--kas-surface);
+  border: 1px solid var(--kas-border);
+  border-radius: var(--kas-radius);
+  box-shadow: var(--kas-shadow);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-card:hover {
+  border-color: var(--kas-accent);
+  box-shadow: var(--kas-shadow-hover);
+}
+
+.admin-card strong {
+  display: block;
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--kas-accent);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 0.25rem;
+}
+
+.admin-card span {
+  font-size: 0.95rem;
+  color: var(--kas-muted);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 1rem 0;
+  border-radius: var(--kas-radius-sm);
+  border: 1px solid var(--kas-border);
+  background: var(--kas-surface);
+}
+
+.table-wrap table {
+  margin: 0;
+}
+
+/* Formulare etwas luftiger */
+article[role="article"].contrast,
+article.contrast {
+  border-radius: var(--kas-radius-sm);
+}
+
+form:not(.inline) label {
+  margin-bottom: 0.35rem;
+}
+
+/* Leere Zustände */
+.k-empty {
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--kas-muted);
+  background: var(--kas-surface-2);
+  border: 1px dashed var(--kas-border);
+  border-radius: var(--kas-radius-sm);
+}
