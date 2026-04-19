@@ -212,6 +212,20 @@ body {
   padding-bottom: 2.5rem;
 }
 
+.powered-by-note {
+  position: fixed;
+  right: 0.7rem;
+  bottom: 0.45rem;
+  z-index: 70;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: rgba(236, 240, 232, 0.72);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.48);
+  pointer-events: none;
+  user-select: none;
+}
+
 .site-main a:not([role="button"]):not(.k-tile):not(.admin-card) {
   color: var(--kas-accent-bright);
 }
@@ -1190,6 +1204,18 @@ body.app-admin .table-wrap a[role="button"]:hover {
   color: #050805;
   border-color: var(--kas-accent);
   background: #fff8e6;
+}
+
+/* Admin: eventuell vom Theme gesetzte Dreieck-/Chevron-Icons an Buttons ausblenden */
+body.app-admin button,
+body.app-admin a[role="button"] {
+  background-image: none !important;
+}
+
+body.app-admin button::after,
+body.app-admin a[role="button"]::after {
+  content: none !important;
+  display: none !important;
 }
 
 /* Aktions-Button unterhalb der Seitenüberschrift (z. B. neue Abrechnung) */
