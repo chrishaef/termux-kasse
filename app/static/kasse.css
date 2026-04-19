@@ -253,19 +253,39 @@ body {
   color: var(--kas-accent-bright);
 }
 
-/* Kontostand */
-.k-balance {
-  background: linear-gradient(145deg, var(--kas-surface) 0%, #ebe8df 100%);
-  border: 1px solid var(--kas-border);
-  border-top: 3px solid var(--kas-accent);
-  border-radius: var(--kas-radius);
-  padding: 1.35rem 1.5rem;
-  margin-bottom: 1.25rem;
-  box-shadow: var(--kas-shadow);
+/* Nutzerkopf: Name links, Kontostand + letzte Abrechnung rechts */
+.page-head.k-user-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
 }
 
-.k-balance__label {
-  margin: 0 0 0.35rem;
+.k-user-head__main {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.k-user-head__aside {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 0.85rem;
+  max-width: 100%;
+}
+
+.k-user-head__balance {
+  border-top: 3px solid var(--kas-accent);
+  border-radius: var(--kas-radius);
+  padding: 0.65rem 0 0;
+  min-width: min(100%, 11rem);
+}
+
+.k-user-head__balance-label {
+  margin: 0 0 0.2rem;
   font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -273,19 +293,44 @@ body {
   color: var(--kas-muted);
 }
 
-.k-balance__value {
+.k-user-head__balance-value {
   margin: 0;
-  font-size: clamp(2rem, 6vw, 2.75rem);
+  font-size: clamp(1.65rem, 5vw, 2.55rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #8a6a0a;
+  color: #d4a012;
   font-variant-numeric: tabular-nums;
+  line-height: 1.1;
 }
 
-.k-balance__note {
-  margin: 0.5rem 0 0;
-  font-size: 0.9rem;
+.k-user-head__last {
+  width: 100%;
+  max-width: 22rem;
+  text-align: right;
+  background: var(--kas-surface);
+  border: 1px solid var(--kas-border);
+  border-radius: var(--kas-radius);
+  padding: 0.75rem 1rem;
+  box-shadow: var(--kas-shadow);
+  color: var(--kas-text);
+}
+
+.k-user-head__last-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--kas-muted);
+}
+
+.k-user-head__last-line {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+}
+
+.k-user-head__last-line:first-of-type {
+  margin-top: 0;
 }
 
 .k-panel {

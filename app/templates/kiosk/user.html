@@ -1,30 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
-<header class="page-head">
-  <p class="page-head__eyebrow">Schritt 3 · {{ user['group_name'] }}</p>
-  <h1 class="page-head__title">{{ user['name'] }}</h1>
-  <p class="page-head__lead">Kontostand und Artikel buchen</p>
+<header class="page-head k-user-head">
+  <div class="k-user-head__main">
+    <p class="page-head__eyebrow">Schritt 3 · {{ user['group_name'] }}</p>
+    <h1 class="page-head__title">{{ user['name'] }}</h1>
+    <p class="page-head__lead">Artikel buchen</p>
+  </div>
+  <aside class="k-user-head__aside" aria-label="Kontostand und letzte Abrechnung">
+    <div class="k-user-head__balance">
+      <p class="k-user-head__balance-label">Kontostand</p>
+      <p class="k-user-head__balance-value">{{ balance_cents|eur }}</p>
+    </div>
+    <div class="k-user-head__last">
+      <h2 class="k-user-head__last-title">Letzte Abrechnung</h2>
+      {% if last_settlement %}
+      <p class="k-user-head__last-line"><strong>Datum:</strong> {{ last_settlement['created_at']|date_de }}</p>
+      <p class="k-user-head__last-line"><strong>Summe damals:</strong> {{ last_settlement['total_cents']|eur }}</p>
+      {% if last_settlement['note'] %}<p class="k-user-head__last-line"><strong>Notiz:</strong> {{ last_settlement['note'] }}</p>{% endif %}
+      {% else %}
+      <p class="k-user-head__last-line secondary">Noch keine Abrechnung erfasst.</p>
+      {% endif %}
+    </div>
+  </aside>
 </header>
 <div class="k-toolbar">
   <a href="/" role="button" class="secondary">Start</a>
   <a href="/g/{{ user['group_id'] }}" role="button" class="secondary">Gruppe wechseln</a>
-</div>
-
-<div class="k-balance">
-  <p class="k-balance__label">Offener Kontostand</p>
-  <p class="k-balance__value">{{ balance_cents|eur }}</p>
-  <p class="k-balance__note">Positiver Betrag = Summe seit der letzten Abrechnung.</p>
-</div>
-
-<div class="k-panel">
-  <h2>Letzte Abrechnung</h2>
-  {% if last_settlement %}
-  <p><strong>Datum:</strong> {{ last_settlement['created_at']|date_de }}</p>
-  <p><strong>Summe damals:</strong> {{ last_settlement['total_cents']|eur }}</p>
-  {% if last_settlement['note'] %}<p><strong>Notiz:</strong> {{ last_settlement['note'] }}</p>{% endif %}
-  {% else %}
-  <p class="secondary" style="margin:0">Noch keine Abrechnung erfasst.</p>
-  {% endif %}
 </div>
 
 <h2 class="k-section-title">Artikel hinzufügen</h2>
