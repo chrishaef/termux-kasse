@@ -1,0 +1,64 @@
+from __future__ import annotations
+
+from fastapi.testclient import TestClient
+
+from app import db
+from app.ledger_service import add_purchase
+from app.main import app
+
+
+def _seed_stats_data(client: TestClient) -> None:
+    client.post(
+        "/admin/setup",
+        data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
+        follow_redirects=False,
+    )
+    client.post("/admin/groups", data={"name": "G1"})
+    with db.get_connection() as conn:
+        gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
+    client.post("/admin/users", data={"name": "Anna", "group_id": str(gid)})
+    client.post("/admin/users", data={"name": "Ben", "group_id": str(gid)})
+    client.post("/admin/products", data={"name": "Cola", "price_eur": "2.00"})
+    with db.get_connection() as conn:
+        users = conn.execute("SELECT id FROM users ORDER BY name").fetchall()
+        uid_anna = int(users[0][0])
+        uid_ben = int(users[1][0])
+        pid = int(conn.execute("SELECT id FROM products LIMIT 1").fetchone()[0])
+        add_purchase(conn, uid_anna, pid, "Cola (x1)", 200)
+        add_purchase(conn, uid_ben, pid, "Cola (x1)", 200)
+        add_purchase(conn, uid_ben, pid, "Cola (x1)", 200)
+        conn.execute(
+            "UPDATE ledger_entries SET created_at = ? WHERE user_id = ?",
+            ("2026-04-10T10:00:00", uid_anna),
+        )
+        conn.execute(
+            "UPDATE ledger_entries SET created_at = ? WHERE user_id = ?",
+            ("2026-04-15T10:00:00", uid_ben),
+        )
+
+
+def test_admin_statistics_page_pdf_and_xlsx() -> None:
+    with TestClient(app) as client:
+        _seed_stats_data(client)
+        r = client.get("/admin/statistics?start=2026-04-12&end=2026-04-15")
+        assert r.status_code == 200
+        assert "Statistik (Zeitraum)" in r.text
+        assert "Nutzer-Auswertung" in r.text
+        assert "Artikel-Auswertung" in r.text
+        assert "2 Buchungen" not in r.text
+        assert "4,00 €" in r.text
+
+        pdf = client.get("/admin/statistics/pdf?start=2026-04-12&end=2026-04-15")
+        assert pdf.status_code == 200
+        assert pdf.headers["content-type"] == "application/pdf"
+        disp_pdf = pdf.headers.get("content-disposition", "")
+        assert "Statistik_Zeitraum" in disp_pdf
+
+        xlsx = client.get("/admin/statistics/xlsx?start=2026-04-12&end=2026-04-15")
+        assert xlsx.status_code == 200
+        assert (
+            xlsx.headers["content-type"]
+            == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        disp_xlsx = xlsx.headers.get("content-disposition", "")
+        assert "Statistik_Zeitraum" in disp_xlsx

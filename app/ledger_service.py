@@ -279,6 +279,89 @@ def settlement_header(conn: sqlite3.Connection, settlement_id: int) -> sqlite3.R
     )
 
 
+def period_user_stats(
+    conn: sqlite3.Connection,
+    period_start: str | None,
+    period_end: str | None,
+) -> list[sqlite3.Row]:
+    sql = """
+        SELECT
+            g.name AS group_name,
+            u.name AS user_name,
+            COUNT(le.id) AS entries_count,
+            COALESCE(SUM(le.amount_cents), 0) AS total_cents
+        FROM ledger_entries le
+        JOIN users u ON u.id = le.user_id
+        JOIN user_groups g ON g.id = u.group_id
+        WHERE 1=1
+    """
+    params: list[Any] = []
+    if period_start:
+        sql += " AND datetime(le.created_at) >= datetime(?)"
+        params.append(period_start)
+    if period_end:
+        sql += " AND datetime(le.created_at) <= datetime(?)"
+        params.append(period_end)
+    sql += """
+        GROUP BY u.id, g.id
+        ORDER BY g.sort_order, g.name COLLATE NOCASE, u.sort_order, u.name COLLATE NOCASE
+    """
+    return db.fetch_all(conn, sql, params)
+
+
+def period_product_stats(
+    conn: sqlite3.Connection,
+    period_start: str | None,
+    period_end: str | None,
+) -> list[dict[str, Any]]:
+    sql = """
+        SELECT le.product_id, p.name AS product_name, le.description, le.amount_cents
+        FROM ledger_entries le
+        LEFT JOIN products p ON p.id = le.product_id
+        WHERE 1=1
+    """
+    params: list[Any] = []
+    if period_start:
+        sql += " AND datetime(le.created_at) >= datetime(?)"
+        params.append(period_start)
+    if period_end:
+        sql += " AND datetime(le.created_at) <= datetime(?)"
+        params.append(period_end)
+    sql += " ORDER BY datetime(le.created_at)"
+    rows = db.fetch_all(conn, sql, params)
+    return aggregate_ledger_lines(rows)
+
+
+def period_totals(
+    conn: sqlite3.Connection,
+    period_start: str | None,
+    period_end: str | None,
+) -> dict[str, int]:
+    sql = """
+        SELECT
+            COUNT(*) AS entries_count,
+            COUNT(DISTINCT user_id) AS users_count,
+            COALESCE(SUM(amount_cents), 0) AS total_cents
+        FROM ledger_entries
+        WHERE 1=1
+    """
+    params: list[Any] = []
+    if period_start:
+        sql += " AND datetime(created_at) >= datetime(?)"
+        params.append(period_start)
+    if period_end:
+        sql += " AND datetime(created_at) <= datetime(?)"
+        params.append(period_end)
+    row = db.fetch_one(conn, sql, params)
+    if not row:
+        return {"entries_count": 0, "users_count": 0, "total_cents": 0}
+    return {
+        "entries_count": int(row["entries_count"]),
+        "users_count": int(row["users_count"]),
+        "total_cents": int(row["total_cents"]),
+    }
+
+
 def admin_exists(conn: sqlite3.Connection) -> bool:
     row = db.fetch_one(conn, "SELECT COUNT(*) AS c FROM admin_users", ())
     return bool(row and int(row["c"]) > 0)

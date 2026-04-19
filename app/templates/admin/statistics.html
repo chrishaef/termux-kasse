@@ -1,0 +1,72 @@
+{% extends "admin/shell.html" %}
+{% block admin_page %}
+<header class="page-head">
+  <p class="page-head__eyebrow">Auswertung</p>
+  <h1 class="page-head__title">Statistik (Zeitraum)</h1>
+</header>
+<a href="/admin" class="admin-back">← Admin-Übersicht</a>
+
+<article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">Zeitraum wählen</h2>
+  <form method="get" action="/admin/statistics" class="k-toolbar">
+    <label>Von <input type="date" name="start" value="{{ start }}" /></label>
+    <label>Bis <input type="date" name="end" value="{{ end }}" /></label>
+    <button type="submit">Auswerten</button>
+    <a class="secondary" style="display:inline-flex;align-items:center;padding:0.4rem 0.7rem;border-radius:8px;border:1px solid #999;text-decoration:none" href="/admin/statistics/pdf?start={{ start }}&end={{ end }}">PDF herunterladen</a>
+    <a class="secondary" style="display:inline-flex;align-items:center;padding:0.4rem 0.7rem;border-radius:8px;border:1px solid #999;text-decoration:none" href="/admin/statistics/xlsx?start={{ start }}&end={{ end }}">XLSX herunterladen</a>
+  </form>
+</article>
+
+<div class="k-toolbar" style="margin-top:1rem">
+  <article class="k-panel" style="flex:1;min-width:170px;margin:0">
+    <h3 style="margin:0 0 0.35rem;font-size:0.85rem;text-transform:uppercase;color:var(--kas-muted)">Buchungen</h3>
+    <p style="margin:0;font-size:1.4rem;font-weight:800;color:#7a5f0c">{{ totals['entries_count'] }}</p>
+  </article>
+  <article class="k-panel" style="flex:1;min-width:170px;margin:0">
+    <h3 style="margin:0 0 0.35rem;font-size:0.85rem;text-transform:uppercase;color:var(--kas-muted)">Nutzer mit Buchungen</h3>
+    <p style="margin:0;font-size:1.4rem;font-weight:800;color:#7a5f0c">{{ totals['users_count'] }}</p>
+  </article>
+  <article class="k-panel" style="flex:1;min-width:170px;margin:0;border-top:3px solid var(--kas-accent)">
+    <h3 style="margin:0 0 0.35rem;font-size:0.85rem;text-transform:uppercase;color:var(--kas-muted)">Gesamtumsatz</h3>
+    <p style="margin:0;font-size:1.4rem;font-weight:800;color:#7a5f0c">{{ totals['total_cents']|eur }}</p>
+  </article>
+</div>
+
+<h2 class="k-section-title">Nutzer-Auswertung</h2>
+<div class="table-wrap">
+  <table role="grid">
+    <thead><tr><th>Gruppe</th><th>Nutzer</th><th class="num">Buchungen</th><th class="num">Summe</th></tr></thead>
+    <tbody>
+      {% for row in user_rows %}
+      <tr>
+        <td>{{ row['group_name'] }}</td>
+        <td>{{ row['user_name'] }}</td>
+        <td class="num">{{ row['entries_count'] }}</td>
+        <td class="num">{{ row['total_cents']|eur }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="secondary">Keine Daten für den gewählten Zeitraum.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2 class="k-section-title">Artikel-Auswertung (zusammengefasst)</h2>
+<div class="table-wrap">
+  <table role="grid">
+    <thead><tr><th class="num">Anzahl</th><th>Bezeichnung</th><th class="num">Einzel</th><th class="num">Summe</th></tr></thead>
+    <tbody>
+      {% for row in product_rows %}
+      <tr>
+        <td class="num">{{ row['quantity'] }}×</td>
+        <td>{{ row['label'] }}</td>
+        <td class="num">{{ row['unit_cents']|eur }}</td>
+        <td class="num">{{ row['total_cents']|eur }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="secondary">Keine Artikeldaten für den gewählten Zeitraum.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

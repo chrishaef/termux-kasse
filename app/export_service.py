@@ -119,3 +119,140 @@ def build_pdf_bytes(
 
     out = pdf.output(dest="S")
     return out.encode("latin-1", errors="replace")
+
+
+def build_statistics_pdf_bytes(
+    period_start: str | None,
+    period_end: str | None,
+    totals: dict[str, int],
+    user_rows: list[dict[str, Any]],
+    product_rows: list[dict[str, Any]],
+) -> bytes:
+    pdf = FPDF(orientation="P", unit="mm", format="A4")
+    pdf.set_margins(14, 14, 14)
+    pdf.set_auto_page_break(True, 14)
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 15)
+    pdf.cell(0, 8, _pdf_cell_text("Statistik (Zeitraum)", 80), 0, 1)
+    pdf.set_font("Helvetica", "", 9)
+    p_from = format_date_de(period_start) if period_start else "-"
+    p_to = format_date_de(period_end) if period_end else "-"
+    pdf.cell(0, 6, _pdf_cell_text(f"Von: {p_from}   Bis: {p_to}", 110), 0, 1)
+    pdf.ln(1)
+
+    meta = [
+        ("Buchungen", str(int(totals["entries_count"]))),
+        ("Nutzer mit Buchungen", str(int(totals["users_count"]))),
+        ("Gesamtumsatz EUR", f'{int(totals["total_cents"]) / 100:.2f}'),
+    ]
+    for label, val in meta:
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.cell(52, 6, _pdf_cell_text(label, 36), 1, 0)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(110, 6, _pdf_cell_text(val, 50), 1, 1)
+
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.cell(0, 6, _pdf_cell_text("Nutzer", 30), 0, 1)
+    w_users = (48, 66, 20, 28)
+    headers_u = ("Gruppe", "Nutzer", "Buch.", "EUR")
+    pdf.set_font("Helvetica", "B", 8)
+    for i, (txt, w) in enumerate(zip(headers_u, w_users)):
+        pdf.cell(w, 6, _pdf_cell_text(txt, 20), 1, 1 if i == len(w_users) - 1 else 0)
+    pdf.set_font("Helvetica", "", 8)
+    if not user_rows:
+        pdf.cell(sum(w_users), 6, _pdf_cell_text("Keine Daten im Zeitraum", 40), 1, 1)
+    for r in user_rows:
+        cells = [
+            str(r["group_name"]),
+            str(r["user_name"]),
+            str(int(r["entries_count"])),
+            f'{int(r["total_cents"]) / 100:.2f}',
+        ]
+        for i, (c, w) in enumerate(zip(cells, w_users)):
+            pdf.cell(w, 5.5, _pdf_cell_text(c, 30), 1, 1 if i == len(w_users) - 1 else 0)
+
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.cell(0, 6, _pdf_cell_text("Artikel (zusammengefasst)", 42), 0, 1)
+    w_prod = (16, 90, 28, 28)
+    headers_p = ("Anz.", "Bezeichnung", "Einzel", "Summe")
+    pdf.set_font("Helvetica", "B", 8)
+    for i, (txt, w) in enumerate(zip(headers_p, w_prod)):
+        pdf.cell(w, 6, _pdf_cell_text(txt, 20), 1, 1 if i == len(w_prod) - 1 else 0)
+    pdf.set_font("Helvetica", "", 8)
+    if not product_rows:
+        pdf.cell(sum(w_prod), 6, _pdf_cell_text("Keine Daten im Zeitraum", 40), 1, 1)
+    for r in product_rows:
+        cells = [
+            str(int(r["quantity"])),
+            str(r["label"]),
+            f'{int(r["unit_cents"]) / 100:.2f}',
+            f'{int(r["total_cents"]) / 100:.2f}',
+        ]
+        for i, (c, w) in enumerate(zip(cells, w_prod)):
+            pdf.cell(w, 5.5, _pdf_cell_text(c, 42), 1, 1 if i == len(w_prod) - 1 else 0)
+
+    out = pdf.output(dest="S")
+    return out.encode("latin-1", errors="replace")
+
+
+def build_statistics_xlsx_bytes(
+    period_start: str | None,
+    period_end: str | None,
+    totals: dict[str, int],
+    user_rows: list[dict[str, Any]],
+    product_rows: list[dict[str, Any]],
+) -> bytes:
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Statistik"
+    bold = Font(bold=True)
+
+    ws.append(["Statistik (Zeitraum)"])
+    ws["A1"].font = bold
+    ws.append(["Von", format_date_de(period_start) if period_start else "-"])
+    ws.append(["Bis", format_date_de(period_end) if period_end else "-"])
+    ws.append([])
+    ws.append(["Kennzahl", "Wert"])
+    for cell in ws[ws.max_row]:
+        cell.font = bold
+    ws.append(["Buchungen", int(totals["entries_count"])])
+    ws.append(["Nutzer mit Buchungen", int(totals["users_count"])])
+    ws.append(["Gesamtumsatz (EUR)", round(int(totals["total_cents"]) / 100, 2)])
+
+    ws.append([])
+    ws.append(["Nutzer-Auswertung"])
+    ws[f"A{ws.max_row}"].font = bold
+    ws.append(["Gruppe", "Nutzer", "Buchungen", "Summe (EUR)"])
+    for cell in ws[ws.max_row]:
+        cell.font = bold
+    for r in user_rows:
+        ws.append(
+            [
+                r["group_name"],
+                r["user_name"],
+                int(r["entries_count"]),
+                round(int(r["total_cents"]) / 100, 2),
+            ]
+        )
+
+    ws.append([])
+    ws.append(["Artikel-Auswertung (zusammengefasst)"])
+    ws[f"A{ws.max_row}"].font = bold
+    ws.append(["Anzahl", "Bezeichnung", "Einzel (EUR)", "Summe (EUR)"])
+    for cell in ws[ws.max_row]:
+        cell.font = bold
+    for r in product_rows:
+        ws.append(
+            [
+                int(r["quantity"]),
+                r["label"],
+                round(int(r["unit_cents"]) / 100, 2),
+                round(int(r["total_cents"]) / 100, 2),
+            ]
+        )
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()

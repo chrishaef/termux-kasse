@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import sqlite3
+from datetime import datetime, timedelta
 from typing import Optional
 from urllib.parse import quote
 
@@ -14,7 +15,12 @@ from app import kiosk_notice
 from app import ledger_service
 from app import sort_order_util
 from app.auth import hash_password, verify_password
-from app.export_service import build_pdf_bytes, build_xlsx_bytes
+from app.export_service import (
+    build_pdf_bytes,
+    build_statistics_pdf_bytes,
+    build_statistics_xlsx_bytes,
+    build_xlsx_bytes,
+)
 from app.templates_env import TEMPLATES
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -57,6 +63,29 @@ def _attachment_disposition(stem: str, ext: str) -> str:
         ascii_fallback = f"abrechnung{ext}"
     enc = quote(full, safe="")
     return f'attachment; filename="{ascii_fallback}"; filename*=UTF-8\'\'{enc}'
+
+
+def _parse_date_input(raw: str | None) -> str | None:
+    s = (raw or "").strip()
+    if not s:
+        return None
+    try:
+        dt = datetime.strptime(s, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Datum ungültig (YYYY-MM-DD)")
+    return dt.strftime("%Y-%m-%dT00:00:00")
+
+
+def _parse_date_end_input(raw: str | None) -> str | None:
+    s = (raw or "").strip()
+    if not s:
+        return None
+    try:
+        dt = datetime.strptime(s, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Datum ungültig (YYYY-MM-DD)")
+    end = dt + timedelta(days=1) - timedelta(seconds=1)
+    return end.strftime("%Y-%m-%dT%H:%M:%S")
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -632,4 +661,70 @@ def admin_settlement_pdf(request: Request, settlement_id: int) -> Response:
         content=data,
         media_type="application/pdf",
         headers={"Content-Disposition": _attachment_disposition(stem, ".pdf")},
+    )
+
+
+@router.get("/statistics", response_class=HTMLResponse)
+def admin_statistics(request: Request, start: str = "", end: str = "") -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    period_start = _parse_date_input(start) if start else None
+    period_end = _parse_date_end_input(end) if end else None
+    with db.get_connection() as conn:
+        totals = ledger_service.period_totals(conn, period_start, period_end)
+        user_rows = ledger_service.period_user_stats(conn, period_start, period_end)
+        product_rows = ledger_service.period_product_stats(conn, period_start, period_end)
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/statistics.html",
+        {
+            "title": "Statistik",
+            "start": start,
+            "end": end,
+            "totals": totals,
+            "user_rows": user_rows,
+            "product_rows": product_rows,
+        },
+    )
+
+
+@router.get("/statistics/pdf")
+def admin_statistics_pdf(request: Request, start: str = "", end: str = "") -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    period_start = _parse_date_input(start) if start else None
+    period_end = _parse_date_end_input(end) if end else None
+    with db.get_connection() as conn:
+        totals = ledger_service.period_totals(conn, period_start, period_end)
+        user_rows = [
+            dict(r) for r in ledger_service.period_user_stats(conn, period_start, period_end)
+        ]
+        product_rows = ledger_service.period_product_stats(conn, period_start, period_end)
+    data = build_statistics_pdf_bytes(period_start, period_end, totals, user_rows, product_rows)
+    stem = "Statistik_Zeitraum"
+    return Response(
+        content=data,
+        media_type="application/pdf",
+        headers={"Content-Disposition": _attachment_disposition(stem, ".pdf")},
+    )
+
+
+@router.get("/statistics/xlsx")
+def admin_statistics_xlsx(request: Request, start: str = "", end: str = "") -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    period_start = _parse_date_input(start) if start else None
+    period_end = _parse_date_end_input(end) if end else None
+    with db.get_connection() as conn:
+        totals = ledger_service.period_totals(conn, period_start, period_end)
+        user_rows = [
+            dict(r) for r in ledger_service.period_user_stats(conn, period_start, period_end)
+        ]
+        product_rows = ledger_service.period_product_stats(conn, period_start, period_end)
+    data = build_statistics_xlsx_bytes(period_start, period_end, totals, user_rows, product_rows)
+    stem = "Statistik_Zeitraum"
+    return Response(
+        content=data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": _attachment_disposition(stem, ".xlsx")},
     )
