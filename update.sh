@@ -98,6 +98,7 @@ fi
 
 echo ">>> git pull"
 git pull --ff-only
+date +"%Y-%m-%d %H:%M:%S" > "$ROOT/.last_sync"
 
 VENV_DIR="$ROOT/.venv"
 VENV_ACTIVATE="$VENV_DIR/bin/activate"

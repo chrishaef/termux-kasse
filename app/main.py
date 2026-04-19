@@ -18,11 +18,29 @@ from app.routers import admin, kiosk
 
 
 def _last_sync_label() -> str:
-    git_dir = Path(__file__).resolve().parent.parent / ".git"
-    fetch_head = git_dir / "FETCH_HEAD"
+    root = Path(__file__).resolve().parent.parent
+    sync_file = root / ".last_sync"
+    git_dir = root / ".git"
     try:
-        if fetch_head.exists():
-            ts = datetime.fromtimestamp(fetch_head.stat().st_mtime)
+        if sync_file.exists():
+            txt = sync_file.read_text(encoding="utf-8").strip()
+            if txt:
+                try:
+                    ts = datetime.strptime(txt, "%Y-%m-%d %H:%M:%S")
+                    return ts.strftime("%d.%m.%Y %H:%M")
+                except ValueError:
+                    pass
+        candidates = [
+            git_dir / "FETCH_HEAD",
+            git_dir / "refs" / "remotes" / "origin" / "HEAD",
+            git_dir / "refs" / "remotes" / "origin" / "main",
+            git_dir / "logs" / "refs" / "remotes" / "origin" / "HEAD",
+            git_dir / "logs" / "refs" / "remotes" / "origin" / "main",
+        ]
+        existing = [p for p in candidates if p.exists()]
+        if existing:
+            newest = max(existing, key=lambda p: p.stat().st_mtime)
+            ts = datetime.fromtimestamp(newest.stat().st_mtime)
             return ts.strftime("%d.%m.%Y %H:%M")
     except Exception:
         pass
