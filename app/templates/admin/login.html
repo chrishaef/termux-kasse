@@ -10,5 +10,8 @@
   <label>Passwort <input type="password" name="password" required autocomplete="current-password" /></label>
   <button type="submit">Anmelden</button>
 </form>
+{% if setup_needed %}
+<p><a href="/admin/setup">Ersteinrichtung (ersten Admin anlegen)</a></p>
+{% endif %}
 <p><a href="/">Zurück zum Kiosk</a></p>
 {% endblock %}

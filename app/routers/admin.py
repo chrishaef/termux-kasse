@@ -32,7 +32,13 @@ def _parse_price_eur_to_cents(raw: str) -> int:
 def admin_login_form(request: Request) -> Response:
     if request.session.get("admin_user"):
         return RedirectResponse("/admin", status_code=303)
-    return TEMPLATES.TemplateResponse(request, "admin/login.html", {"title": "Admin-Login"})
+    with db.get_connection() as conn:
+        setup_needed = not ledger_service.admin_exists(conn)
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/login.html",
+        {"title": "Admin-Login", "setup_needed": setup_needed},
+    )
 
 
 @router.post("/login")
@@ -50,10 +56,15 @@ def admin_login_post(
             (username.strip(),),
         )
         if not row or not verify_password(password, row["password_hash"]):
+            setup_needed = not ledger_service.admin_exists(conn)
             return TEMPLATES.TemplateResponse(
                 request,
                 "admin/login.html",
-                {"title": "Admin-Login", "error": "Zugangsdaten ungültig"},
+                {
+                    "title": "Admin-Login",
+                    "error": "Zugangsdaten ungültig",
+                    "setup_needed": setup_needed,
+                },
                 status_code=401,
             )
     request.session["admin_user"] = row["username"]
