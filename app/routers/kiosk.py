@@ -17,7 +17,7 @@ def kiosk_home(request: Request) -> HTMLResponse:
     return TEMPLATES.TemplateResponse(
         request,
         "kiosk/groups.html",
-        {"groups": groups, "title": "Nutzergruppe wählen"},
+        {"groups": groups, "title": "Kiosk"},
     )
 
 

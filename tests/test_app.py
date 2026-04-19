@@ -7,5 +7,5 @@ def test_kiosk_home() -> None:
     with TestClient(app) as c:
         r = c.get("/")
         assert r.status_code == 200
-        assert "Nutzergruppe" in r.text
+        assert "k-tiles" in r.text or "k-empty" in r.text
         assert "kasse.css" in r.text
