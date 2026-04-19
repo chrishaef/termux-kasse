@@ -637,7 +637,7 @@ def admin_settlement_confirm_post(
         )
     if sid is None:
         return RedirectResponse("/admin/settlements/start?err=no_open", status_code=303)
-    return RedirectResponse(f"/admin/settlements/{sid}/pdf", status_code=303)
+    return RedirectResponse(f"/admin/settlements/{sid}/done", status_code=303)
 
 
 @router.get("/settlements/{settlement_id}/xlsx")
@@ -675,6 +675,17 @@ def admin_settlement_pdf(request: Request, settlement_id: int) -> Response:
         content=data,
         media_type="application/pdf",
         headers={"Content-Disposition": _attachment_disposition(stem, ".pdf")},
+    )
+
+
+@router.get("/settlements/{settlement_id}/done", response_class=HTMLResponse)
+def admin_settlement_done(request: Request, settlement_id: int) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/settlement_done.html",
+        {"title": "Abrechnung erstellt", "settlement_id": settlement_id},
     )
 
 

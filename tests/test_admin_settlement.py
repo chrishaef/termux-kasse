@@ -55,8 +55,11 @@ def test_settlement_confirm_pdf_and_clears_balance() -> None:
         )
         assert r.status_code == 303
         path = urlparse(r.headers["location"]).path
-        assert path.endswith("/pdf")
-        pdf = client.get(path)
+        assert path.endswith("/done")
+        done = client.get(path)
+        assert done.status_code == 200
+        assert "PDF wird geladen" in done.text
+        pdf = client.get(path.replace("/done", "/pdf"))
         assert pdf.status_code == 200
         assert pdf.headers["content-type"] == "application/pdf"
         disp = pdf.headers.get("content-disposition", "")

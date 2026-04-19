@@ -156,24 +156,27 @@ def build_statistics_pdf_bytes(
 
     pdf.ln(4)
     pdf.set_font("Helvetica", "B", 10)
-    pdf.cell(0, 6, _pdf_cell_text("Nutzer", 30), 0, 1)
-    w_users = (48, 66, 20, 28)
-    headers_u = ("Gruppe", "Nutzer", "Buch.", "EUR")
+    pdf.cell(0, 6, _pdf_cell_text("Nutzer-Topliste (inkl. Artikelmix)", 48), 0, 1)
+    w_users = (10, 26, 28, 76, 14, 28)
+    headers_u = ("#", "Gruppe", "Nutzer", "Artikel", "Anz.", "EUR")
     pdf.set_font("Helvetica", "B", 8)
     for i, (txt, w) in enumerate(zip(headers_u, w_users)):
         pdf.cell(w, 6, _pdf_cell_text(txt, 20), 1, 1 if i == len(w_users) - 1 else 0)
     pdf.set_font("Helvetica", "", 8)
     if not user_rows:
         pdf.cell(sum(w_users), 6, _pdf_cell_text("Keine Daten im Zeitraum", 40), 1, 1)
-    for r in user_rows:
+    for idx, r in enumerate(user_rows, start=1):
         cells = [
+            str(idx),
             str(r["group_name"]),
             str(r["user_name"]),
+            str(r.get("purchases_summary", "")),
             str(int(r["entries_count"])),
             f'{int(r["total_cents"]) / 100:.2f}',
         ]
-        for i, (c, w) in enumerate(zip(cells, w_users)):
-            pdf.cell(w, 5.5, _pdf_cell_text(c, 30), 1, 1 if i == len(w_users) - 1 else 0)
+        maxl = (3, 13, 14, 42, 5, 12)
+        for i, (c, w, m) in enumerate(zip(cells, w_users, maxl)):
+            pdf.cell(w, 5.5, _pdf_cell_text(c, m), 1, 1 if i == len(w_users) - 1 else 0)
 
     pdf.ln(4)
     pdf.set_font("Helvetica", "B", 10)
@@ -227,16 +230,18 @@ def build_statistics_xlsx_bytes(
     ws.append(["Gesamtumsatz (EUR)", round(int(totals["total_cents"]) / 100, 2)])
 
     ws.append([])
-    ws.append(["Nutzer-Auswertung"])
+    ws.append(["Nutzer-Topliste"])
     ws[f"A{ws.max_row}"].font = bold
-    ws.append(["Gruppe", "Nutzer", "Buchungen", "Summe (EUR)"])
+    ws.append(["Rang", "Gruppe", "Nutzer", "Artikelmix", "Buchungen", "Summe (EUR)"])
     for cell in ws[ws.max_row]:
         cell.font = bold
-    for r in user_rows:
+    for idx, r in enumerate(user_rows, start=1):
         ws.append(
             [
+                idx,
                 r["group_name"],
                 r["user_name"],
+                r.get("purchases_summary", ""),
                 int(r["entries_count"]),
                 round(int(r["total_cents"]) / 100, 2),
             ]

@@ -44,6 +44,19 @@
   </article>
 </div>
 
+{% if user_rows %}
+<article class="k-panel" style="margin-top:1rem">
+  <h2 style="margin-top:0;font-size:1.05rem">Schnellblick Top 3</h2>
+  <ol style="margin:0;padding-left:1.2rem">
+    {% for row in user_rows[:3] %}
+    <li style="margin:0.25rem 0">
+      <strong>{{ row['user_name'] }}</strong> ({{ row['group_name'] }}) - {{ row['total_cents']|eur }} - {{ row['purchases_summary'] }}
+    </li>
+    {% endfor %}
+  </ol>
+</article>
+{% endif %}
+
 <h2 class="k-section-title">Topliste Nutzer (nach Summe)</h2>
 <div class="table-wrap">
   <table role="grid">

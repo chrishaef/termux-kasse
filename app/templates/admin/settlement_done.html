@@ -1,0 +1,21 @@
+{% extends "admin/shell.html" %}
+{% block admin_page %}
+<header class="page-head">
+  <p class="page-head__eyebrow">Abrechnung</p>
+  <h1 class="page-head__title">PDF wird geladen</h1>
+  <p class="page-head__lead">Nach dem Download geht es automatisch zurück zur Übersicht.</p>
+</header>
+
+<article class="k-panel">
+  <p>Falls der Download nicht startet, nutzen Sie diesen Link:</p>
+  <p><a href="/admin/settlements/{{ settlement_id }}/pdf" role="button">PDF jetzt herunterladen</a></p>
+  <p class="secondary">Sie werden in wenigen Sekunden zur Abrechnungsübersicht weitergeleitet.</p>
+</article>
+
+<iframe src="/admin/settlements/{{ settlement_id }}/pdf" style="display:none" title="PDF download"></iframe>
+<script>
+  window.setTimeout(function () {
+    window.location.href = "/admin/settlements";
+  }, 1400);
+</script>
+{% endblock %}

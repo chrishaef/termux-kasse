@@ -787,11 +787,12 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .admin-card strong {
   display: block;
-  font-size: 1.85rem;
+  font-size: clamp(1.1rem, 2.6vw, 1.8rem);
   font-weight: 800;
   color: #7a5f0c;
   font-variant-numeric: tabular-nums;
   margin-bottom: 0.25rem;
+  white-space: nowrap;
 }
 
 .admin-card span {
