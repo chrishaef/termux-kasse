@@ -41,13 +41,6 @@ def _parse_price_eur_to_cents(raw: str) -> int:
     return int(round(float(s) * 100))
 
 
-def _parse_signed_eur_to_cents(raw: str) -> int:
-    s = raw.strip().replace(",", ".")
-    if not re.fullmatch(r"[+-]?\d+(\.\d{1,2})?", s):
-        raise ValueError("Betrag ungültig")
-    return int(round(float(s) * 100))
-
-
 _FN_UNSAFE = re.compile(r'[\s<>:"/\\|?*\x00-\x1f]+')
 
 
@@ -197,79 +190,6 @@ def admin_dashboard(request: Request) -> Response:
         "admin/dashboard.html",
         {"title": "Admin", "stats": stats, "finance": finance},
     )
-
-
-@router.get("/special-bookings", response_class=HTMLResponse)
-def admin_special_bookings_get(request: Request) -> Response:
-    if (r := _redirect_login(request)):
-        return r
-    with db.get_connection() as conn:
-        users = db.fetch_all(
-            conn,
-            """
-            SELECT u.id, u.name, g.name AS group_name
-            FROM users u
-            JOIN user_groups g ON g.id = u.group_id
-            ORDER BY g.sort_order, g.name COLLATE NOCASE, u.sort_order, u.name COLLATE NOCASE
-            """,
-        )
-        recent = db.fetch_all(
-            conn,
-            """
-            SELECT le.id, le.description, le.amount_cents, le.created_at,
-                u.name AS user_name, g.name AS group_name
-            FROM ledger_entries le
-            JOIN users u ON u.id = le.user_id
-            JOIN user_groups g ON g.id = u.group_id
-            WHERE le.product_id IS NULL
-            ORDER BY datetime(le.created_at) DESC
-            LIMIT 30
-            """,
-        )
-    return TEMPLATES.TemplateResponse(
-        request,
-        "admin/special_bookings.html",
-        {
-            "title": "Sonderbuchungen",
-            "users": users,
-            "recent": recent,
-            "saved": request.query_params.get("saved") == "1",
-            "error": request.query_params.get("err") == "invalid",
-        },
-    )
-
-
-@router.post("/special-bookings")
-def admin_special_bookings_post(
-    request: Request,
-    user_id: int = Form(...),
-    amount_eur: str = Form(...),
-    description: str = Form(""),
-) -> RedirectResponse:
-    if (r := _redirect_login(request)):
-        return r
-    try:
-        amount_cents = _parse_signed_eur_to_cents(amount_eur)
-    except ValueError:
-        return RedirectResponse("/admin/special-bookings?err=invalid", status_code=303)
-    if amount_cents == 0:
-        return RedirectResponse("/admin/special-bookings?err=invalid", status_code=303)
-    # Ledger-Konvention: positive Werte erhöhen den offenen Ausstand.
-    # Sonderbuchung im Admin soll intuitiv sein: + = Gutschrift, - = Belastung.
-    ledger_amount_cents = -amount_cents
-    desc = description.strip() or "Sonderbuchung"
-    with db.get_connection() as conn:
-        row = db.fetch_one(conn, "SELECT id FROM users WHERE id = ?", (user_id,))
-        if not row:
-            raise HTTPException(status_code=404)
-        conn.execute(
-            """
-            INSERT INTO ledger_entries (user_id, product_id, description, amount_cents, created_at)
-            VALUES (?, NULL, ?, ?, ?)
-            """,
-            (user_id, desc, ledger_amount_cents, ledger_service.utc_now_iso()),
-        )
-    return RedirectResponse("/admin/special-bookings?saved=1", status_code=303)
 
 
 def _is_valid_sqlite_file(path: Path) -> bool:
