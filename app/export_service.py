@@ -14,6 +14,8 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 if TYPE_CHECKING:
     import sqlite3
 
+from app.dates import format_date_de
+
 
 def build_xlsx_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     wb = Workbook()
@@ -24,7 +26,7 @@ def build_xlsx_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     ws["A1"].font = bold
     ws.append(["Nutzer", header["user_name"]])
     ws.append(["Gruppe", header["group_name"]])
-    ws.append(["Erstellt", header["created_at"]])
+    ws.append(["Erstellt", format_date_de(header["created_at"])])
     ws.append(["Summe (EUR)", round(int(header["total_cents"]) / 100, 2)])
     if header["note"]:
         ws.append(["Notiz", header["note"]])
@@ -35,7 +37,7 @@ def build_xlsx_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     for r in lines:
         ws.append(
             [
-                r["created_at"],
+                format_date_de(r["created_at"]),
                 r["description"],
                 r["product_name"] or "",
                 round(int(r["amount_cents"]) / 100, 2),
@@ -56,7 +58,7 @@ def build_pdf_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     meta = [
         ["Nutzer", str(header["user_name"])],
         ["Gruppe", str(header["group_name"])],
-        ["Erstellt", str(header["created_at"])],
+        ["Erstellt", format_date_de(header["created_at"])],
         ["Summe EUR", f'{int(header["total_cents"]) / 100:.2f}'],
     ]
     if header["note"]:
@@ -76,7 +78,7 @@ def build_pdf_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     for r in lines:
         data.append(
             [
-                str(r["created_at"]),
+                format_date_de(r["created_at"]),
                 str(r["description"]),
                 str(r["product_name"] or ""),
                 f'{int(r["amount_cents"]) / 100:.2f}',

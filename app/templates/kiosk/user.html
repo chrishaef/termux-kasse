@@ -19,7 +19,7 @@
 <div class="k-panel">
   <h2>Letzte Abrechnung</h2>
   {% if last_settlement %}
-  <p><strong>Datum:</strong> {{ last_settlement['created_at'] }}</p>
+  <p><strong>Datum:</strong> {{ last_settlement['created_at']|date_de }}</p>
   <p><strong>Summe damals:</strong> {{ last_settlement['total_cents']|eur }}</p>
   {% if last_settlement['note'] %}<p><strong>Notiz:</strong> {{ last_settlement['note'] }}</p>{% endif %}
   {% else %}

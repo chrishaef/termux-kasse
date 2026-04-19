@@ -23,8 +23,8 @@
       </select>
     </label>
     <label>Notiz (optional) <input type="text" name="note" /></label>
-    <label>Zeitraum von (optional, ISO) <input type="text" name="period_start" placeholder="2026-01-01T00:00:00+00:00" /></label>
-    <label>Zeitraum bis (optional, ISO) <input type="text" name="period_end" /></label>
+    <label>Zeitraum von (optional, ISO-Datum) <input type="text" name="period_start" placeholder="2026-01-01" /></label>
+    <label>Zeitraum bis (optional, ISO-Datum) <input type="text" name="period_end" placeholder="2026-04-30" /></label>
     <button type="submit">Abrechnung erstellen</button>
   </form>
 </article>
@@ -36,7 +36,7 @@
     <tbody>
       {% for s in settlements %}
       <tr>
-        <td>{{ s['created_at'] }}</td>
+        <td>{{ s['created_at']|date_de }}</td>
         <td>{{ s['user_name'] }}</td>
         <td>{{ s['group_name'] }}</td>
         <td>{{ s['total_cents']|eur }}</td>
