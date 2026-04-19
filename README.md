@@ -75,6 +75,8 @@ Die App spricht keine externen Dienste an. Internet ist nur für `git pull` / `p
 
 Nach dem ersten Start: [http://127.0.0.1:8000/admin/setup](http://127.0.0.1:8000/admin/setup) — ersten Administrator anlegen. Anschließend Gruppen, Nutzer, Warengruppen und Artikel pflegen; Abrechnungen inkl. **XLS** und **PDF** unter `/admin/settlements`.
 
+**Kiosk-Nachricht:** unter Admin → „News“ / `/admin/news` — erscheint oben auf allen Kiosk-Seiten. Leer speichern stellt den Standard-Hinweis wieder her.
+
 ## Entwicklung (Windows / Linux)
 
 ```bash

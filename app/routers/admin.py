@@ -7,6 +7,7 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from app import db
+from app import kiosk_notice
 from app import ledger_service
 from app.auth import hash_password, verify_password
 from app.export_service import build_pdf_bytes, build_xlsx_bytes
@@ -128,6 +129,31 @@ def admin_dashboard(request: Request) -> Response:
         "admin/dashboard.html",
         {"title": "Admin", "stats": stats},
     )
+
+
+@router.get("/news", response_class=HTMLResponse)
+def admin_news_form(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    stored = kiosk_notice.get_stored_custom()
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/news.html",
+        {
+            "title": "Kiosk-Nachricht",
+            "stored_notice": stored,
+            "default_notice": kiosk_notice.DEFAULT_KIOSK_NOTICE,
+            "saved": request.query_params.get("saved") == "1",
+        },
+    )
+
+
+@router.post("/news")
+def admin_news_save(request: Request, message: str = Form("")) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    kiosk_notice.set_custom_message(message)
+    return RedirectResponse("/admin/news?saved=1", status_code=303)
 
 
 @router.get("/groups", response_class=HTMLResponse)

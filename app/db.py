@@ -82,6 +82,11 @@ def init_db() -> None:
                 password_hash TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS app_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL DEFAULT ''
+            );
+
             CREATE INDEX IF NOT EXISTS idx_ledger_user_open
                 ON ledger_entries(user_id) WHERE settlement_id IS NULL;
             CREATE INDEX IF NOT EXISTS idx_ledger_settlement

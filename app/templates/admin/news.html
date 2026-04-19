@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block body_class %}app-admin{% endblock %}
+{% block trust %}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <p class="page-head__eyebrow">Kiosk</p>
+  <h1 class="page-head__title">Nachricht im Kiosk</h1>
+  <p class="page-head__lead">Der Text erscheint oben auf allen Kiosk-Seiten (unter der Navigation), sichtbar für alle.</p>
+</header>
+<a href="/admin" class="admin-back">← Admin-Übersicht</a>
+{% if saved %}
+<article class="contrast">Gespeichert.</article>
+{% endif %}
+<article class="k-panel">
+  <form method="post" action="/admin/news">
+    <label for="msg">Nachricht</label>
+    <textarea id="msg" name="message" rows="5" placeholder="Leer lassen für Standard-Hinweis …">{{ stored_notice }}</textarea>
+    <p class="secondary" style="margin-top:0.5rem;font-size:0.9rem">
+      <strong>Leer speichern:</strong> Es wird wieder der Standardtext angezeigt:<br />
+      <em>{{ default_notice }}</em>
+    </p>
+    <button type="submit">Speichern</button>
+  </form>
+</article>
+<p><a href="/" target="_blank" rel="noopener">Kiosk in neuem Tab öffnen</a> (Vorschau)</p>
+{% endblock %}
