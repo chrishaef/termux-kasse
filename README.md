@@ -1,6 +1,6 @@
 # Termux-Vertrauenskasse
 
-Lokal laufende Vertrauenskasse (FastAPI, SQLite, Jinja2). UI: **Pico.css** plus eigenes **`app/static/kasse.css`** (Tablet-taugliche Kacheln, Admin-Karten, helles/dunkles Schema über Systemeinstellung) — alles ohne CDN.
+Lokal laufende Vertrauenskasse (FastAPI, SQLite, Jinja2). UI: **Pico.css** plus **`app/static/kasse.css`** — Oliv-/Feld-Hintergrund und Goldakzente (rein CSS, offline), optisch in der Tradition öffentlicher Informationsportale; **kein** Bezug zu offiziellen Markenassets der Bundeswehr.
 
 ## Voraussetzungen (Termux auf dem Tablet)
 

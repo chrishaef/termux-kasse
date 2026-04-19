@@ -1,66 +1,79 @@
-/* Vertrauenskasse — ergänzt Pico.css, offline, ohne externe Fonts */
+/* Vertrauenskasse — Anmutung inspiriert an bundeswehr.de (Oliv, Gold, helle Flächen).
+   Keine externen Assets: Hintergrund rein per CSS-Gradienten + feiner Struktur. */
 
 :root {
-  --kas-bg: #f2efe8;
-  --kas-surface: #ffffff;
-  --kas-surface-2: #faf8f4;
-  --kas-text: #1c2422;
-  --kas-muted: #5a6562;
-  --kas-accent: #0f6b5c;
-  --kas-accent-contrast: #f4fbfa;
-  --kas-accent-hover: #0a5549;
-  --kas-border: #e2ddd4;
+  /* Seitenhintergrund (Oliv / Feld) */
+  --kas-bg-deep: #161914;
+  --kas-bg-mid: #252b23;
+  --kas-bg-top: #343d32;
+
+  /* Schrift auf dunklem Grund */
+  --kas-page-fg: #e9ece6;
+  --kas-page-muted: #a8b0a3;
+
+  /* Helle Inhaltsflächen (wie Content-Karten auf dunklem Portal) */
+  --kas-surface: #f3f1eb;
+  --kas-surface-2: #e8e4da;
+
+  --kas-text: #1a211c;
+  --kas-muted: #4d5650;
+
+  /* Bundeswehr-Gold / Signal (Näherung, kein Markenrecht auf exakte Werte) */
+  --kas-accent: #d4a012;
+  --kas-accent-bright: #e8bc2e;
+  --kas-accent-hover: #c49210;
+  --kas-accent-contrast: #1a1a12;
+
+  --kas-border: #c4bfb2;
   --kas-radius: 14px;
   --kas-radius-sm: 10px;
-  --kas-shadow: 0 6px 28px rgba(15, 107, 92, 0.07);
-  --kas-shadow-hover: 0 10px 36px rgba(15, 107, 92, 0.12);
-  --kas-step: #6b7c78;
-  --kas-danger: #9b2c2c;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --kas-bg: #121816;
-    --kas-surface: #1a2220;
-    --kas-surface-2: #222b28;
-    --kas-text: #e8eeec;
-    --kas-muted: #9caaa6;
-    --kas-accent: #3ecfae;
-    --kas-accent-contrast: #062620;
-    --kas-accent-hover: #58dcc0;
-    --kas-border: #2d3835;
-    --kas-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-    --kas-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.45);
-    --kas-step: #8a9a95;
-    --kas-danger: #f08080;
-  }
+  --kas-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+  --kas-shadow-hover: 0 14px 40px rgba(0, 0, 0, 0.35);
+  --kas-step: #8a9588;
+  --kas-danger: #c44;
 }
 
 body {
-  background: var(--kas-bg);
-  color: var(--kas-text);
+  min-height: 100vh;
+  color: var(--kas-page-fg);
+  background-color: var(--kas-bg-deep);
+  /* Mehrschichtiger „Feld“-Hintergrund ähnlich hero/Übersichtsseiten */
+  background-image:
+    radial-gradient(ellipse 120% 70% at 50% -15%, rgba(90, 102, 78, 0.45), transparent 52%),
+    radial-gradient(ellipse 90% 55% at 110% 60%, rgba(35, 42, 32, 0.95), transparent),
+    radial-gradient(ellipse 70% 45% at -10% 85%, rgba(48, 56, 42, 0.75), transparent),
+    repeating-linear-gradient(
+      -12deg,
+      transparent 0,
+      transparent 11px,
+      rgba(0, 0, 0, 0.035) 11px,
+      rgba(0, 0, 0, 0.035) 12px
+    ),
+    linear-gradient(168deg, var(--kas-bg-top) 0%, var(--kas-bg-mid) 42%, var(--kas-bg-deep) 100%);
+  background-attachment: fixed;
 }
 
-/* Pico: Primärfarbe an Theme anbinden */
+/* Pico an dunkles Portal anbinden */
 :root {
   --pico-primary: var(--kas-accent);
   --pico-primary-hover: var(--kas-accent-hover);
-  --pico-primary-focus: var(--kas-accent);
+  --pico-primary-focus: var(--kas-accent-bright);
   --pico-primary-inverse: var(--kas-accent-contrast);
-  --pico-background-color: var(--kas-bg);
+  --pico-background-color: var(--kas-bg-deep);
   --pico-card-background-color: var(--kas-surface);
   --pico-border-radius: var(--kas-radius-sm);
+  --pico-color: var(--kas-page-fg);
+  --pico-muted-color: var(--kas-page-muted);
 }
 
 .site-header {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--kas-surface);
-  opacity: 1;
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--kas-border);
+  background: linear-gradient(180deg, #121510 0%, #0f120e 100%);
+  border-bottom: 2px solid var(--kas-accent);
   margin-bottom: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .site-header__inner {
@@ -75,15 +88,16 @@ body {
 }
 
 .site-brand {
-  font-weight: 700;
-  font-size: 1.15rem;
-  letter-spacing: -0.02em;
-  color: var(--kas-text);
+  font-weight: 800;
+  font-size: 1.12rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kas-page-fg);
   text-decoration: none;
 }
 
 .site-brand:hover {
-  color: var(--kas-accent);
+  color: var(--kas-accent-bright);
 }
 
 .site-nav {
@@ -93,19 +107,20 @@ body {
 }
 
 .site-nav a {
-  padding: 0.45rem 0.9rem;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding: 0.45rem 0.95rem;
+  border-radius: 4px;
+  font-size: 0.88rem;
+  font-weight: 700;
   text-decoration: none;
-  color: var(--kas-muted);
-  border: 1px solid transparent;
+  color: var(--kas-page-muted);
+  border: 1px solid rgba(212, 160, 18, 0.25);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .site-nav a:hover {
-  color: var(--kas-accent);
-  background: var(--kas-surface-2);
-  border-color: var(--kas-border);
+  color: var(--kas-accent-contrast);
+  background: var(--kas-accent);
+  border-color: var(--kas-accent-bright);
 }
 
 .site-main {
@@ -113,19 +128,28 @@ body {
   padding-bottom: 2.5rem;
 }
 
+.site-main a:not([role="button"]):not(.k-tile):not(.admin-card) {
+  color: var(--kas-accent-bright);
+}
+
+.site-main a:not([role="button"]):not(.k-tile):not(.admin-card):hover {
+  color: #fff8d4;
+}
+
 .trust-banner {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
-  padding: 0.85rem 1rem;
+  padding: 0.9rem 1.1rem;
   margin-bottom: 1.5rem;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  color: var(--kas-muted);
-  background: var(--kas-surface-2);
-  border: 1px solid var(--kas-border);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #dfe3dd;
+  background: rgba(12, 14, 11, 0.72);
+  border: 1px solid rgba(212, 160, 18, 0.35);
   border-radius: var(--kas-radius-sm);
   border-left: 4px solid var(--kas-accent);
+  backdrop-filter: blur(8px);
 }
 
 .trust-banner::before {
@@ -134,36 +158,37 @@ body {
   width: 1.25rem;
   height: 1.25rem;
   margin-top: 0.1rem;
-  border-radius: 50%;
+  border-radius: 2px;
   border: 2px solid var(--kas-accent);
-  opacity: 0.7;
+  opacity: 0.85;
 }
 
-/* Seitenkopf */
+/* Seitenkopf (auf dunklem Grund) */
 .page-head {
   margin-bottom: 1.75rem;
 }
 
 .page-head__eyebrow {
   margin: 0 0 0.35rem;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--kas-step);
 }
 
 .page-head__title {
   margin: 0 0 0.4rem;
   font-size: clamp(1.5rem, 4vw, 2rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   line-height: 1.15;
+  color: var(--kas-page-fg);
 }
 
 .page-head__lead {
   margin: 0;
-  color: var(--kas-muted);
+  color: var(--kas-page-muted);
   font-size: 1rem;
 }
 
@@ -200,7 +225,7 @@ body {
 .k-tile__title {
   margin: 0 0 0.35rem;
   font-size: 1.2rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--kas-text);
 }
 
@@ -221,10 +246,25 @@ body {
   margin: 0;
 }
 
+/* Sekundär-Buttons auf dunklem Seitengrund */
+.k-toolbar [role="button"].secondary,
+.k-toolbar [role="button"].outline {
+  color: var(--kas-page-fg);
+  border-color: rgba(212, 160, 18, 0.45);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.k-toolbar [role="button"].secondary:hover,
+.k-toolbar [role="button"].outline:hover {
+  border-color: var(--kas-accent);
+  color: var(--kas-accent-bright);
+}
+
 /* Kontostand */
 .k-balance {
-  background: linear-gradient(145deg, var(--kas-surface) 0%, var(--kas-surface-2) 100%);
+  background: linear-gradient(145deg, var(--kas-surface) 0%, #ebe8df 100%);
   border: 1px solid var(--kas-border);
+  border-top: 3px solid var(--kas-accent);
   border-radius: var(--kas-radius);
   padding: 1.35rem 1.5rem;
   margin-bottom: 1.25rem;
@@ -233,11 +273,11 @@ body {
 
 .k-balance__label {
   margin: 0 0 0.35rem;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--kas-step);
+  letter-spacing: 0.06em;
+  color: var(--kas-muted);
 }
 
 .k-balance__value {
@@ -245,7 +285,7 @@ body {
   font-size: clamp(2rem, 6vw, 2.75rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: var(--kas-accent);
+  color: #8a6a0a;
   font-variant-numeric: tabular-nums;
 }
 
@@ -262,21 +302,23 @@ body {
   padding: 1.15rem 1.35rem;
   margin-bottom: 1.25rem;
   box-shadow: var(--kas-shadow);
+  color: var(--kas-text);
 }
 
 .k-panel h2,
 .k-panel h3 {
   margin-top: 0;
+  color: var(--kas-text);
 }
 
 .k-section-title {
   margin: 1.75rem 0 0.75rem;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--kas-text);
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: var(--kas-page-fg);
+  letter-spacing: 0.02em;
 }
 
-/* Produkt-Buttons: groß für Touch */
 .k-product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -290,8 +332,8 @@ body {
 .k-product-grid button {
   width: 100%;
   min-height: 3.25rem;
-  font-weight: 600;
-  border-radius: var(--kas-radius-sm);
+  font-weight: 700;
+  border-radius: 4px;
 }
 
 /* Admin */
@@ -302,7 +344,7 @@ body {
 .admin-back {
   display: inline-block;
   margin-bottom: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.95rem;
 }
 
@@ -328,20 +370,21 @@ body {
   border-radius: var(--kas-radius);
   box-shadow: var(--kas-shadow);
   text-decoration: none;
-  color: inherit;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  color: var(--kas-text);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
 }
 
 .admin-card:hover {
   border-color: var(--kas-accent);
   box-shadow: var(--kas-shadow-hover);
+  transform: translateY(-1px);
 }
 
 .admin-card strong {
   display: block;
   font-size: 1.85rem;
   font-weight: 800;
-  color: var(--kas-accent);
+  color: #7a5f0c;
   font-variant-numeric: tabular-nums;
   margin-bottom: 0.25rem;
 }
@@ -357,14 +400,13 @@ body {
   border-radius: var(--kas-radius-sm);
   border: 1px solid var(--kas-border);
   background: var(--kas-surface);
+  color: var(--kas-text);
 }
 
 .table-wrap table {
   margin: 0;
 }
 
-/* Formulare etwas luftiger */
-article[role="article"].contrast,
 article.contrast {
   border-radius: var(--kas-radius-sm);
 }
@@ -373,12 +415,18 @@ form:not(.inline) label {
   margin-bottom: 0.35rem;
 }
 
-/* Leere Zustände */
 .k-empty {
-  padding: 1.25rem;
+  padding: 1.35rem;
   text-align: center;
-  color: var(--kas-muted);
-  background: var(--kas-surface-2);
-  border: 1px dashed var(--kas-border);
+  color: var(--kas-page-muted);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px dashed rgba(212, 160, 18, 0.4);
   border-radius: var(--kas-radius-sm);
+}
+
+/* Formulare in hellen Panels: Pico-Inputs lesbar */
+.k-panel input,
+.k-panel select,
+.k-panel textarea {
+  background-color: #fff;
 }
