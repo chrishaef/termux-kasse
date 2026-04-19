@@ -752,18 +752,76 @@ body.app-admin .table-wrap th {
 }
 
 body.app-admin .table-wrap td {
-  color: #141a16;
+  color: #121812;
   padding: 0.55rem 0.75rem;
   border-bottom: 1px solid #d2cdc2;
   vertical-align: middle;
 }
 
+/* Zeilen: Pico-Dark kann „striped“ mit falscher Textfarbe mischen — immer dunkle Schrift auf heller Fläche */
+body.app-admin .table-wrap tbody tr {
+  color: #121812;
+}
+
+body.app-admin .table-wrap tbody tr:nth-child(odd) td {
+  background-color: #faf8f3;
+  color: #121812;
+}
+
 body.app-admin .table-wrap tbody tr:nth-child(even) td {
-  background: #f4f2ec;
+  background-color: #ede8df;
+  color: #121812;
 }
 
 body.app-admin .table-wrap tbody tr:hover td {
-  background: #fff6e0;
+  background-color: #fff6e0;
+  color: #0a0f0a;
+}
+
+body.app-admin .table-wrap .th-actions,
+body.app-admin .table-wrap .td-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+body.app-admin .table-wrap .td-actions__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+body.app-admin .table-wrap .form-inline-action {
+  margin: 0;
+  display: inline;
+}
+
+body.app-admin .table-wrap button.admin-btn-sm {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 6px;
+  min-height: unset;
+}
+
+body.app-admin .table-wrap a.admin-btn-edit {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #1a1a12;
+  background: #e4dfd4;
+  border: 1px solid #9a926e;
+}
+
+body.app-admin .table-wrap a.admin-btn-edit:hover {
+  background: #f5f0e6;
+  border-color: var(--kas-accent);
+  color: #050805;
 }
 
 body.app-admin .table-wrap td.secondary {

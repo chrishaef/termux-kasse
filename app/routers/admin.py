@@ -182,6 +182,40 @@ def admin_groups_create(request: Request, name: str = Form(...)) -> RedirectResp
     return RedirectResponse("/admin/groups", status_code=303)
 
 
+@router.get("/groups/{group_id}/edit", response_class=HTMLResponse)
+def admin_groups_edit_form(request: Request, group_id: int) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    with db.get_connection() as conn:
+        group = db.fetch_one(conn, "SELECT id, name FROM user_groups WHERE id = ?", (group_id,))
+        if not group:
+            raise HTTPException(status_code=404)
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/groups_edit.html",
+        {"title": "Gruppe bearbeiten", "group": group},
+    )
+
+
+@router.post("/groups/{group_id}/edit")
+def admin_groups_edit_save(
+    request: Request,
+    group_id: int,
+    name: str = Form(...),
+) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    name = name.strip()
+    if not name:
+        return RedirectResponse(f"/admin/groups/{group_id}/edit", status_code=303)
+    with db.get_connection() as conn:
+        row = db.fetch_one(conn, "SELECT id FROM user_groups WHERE id = ?", (group_id,))
+        if not row:
+            raise HTTPException(status_code=404)
+        conn.execute("UPDATE user_groups SET name = ? WHERE id = ?", (name, group_id))
+    return RedirectResponse("/admin/groups", status_code=303)
+
+
 @router.post("/groups/{group_id}/delete")
 def admin_groups_delete(request: Request, group_id: int) -> RedirectResponse:
     if (r := _redirect_login(request)):
