@@ -25,7 +25,6 @@
 </div>
 
 <h2 class="k-section-title">Offene Posten (zusammengefasst)</h2>
-<p class="secondary" style="margin:-0.25rem 0 0.75rem;font-size:0.9rem">Gleiche Artikel mit gleichem Einzelbetrag werden zu einer Zeile zusammengefasst.</p>
 <div class="table-wrap">
   <table role="grid">
     <thead><tr><th class="num">Anzahl</th><th>Bezeichnung</th><th class="num">Einzel</th><th class="num">Summe</th></tr></thead>
@@ -47,9 +46,8 @@
   <p>Sie begleichen damit den <strong>offenen Betrag von {{ open_cents|eur }}</strong> auf dem Konto dieses Nutzers. Anschließend wird die Abrechnung als <strong>PDF</strong> heruntergeladen (optional danach XLS in der Übersicht).</p>
   <form method="post" action="/admin/settlements/confirm">
     <input type="hidden" name="user_id" value="{{ user['id'] }}" />
-    <label>Notiz (optional, erscheint auf der Abrechnung) <input type="text" name="note" placeholder="z. B. Barzahlung Küche" /></label>
-    <label style="display:flex;align-items:flex-start;gap:0.6rem;margin-top:0.75rem">
-      <input type="checkbox" name="received_confirmed" value="1" required style="width:auto;margin-top:0.25rem" />
+    <label class="admin-received-confirm">
+      <input type="checkbox" name="received_confirmed" value="1" required />
       <span>Ich bestätige, den offenen Betrag von <strong>{{ open_cents|eur }}</strong> von diesem Nutzer erhalten zu haben.</span>
     </label>
     <button type="submit" style="margin-top:1rem">Abrechnung buchen &amp; PDF laden</button>

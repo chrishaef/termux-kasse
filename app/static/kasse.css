@@ -1029,6 +1029,20 @@ body.app-admin .k-panel textarea {
   border-radius: var(--kas-radius-sm);
 }
 
+body.app-admin .k-panel .admin-received-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-top: 0.8rem;
+}
+
+body.app-admin .k-panel .admin-received-confirm input[type="checkbox"] {
+  width: 1.45rem;
+  height: 1.45rem;
+  min-width: 1.45rem;
+  margin: 0.08rem 0 0;
+}
+
 body.app-admin .k-panel select option {
   color: #141a16;
   background: #fff;

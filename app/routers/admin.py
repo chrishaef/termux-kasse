@@ -417,6 +417,52 @@ def admin_users_create(
     return RedirectResponse("/admin/users", status_code=303)
 
 
+@router.get("/users/{user_id}/edit", response_class=HTMLResponse)
+def admin_users_edit_form(request: Request, user_id: int) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    with db.get_connection() as conn:
+        user = db.fetch_one(
+            conn,
+            "SELECT id, name, group_id FROM users WHERE id = ?",
+            (user_id,),
+        )
+        if not user:
+            raise HTTPException(status_code=404)
+        groups = db.fetch_all(
+            conn,
+            "SELECT id, name FROM user_groups ORDER BY sort_order, name COLLATE NOCASE",
+        )
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/users_edit.html",
+        {"title": "Nutzer bearbeiten", "user": user, "groups": groups},
+    )
+
+
+@router.post("/users/{user_id}/edit")
+def admin_users_edit_save(
+    request: Request,
+    user_id: int,
+    name: str = Form(...),
+    group_id: int = Form(...),
+) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    name = name.strip()
+    if not name:
+        return RedirectResponse(f"/admin/users/{user_id}/edit", status_code=303)
+    with db.get_connection() as conn:
+        row = db.fetch_one(conn, "SELECT id FROM users WHERE id = ?", (user_id,))
+        if not row:
+            raise HTTPException(status_code=404)
+        conn.execute(
+            "UPDATE users SET name = ?, group_id = ? WHERE id = ?",
+            (name, group_id, user_id),
+        )
+    return RedirectResponse("/admin/users", status_code=303)
+
+
 @router.post("/users/{user_id}/sort")
 def admin_users_sort(
     request: Request,
