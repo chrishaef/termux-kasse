@@ -704,7 +704,7 @@ def admin_statistics(
             raise HTTPException(status_code=404, detail="Nutzergruppe nicht gefunden")
         selected_group_name = str(group_row["name"]) if group_row else None
         totals = ledger_service.period_totals(conn, period_start, period_end, gid)
-        user_rows = ledger_service.period_user_stats(conn, period_start, period_end, gid)
+        user_rows = ledger_service.period_user_toplist(conn, period_start, period_end, gid)
         product_rows = ledger_service.period_product_stats(conn, period_start, period_end, gid)
     return TEMPLATES.TemplateResponse(
         request,
@@ -747,7 +747,8 @@ def admin_statistics_pdf(
         selected_group_name = str(group_row["name"]) if group_row else None
         totals = ledger_service.period_totals(conn, period_start, period_end, gid)
         user_rows = [
-            dict(r) for r in ledger_service.period_user_stats(conn, period_start, period_end, gid)
+            dict(r)
+            for r in ledger_service.period_user_toplist(conn, period_start, period_end, gid)
         ]
         product_rows = ledger_service.period_product_stats(conn, period_start, period_end, gid)
     data = build_statistics_pdf_bytes(
@@ -784,7 +785,8 @@ def admin_statistics_xlsx(
         selected_group_name = str(group_row["name"]) if group_row else None
         totals = ledger_service.period_totals(conn, period_start, period_end, gid)
         user_rows = [
-            dict(r) for r in ledger_service.period_user_stats(conn, period_start, period_end, gid)
+            dict(r)
+            for r in ledger_service.period_user_toplist(conn, period_start, period_end, gid)
         ]
         product_rows = ledger_service.period_product_stats(conn, period_start, period_end, gid)
     data = build_statistics_xlsx_bytes(

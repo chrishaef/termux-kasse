@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block trust %}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <p class="page-head__eyebrow">Kiosk</p>
+  <h1 class="page-head__title">Top Ten</h1>
+  <p class="page-head__lead">Die 10 aktivsten Nutzer nach Anzahl Buchungen.</p>
+</header>
+<a href="/" class="admin-back">← Zur Startseite</a>
+
+<div class="table-wrap">
+  <table role="grid">
+    <thead><tr><th>#</th><th>Gruppe</th><th>Nutzer</th><th class="num">Buchungen</th><th class="num">Summe</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td class="num">{{ loop.index }}</td>
+        <td>{{ row['group_name'] }}</td>
+        <td>{{ row['user_name'] }}</td>
+        <td class="num">{{ row['entries_count'] }}</td>
+        <td class="num">{{ row['total_cents']|eur }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="secondary">Noch keine Buchungen vorhanden.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

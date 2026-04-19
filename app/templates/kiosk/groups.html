@@ -3,6 +3,9 @@
 <p class="trust-banner">{{ request.state.kiosk_notice | nl2br }}</p>
 {% endblock %}
 {% block content %}
+<div class="k-toolbar" style="margin-bottom:0.8rem">
+  <a href="/top-ten" role="button" class="secondary">Top Ten</a>
+</div>
 {% if groups %}
 <div class="k-tiles">
   {% for g in groups %}

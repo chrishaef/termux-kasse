@@ -5,6 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app import db
 from app import debt_thresholds
+from app import ledger_service
 from app.ledger_service import add_purchase, last_settlement, user_balance_cents
 from app.templates_env import TEMPLATES
 
@@ -22,6 +23,17 @@ def kiosk_home(request: Request) -> HTMLResponse:
         request,
         "kiosk/groups.html",
         {"groups": groups, "title": "Kiosk"},
+    )
+
+
+@router.get("/top-ten", response_class=HTMLResponse)
+def kiosk_top_ten(request: Request) -> HTMLResponse:
+    with db.get_connection() as conn:
+        rows = ledger_service.top_ten_active_users(conn)
+    return TEMPLATES.TemplateResponse(
+        request,
+        "kiosk/top_ten.html",
+        {"title": "Top Ten", "rows": rows},
     )
 
 

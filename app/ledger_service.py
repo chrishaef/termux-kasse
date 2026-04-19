@@ -313,6 +313,76 @@ def period_user_stats(
     return db.fetch_all(conn, sql, params)
 
 
+def period_user_toplist(
+    conn: sqlite3.Connection,
+    period_start: str | None,
+    period_end: str | None,
+    group_id: int | None = None,
+) -> list[dict[str, Any]]:
+    sql = """
+        SELECT
+            g.id AS group_id,
+            g.name AS group_name,
+            u.id AS user_id,
+            u.name AS user_name,
+            le.product_id,
+            p.name AS product_name,
+            le.description,
+            le.amount_cents
+        FROM ledger_entries le
+        JOIN users u ON u.id = le.user_id
+        JOIN user_groups g ON g.id = u.group_id
+        LEFT JOIN products p ON p.id = le.product_id
+        WHERE 1=1
+    """
+    params: list[Any] = []
+    if period_start:
+        sql += " AND datetime(le.created_at) >= datetime(?)"
+        params.append(period_start)
+    if period_end:
+        sql += " AND datetime(le.created_at) <= datetime(?)"
+        params.append(period_end)
+    if group_id is not None:
+        sql += " AND g.id = ?"
+        params.append(group_id)
+    sql += " ORDER BY g.sort_order, g.name COLLATE NOCASE, u.sort_order, u.name COLLATE NOCASE"
+    rows = db.fetch_all(conn, sql, params)
+
+    per_user: dict[int, dict[str, Any]] = {}
+    for r in rows:
+        uid = int(r["user_id"])
+        if uid not in per_user:
+            per_user[uid] = {
+                "group_name": str(r["group_name"]),
+                "user_name": str(r["user_name"]),
+                "entries_count": 0,
+                "total_cents": 0,
+                "_products": {},
+            }
+        item = per_user[uid]
+        item["entries_count"] += 1
+        item["total_cents"] += int(r["amount_cents"])
+        label = str((r["product_name"] or "").strip() or (r["description"] or "").strip())
+        pmap: dict[str, int] = item["_products"]
+        pmap[label] = pmap.get(label, 0) + 1
+
+    out: list[dict[str, Any]] = []
+    for u in per_user.values():
+        prods = sorted(u["_products"].items(), key=lambda x: (-x[1], x[0].casefold()))
+        summary = ", ".join(f"{n}x {name}" for name, n in prods)
+        out.append(
+            {
+                "group_name": u["group_name"],
+                "user_name": u["user_name"],
+                "entries_count": int(u["entries_count"]),
+                "total_cents": int(u["total_cents"]),
+                "purchases_summary": summary,
+            }
+        )
+    out.sort(key=lambda x: (-int(x["total_cents"]), -int(x["entries_count"]), str(x["user_name"]).casefold()))
+    return out
+
+
 def period_product_stats(
     conn: sqlite3.Connection,
     period_start: str | None,
@@ -340,6 +410,26 @@ def period_product_stats(
     sql += " ORDER BY datetime(le.created_at)"
     rows = db.fetch_all(conn, sql, params)
     return aggregate_ledger_lines(rows)
+
+
+def top_ten_active_users(conn: sqlite3.Connection) -> list[sqlite3.Row]:
+    return db.fetch_all(
+        conn,
+        """
+        SELECT
+            g.name AS group_name,
+            u.name AS user_name,
+            COUNT(le.id) AS entries_count,
+            COALESCE(SUM(le.amount_cents), 0) AS total_cents
+        FROM ledger_entries le
+        JOIN users u ON u.id = le.user_id
+        JOIN user_groups g ON g.id = u.group_id
+        GROUP BY u.id, g.id
+        ORDER BY entries_count DESC, total_cents DESC, u.name COLLATE NOCASE
+        LIMIT 10
+        """,
+        (),
+    )
 
 
 def period_totals(
