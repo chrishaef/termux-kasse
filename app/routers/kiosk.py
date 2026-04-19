@@ -64,7 +64,15 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
             raise HTTPException(status_code=404, detail="Nutzer nicht gefunden")
         balance = user_balance_cents(conn, user_id)
         t1, t2, t3 = debt_thresholds.get_thresholds(conn)
+        m1, m2, m3 = debt_thresholds.get_threshold_messages(conn)
         debt_reminder_level = debt_thresholds.reminder_level(balance, t1, t2, t3)
+        debt_message = ""
+        if debt_reminder_level == 1:
+            debt_message = m1
+        elif debt_reminder_level == 2:
+            debt_message = m2
+        elif debt_reminder_level == 3:
+            debt_message = m3
         last_s = last_settlement(conn, user_id)
         products = db.fetch_all(
             conn,
@@ -83,6 +91,7 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
             "balance_cents": balance,
             "display_balance_cents": -balance,
             "debt_reminder_level": debt_reminder_level,
+            "debt_message": debt_message,
             "last_settlement": last_s,
             "products": products,
             "title": u["name"],

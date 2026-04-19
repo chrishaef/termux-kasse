@@ -283,6 +283,7 @@ def period_user_stats(
     conn: sqlite3.Connection,
     period_start: str | None,
     period_end: str | None,
+    group_id: int | None = None,
 ) -> list[sqlite3.Row]:
     sql = """
         SELECT
@@ -302,6 +303,9 @@ def period_user_stats(
     if period_end:
         sql += " AND datetime(le.created_at) <= datetime(?)"
         params.append(period_end)
+    if group_id is not None:
+        sql += " AND g.id = ?"
+        params.append(group_id)
     sql += """
         GROUP BY u.id, g.id
         ORDER BY g.sort_order, g.name COLLATE NOCASE, u.sort_order, u.name COLLATE NOCASE
@@ -313,10 +317,13 @@ def period_product_stats(
     conn: sqlite3.Connection,
     period_start: str | None,
     period_end: str | None,
+    group_id: int | None = None,
 ) -> list[dict[str, Any]]:
     sql = """
         SELECT le.product_id, p.name AS product_name, le.description, le.amount_cents
         FROM ledger_entries le
+        JOIN users u ON u.id = le.user_id
+        JOIN user_groups g ON g.id = u.group_id
         LEFT JOIN products p ON p.id = le.product_id
         WHERE 1=1
     """
@@ -327,6 +334,9 @@ def period_product_stats(
     if period_end:
         sql += " AND datetime(le.created_at) <= datetime(?)"
         params.append(period_end)
+    if group_id is not None:
+        sql += " AND g.id = ?"
+        params.append(group_id)
     sql += " ORDER BY datetime(le.created_at)"
     rows = db.fetch_all(conn, sql, params)
     return aggregate_ledger_lines(rows)
@@ -336,22 +346,27 @@ def period_totals(
     conn: sqlite3.Connection,
     period_start: str | None,
     period_end: str | None,
+    group_id: int | None = None,
 ) -> dict[str, int]:
     sql = """
         SELECT
             COUNT(*) AS entries_count,
             COUNT(DISTINCT user_id) AS users_count,
             COALESCE(SUM(amount_cents), 0) AS total_cents
-        FROM ledger_entries
+        FROM ledger_entries le
+        JOIN users u ON u.id = le.user_id
         WHERE 1=1
     """
     params: list[Any] = []
     if period_start:
-        sql += " AND datetime(created_at) >= datetime(?)"
+        sql += " AND datetime(le.created_at) >= datetime(?)"
         params.append(period_start)
     if period_end:
-        sql += " AND datetime(created_at) <= datetime(?)"
+        sql += " AND datetime(le.created_at) <= datetime(?)"
         params.append(period_end)
+    if group_id is not None:
+        sql += " AND u.group_id = ?"
+        params.append(group_id)
     row = db.fetch_one(conn, sql, params)
     if not row:
         return {"entries_count": 0, "users_count": 0, "total_cents": 0}

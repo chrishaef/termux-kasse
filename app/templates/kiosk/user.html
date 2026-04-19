@@ -34,13 +34,7 @@
 </header>
 {% if debt_reminder_level > 0 %}
 <div class="k-debt-banner k-debt-banner--level{{ debt_reminder_level }}" role="status">
-  {% if debt_reminder_level == 1 %}
-  <p class="k-debt-banner__text"><strong>Post-it:</strong> Konto nickt – bitte zeitnah begleichen.</p>
-  {% elif debt_reminder_level == 2 %}
-  <p class="k-debt-banner__text"><strong>Kasse knurrt:</strong> Höherer Ausstand – bald zahlen.</p>
-  {% else %}
-  <p class="k-debt-banner__text"><strong>Stufe 3:</strong> Admin informiert – bitte zahlen.</p>
-  {% endif %}
+  <p class="k-debt-banner__text">{{ debt_message }}</p>
 </div>
 {% endif %}
 

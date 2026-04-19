@@ -124,6 +124,7 @@ def build_pdf_bytes(
 def build_statistics_pdf_bytes(
     period_start: str | None,
     period_end: str | None,
+    group_name: str | None,
     totals: dict[str, int],
     user_rows: list[dict[str, Any]],
     product_rows: list[dict[str, Any]],
@@ -138,6 +139,8 @@ def build_statistics_pdf_bytes(
     p_from = format_date_de(period_start) if period_start else "-"
     p_to = format_date_de(period_end) if period_end else "-"
     pdf.cell(0, 6, _pdf_cell_text(f"Von: {p_from}   Bis: {p_to}", 110), 0, 1)
+    if group_name:
+        pdf.cell(0, 6, _pdf_cell_text(f"Nutzergruppe: {group_name}", 90), 0, 1)
     pdf.ln(1)
 
     meta = [
@@ -200,6 +203,7 @@ def build_statistics_pdf_bytes(
 def build_statistics_xlsx_bytes(
     period_start: str | None,
     period_end: str | None,
+    group_name: str | None,
     totals: dict[str, int],
     user_rows: list[dict[str, Any]],
     product_rows: list[dict[str, Any]],
@@ -213,6 +217,7 @@ def build_statistics_xlsx_bytes(
     ws["A1"].font = bold
     ws.append(["Von", format_date_de(period_start) if period_start else "-"])
     ws.append(["Bis", format_date_de(period_end) if period_end else "-"])
+    ws.append(["Nutzergruppe", group_name or "Alle"])
     ws.append([])
     ws.append(["Kennzahl", "Wert"])
     for cell in ws[ws.max_row]:

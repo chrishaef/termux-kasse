@@ -11,11 +11,23 @@
   <form method="get" action="/admin/statistics" class="k-toolbar">
     <label>Von <input type="date" name="start" value="{{ start }}" /></label>
     <label>Bis <input type="date" name="end" value="{{ end }}" /></label>
+    <label>Nutzergruppe
+      <select name="group_id">
+        <option value="">Alle Gruppen</option>
+        {% for g in groups %}
+        <option value="{{ g['id'] }}"{% if selected_group_id == g['id'] %} selected{% endif %}>{{ g['name'] }}</option>
+        {% endfor %}
+      </select>
+    </label>
     <button type="submit">Auswerten</button>
-    <a class="secondary" style="display:inline-flex;align-items:center;padding:0.4rem 0.7rem;border-radius:8px;border:1px solid #999;text-decoration:none" href="/admin/statistics/pdf?start={{ start }}&end={{ end }}">PDF herunterladen</a>
-    <a class="secondary" style="display:inline-flex;align-items:center;padding:0.4rem 0.7rem;border-radius:8px;border:1px solid #999;text-decoration:none" href="/admin/statistics/xlsx?start={{ start }}&end={{ end }}">XLSX herunterladen</a>
+    <a class="secondary" style="display:inline-flex;align-items:center;padding:0.4rem 0.7rem;border-radius:8px;border:1px solid #999;text-decoration:none" href="/admin/statistics/pdf?start={{ start }}&end={{ end }}&group_id={{ group_id }}">PDF herunterladen</a>
+    <a class="secondary" style="display:inline-flex;align-items:center;padding:0.4rem 0.7rem;border-radius:8px;border:1px solid #999;text-decoration:none" href="/admin/statistics/xlsx?start={{ start }}&end={{ end }}&group_id={{ group_id }}">XLSX herunterladen</a>
   </form>
 </article>
+
+{% if selected_group_name %}
+<p class="secondary" style="margin-top:0.5rem">Aktiver Gruppenfilter: <strong>{{ selected_group_name }}</strong></p>
+{% endif %}
 
 <div class="k-toolbar" style="margin-top:1rem">
   <article class="k-panel" style="flex:1;min-width:170px;margin:0">

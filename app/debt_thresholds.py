@@ -9,11 +9,17 @@ from app import db
 KEY_T1 = "debt_threshold_1_cents"
 KEY_T2 = "debt_threshold_2_cents"
 KEY_T3 = "debt_threshold_3_cents"
+KEY_M1 = "debt_threshold_1_message"
+KEY_M2 = "debt_threshold_2_message"
+KEY_M3 = "debt_threshold_3_message"
 
 # Standard: 5 € / 15 € / 30 € offener Saldo (intern positiv = Schuld)
 DEFAULT_T1 = 500
 DEFAULT_T2 = 1500
 DEFAULT_T3 = 3000
+DEFAULT_M1 = "Post-it: Konto nickt - bitte zeitnah begleichen."
+DEFAULT_M2 = "Kasse knurrt: Hoeherer Ausstand - bald zahlen."
+DEFAULT_M3 = "Stufe 3: Admin informiert - bitte zahlen."
 
 
 def _normalize_triple(t1: int, t2: int, t3: int) -> tuple[int, int, int]:
@@ -33,12 +39,27 @@ def _read_cents(conn: sqlite3.Connection, key: str) -> int | None:
         return None
 
 
+def _read_text(conn: sqlite3.Connection, key: str) -> str | None:
+    row = db.fetch_one(conn, "SELECT value FROM app_settings WHERE key = ?", (key,))
+    if not row or row["value"] is None:
+        return None
+    val = str(row["value"]).strip()
+    return val if val else None
+
+
 def get_thresholds(conn: sqlite3.Connection) -> tuple[int, int, int]:
     """Drei aufsteigende Schwellen in Cent (Stufe 1 &lt; Stufe 2 &lt; Stufe 3)."""
     a, b, c = (_read_cents(conn, KEY_T1), _read_cents(conn, KEY_T2), _read_cents(conn, KEY_T3))
     if a is None or b is None or c is None:
         return _normalize_triple(DEFAULT_T1, DEFAULT_T2, DEFAULT_T3)
     return _normalize_triple(a, b, c)
+
+
+def get_threshold_messages(conn: sqlite3.Connection) -> tuple[str, str, str]:
+    m1 = _read_text(conn, KEY_M1) or DEFAULT_M1
+    m2 = _read_text(conn, KEY_M2) or DEFAULT_M2
+    m3 = _read_text(conn, KEY_M3) or DEFAULT_M3
+    return (m1, m2, m3)
 
 
 def save_thresholds_cents(conn: sqlite3.Connection, a: int, b: int, c: int) -> tuple[int, int, int]:
@@ -52,6 +73,28 @@ def save_thresholds_cents(conn: sqlite3.Connection, a: int, b: int, c: int) -> t
             (key, str(val)),
         )
     return (t1, t2, t3)
+
+
+def save_threshold_messages(
+    conn: sqlite3.Connection,
+    m1: str,
+    m2: str,
+    m3: str,
+) -> tuple[str, str, str]:
+    out = (
+        (m1 or "").strip() or DEFAULT_M1,
+        (m2 or "").strip() or DEFAULT_M2,
+        (m3 or "").strip() or DEFAULT_M3,
+    )
+    for key, val in ((KEY_M1, out[0]), (KEY_M2, out[1]), (KEY_M3, out[2])):
+        conn.execute(
+            """
+            INSERT INTO app_settings (key, value) VALUES (?, ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value
+            """,
+            (key, val),
+        )
+    return out
 
 
 def reminder_level(open_balance_cents: int, t1: int, t2: int, t3: int) -> int:

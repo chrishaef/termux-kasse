@@ -225,6 +225,7 @@ def admin_debt_thresholds_get(request: Request) -> Response:
         return r
     with db.get_connection() as conn:
         t1, t2, t3 = debt_thresholds.get_thresholds(conn)
+        m1, m2, m3 = debt_thresholds.get_threshold_messages(conn)
     return TEMPLATES.TemplateResponse(
         request,
         "admin/debt_thresholds.html",
@@ -236,6 +237,9 @@ def admin_debt_thresholds_get(request: Request) -> Response:
             "t1_eur": _eur_field_from_cents(t1),
             "t2_eur": _eur_field_from_cents(t2),
             "t3_eur": _eur_field_from_cents(t3),
+            "m1": m1,
+            "m2": m2,
+            "m3": m3,
             "saved": request.query_params.get("saved") == "1",
             "error": request.query_params.get("err") == "invalid",
         },
@@ -248,6 +252,9 @@ def admin_debt_thresholds_post(
     threshold_a_eur: str = Form(...),
     threshold_b_eur: str = Form(...),
     threshold_c_eur: str = Form(...),
+    message_1: str = Form(""),
+    message_2: str = Form(""),
+    message_3: str = Form(""),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
@@ -259,6 +266,13 @@ def admin_debt_thresholds_post(
         return RedirectResponse("/admin/debt-thresholds?err=invalid", status_code=303)
     with db.get_connection() as conn:
         debt_thresholds.save_thresholds_cents(conn, ca, cb, cc)
+        current_m1, current_m2, current_m3 = debt_thresholds.get_threshold_messages(conn)
+        debt_thresholds.save_threshold_messages(
+            conn,
+            message_1.strip() or current_m1,
+            message_2.strip() or current_m2,
+            message_3.strip() or current_m3,
+        )
     return RedirectResponse("/admin/debt-thresholds?saved=1", status_code=303)
 
 
@@ -665,15 +679,33 @@ def admin_settlement_pdf(request: Request, settlement_id: int) -> Response:
 
 
 @router.get("/statistics", response_class=HTMLResponse)
-def admin_statistics(request: Request, start: str = "", end: str = "") -> Response:
+def admin_statistics(
+    request: Request,
+    start: str = "",
+    end: str = "",
+    group_id: str = "",
+) -> Response:
     if (r := _redirect_login(request)):
         return r
     period_start = _parse_date_input(start) if start else None
     period_end = _parse_date_end_input(end) if end else None
+    gid = int(group_id) if group_id.strip().isdigit() else None
     with db.get_connection() as conn:
-        totals = ledger_service.period_totals(conn, period_start, period_end)
-        user_rows = ledger_service.period_user_stats(conn, period_start, period_end)
-        product_rows = ledger_service.period_product_stats(conn, period_start, period_end)
+        groups = db.fetch_all(
+            conn,
+            "SELECT id, name FROM user_groups ORDER BY sort_order, name COLLATE NOCASE",
+        )
+        group_row = (
+            db.fetch_one(conn, "SELECT id, name FROM user_groups WHERE id = ?", (gid,))
+            if gid is not None
+            else None
+        )
+        if gid is not None and not group_row:
+            raise HTTPException(status_code=404, detail="Nutzergruppe nicht gefunden")
+        selected_group_name = str(group_row["name"]) if group_row else None
+        totals = ledger_service.period_totals(conn, period_start, period_end, gid)
+        user_rows = ledger_service.period_user_stats(conn, period_start, period_end, gid)
+        product_rows = ledger_service.period_product_stats(conn, period_start, period_end, gid)
     return TEMPLATES.TemplateResponse(
         request,
         "admin/statistics.html",
@@ -681,6 +713,10 @@ def admin_statistics(request: Request, start: str = "", end: str = "") -> Respon
             "title": "Statistik",
             "start": start,
             "end": end,
+            "group_id": group_id,
+            "selected_group_id": gid,
+            "groups": groups,
+            "selected_group_name": selected_group_name,
             "totals": totals,
             "user_rows": user_rows,
             "product_rows": product_rows,
@@ -689,18 +725,34 @@ def admin_statistics(request: Request, start: str = "", end: str = "") -> Respon
 
 
 @router.get("/statistics/pdf")
-def admin_statistics_pdf(request: Request, start: str = "", end: str = "") -> Response:
+def admin_statistics_pdf(
+    request: Request,
+    start: str = "",
+    end: str = "",
+    group_id: str = "",
+) -> Response:
     if (r := _redirect_login(request)):
         return r
     period_start = _parse_date_input(start) if start else None
     period_end = _parse_date_end_input(end) if end else None
+    gid = int(group_id) if group_id.strip().isdigit() else None
     with db.get_connection() as conn:
-        totals = ledger_service.period_totals(conn, period_start, period_end)
+        group_row = (
+            db.fetch_one(conn, "SELECT id, name FROM user_groups WHERE id = ?", (gid,))
+            if gid is not None
+            else None
+        )
+        if gid is not None and not group_row:
+            raise HTTPException(status_code=404, detail="Nutzergruppe nicht gefunden")
+        selected_group_name = str(group_row["name"]) if group_row else None
+        totals = ledger_service.period_totals(conn, period_start, period_end, gid)
         user_rows = [
-            dict(r) for r in ledger_service.period_user_stats(conn, period_start, period_end)
+            dict(r) for r in ledger_service.period_user_stats(conn, period_start, period_end, gid)
         ]
-        product_rows = ledger_service.period_product_stats(conn, period_start, period_end)
-    data = build_statistics_pdf_bytes(period_start, period_end, totals, user_rows, product_rows)
+        product_rows = ledger_service.period_product_stats(conn, period_start, period_end, gid)
+    data = build_statistics_pdf_bytes(
+        period_start, period_end, selected_group_name, totals, user_rows, product_rows
+    )
     stem = "Statistik_Zeitraum"
     return Response(
         content=data,
@@ -710,18 +762,34 @@ def admin_statistics_pdf(request: Request, start: str = "", end: str = "") -> Re
 
 
 @router.get("/statistics/xlsx")
-def admin_statistics_xlsx(request: Request, start: str = "", end: str = "") -> Response:
+def admin_statistics_xlsx(
+    request: Request,
+    start: str = "",
+    end: str = "",
+    group_id: str = "",
+) -> Response:
     if (r := _redirect_login(request)):
         return r
     period_start = _parse_date_input(start) if start else None
     period_end = _parse_date_end_input(end) if end else None
+    gid = int(group_id) if group_id.strip().isdigit() else None
     with db.get_connection() as conn:
-        totals = ledger_service.period_totals(conn, period_start, period_end)
+        group_row = (
+            db.fetch_one(conn, "SELECT id, name FROM user_groups WHERE id = ?", (gid,))
+            if gid is not None
+            else None
+        )
+        if gid is not None and not group_row:
+            raise HTTPException(status_code=404, detail="Nutzergruppe nicht gefunden")
+        selected_group_name = str(group_row["name"]) if group_row else None
+        totals = ledger_service.period_totals(conn, period_start, period_end, gid)
         user_rows = [
-            dict(r) for r in ledger_service.period_user_stats(conn, period_start, period_end)
+            dict(r) for r in ledger_service.period_user_stats(conn, period_start, period_end, gid)
         ]
-        product_rows = ledger_service.period_product_stats(conn, period_start, period_end)
-    data = build_statistics_xlsx_bytes(period_start, period_end, totals, user_rows, product_rows)
+        product_rows = ledger_service.period_product_stats(conn, period_start, period_end, gid)
+    data = build_statistics_xlsx_bytes(
+        period_start, period_end, selected_group_name, totals, user_rows, product_rows
+    )
     stem = "Statistik_Zeitraum"
     return Response(
         content=data,
