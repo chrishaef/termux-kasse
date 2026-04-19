@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
+import sqlite3
 from typing import Optional
+from urllib.parse import quote
 
 from fastapi import APIRouter, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -28,6 +30,32 @@ def _parse_price_eur_to_cents(raw: str) -> int:
     if not re.fullmatch(r"\d+(\.\d{1,2})?", s):
         raise ValueError("Preis ungültig")
     return int(round(float(s) * 100))
+
+
+_FN_UNSAFE = re.compile(r'[\s<>:"/\\|?*\x00-\x1f]+')
+
+
+def _settlement_filename_stem(header: sqlite3.Row) -> str:
+    name = str(header["user_name"] or "Nutzer").strip() or "Nutzer"
+    name = _FN_UNSAFE.sub("_", name)
+    name = re.sub(r"_+", "_", name).strip("_") or "Nutzer"
+    name = name[:45]
+    created = str(header["created_at"] or "")
+    if len(created) >= 10 and created[4] == "-" and created[7] == "-":
+        day = created[:10]
+    else:
+        day = "unbekannt"
+    return f"Abrechnung_{name}_{day}"
+
+
+def _attachment_disposition(stem: str, ext: str) -> str:
+    ext = ext if ext.startswith(".") else f".{ext}"
+    full = f"{stem}{ext}"
+    ascii_fallback = full.encode("ascii", "replace").decode("ascii").replace("?", "_")[:180]
+    if not ascii_fallback.strip():
+        ascii_fallback = f"abrechnung{ext}"
+    enc = quote(full, safe="")
+    return f'attachment; filename="{ascii_fallback}"; filename*=UTF-8\'\'{enc}'
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -558,11 +586,12 @@ def admin_settlement_xlsx(request: Request, settlement_id: int) -> Response:
         if not header:
             raise HTTPException(status_code=404)
         lines = ledger_service.settlement_lines(conn, settlement_id)
+    stem = _settlement_filename_stem(header)
     data = build_xlsx_bytes(header, lines)
     return Response(
         content=data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="abrechnung_{settlement_id}.xlsx"'},
+        headers={"Content-Disposition": _attachment_disposition(stem, ".xlsx")},
     )
 
 
@@ -575,9 +604,10 @@ def admin_settlement_pdf(request: Request, settlement_id: int) -> Response:
         if not header:
             raise HTTPException(status_code=404)
         lines = ledger_service.settlement_lines(conn, settlement_id)
+    stem = _settlement_filename_stem(header)
     data = build_pdf_bytes(header, lines)
     return Response(
         content=data,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="abrechnung_{settlement_id}.pdf"'},
+        headers={"Content-Disposition": _attachment_disposition(stem, ".pdf")},
     )

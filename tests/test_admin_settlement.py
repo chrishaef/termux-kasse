@@ -62,6 +62,9 @@ def test_settlement_confirm_pdf_and_clears_balance() -> None:
         pdf = client.get(path)
         assert pdf.status_code == 200
         assert pdf.headers["content-type"] == "application/pdf"
+        disp = pdf.headers.get("content-disposition", "")
+        assert "Abrechnung_Anna_" in disp
+        assert ".pdf" in disp
         with db.get_connection() as conn:
             assert user_balance_cents(conn, uid) == 0
 
