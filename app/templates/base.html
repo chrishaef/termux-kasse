@@ -35,7 +35,9 @@
     {% block trust %}{% endblock %}
     {% block content %}{% endblock %}
   </main>
-  <div class="powered-by-note">this system is powered by OF Häfner · update {{ request.state.last_sync_label }}</div>
+  <div class="powered-by-note">
+    this system is powered by OF Häfner · update {{ request.state.last_sync_label }} · repo: github.com/chrishaef/termux-kasse
+  </div>
   <script>
     (function () {
       const trigger = document.getElementById("secret-admin-trigger");
