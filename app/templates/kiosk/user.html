@@ -52,9 +52,11 @@
 {% else %}
 <p class="k-empty">Keine aktiven Artikel. Bitte im Admin unter „Artikel“ anlegen.</p>
 {% endif %}
+<audio id="payment-sound" preload="auto" src="/static/payed.mp3"></audio>
 <script>
   (function () {
     const forms = document.querySelectorAll(".k-product-grid form");
+    const paymentSound = document.getElementById("payment-sound");
     forms.forEach(function (form) {
       form.addEventListener("submit", function (event) {
         const button = form.querySelector(".k-product-btn");
@@ -62,6 +64,10 @@
         event.preventDefault();
         button.dataset.submitting = "1";
         button.classList.add("k-product-btn--flash");
+        if (paymentSound && typeof paymentSound.play === "function") {
+          paymentSound.currentTime = 0;
+          paymentSound.play().catch(function () {});
+        }
         window.setTimeout(function () {
           form.submit();
         }, 280);
