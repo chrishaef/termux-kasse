@@ -64,13 +64,29 @@
         event.preventDefault();
         button.dataset.submitting = "1";
         button.classList.add("k-product-btn--flash");
+        const submitNow = function () {
+          if (button.dataset.submitted === "1") return;
+          button.dataset.submitted = "1";
+          form.submit();
+        };
         if (paymentSound && typeof paymentSound.play === "function") {
           paymentSound.currentTime = 0;
-          paymentSound.play().catch(function () {});
+          const onEnded = function () {
+            paymentSound.removeEventListener("ended", onEnded);
+            submitNow();
+          };
+          paymentSound.addEventListener("ended", onEnded);
+          paymentSound.play().catch(function () {
+            paymentSound.removeEventListener("ended", onEnded);
+            window.setTimeout(submitNow, 280);
+          });
+          window.setTimeout(function () {
+            paymentSound.removeEventListener("ended", onEnded);
+            submitNow();
+          }, 3000);
+        } else {
+          window.setTimeout(submitNow, 280);
         }
-        window.setTimeout(function () {
-          form.submit();
-        }, 280);
       });
     });
   })();
