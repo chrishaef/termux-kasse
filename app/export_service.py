@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import io
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from fpdf import FPDF
 from openpyxl import Workbook
@@ -29,7 +29,10 @@ def _pdf_cell_text(s: str, max_len: int) -> str:
     return t.encode("latin-1", errors="replace").decode("latin-1")
 
 
-def build_xlsx_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
+def build_xlsx_bytes(
+    header: sqlite3.Row,
+    aggregated_lines: list[dict[str, Any]],
+) -> bytes:
     wb = Workbook()
     ws = wb.active
     ws.title = "Abrechnung"
@@ -46,16 +49,16 @@ def build_xlsx_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     if rq is not None:
         ws.append(["Zahlungseingang bestätigt", rq])
     ws.append([])
-    ws.append(["Datum", "Beschreibung", "Artikel", "Betrag EUR"])
+    ws.append(["Anzahl", "Bezeichnung", "Einzel (EUR)", "Summe (EUR)"])
     for cell in ws[ws.max_row]:
         cell.font = bold
-    for r in lines:
+    for r in aggregated_lines:
         ws.append(
             [
-                format_date_de(r["created_at"]),
-                r["description"],
-                r["product_name"] or "",
-                round(int(r["amount_cents"]) / 100, 2),
+                int(r["quantity"]),
+                r["label"],
+                round(int(r["unit_cents"]) / 100, 2),
+                round(int(r["total_cents"]) / 100, 2),
             ]
         )
     buf = io.BytesIO()
@@ -63,7 +66,10 @@ def build_xlsx_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     return buf.getvalue()
 
 
-def build_pdf_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
+def build_pdf_bytes(
+    header: sqlite3.Row,
+    aggregated_lines: list[dict[str, Any]],
+) -> bytes:
     """PDF ohne Pillow — PyFPDF 1.x-Paket ``fpdf`` (nicht fpdf2), keine Bild-Abhängigkeiten."""
     pdf = FPDF(orientation="P", unit="mm", format="A4")
     pdf.set_margins(18, 18, 18)
@@ -94,19 +100,20 @@ def build_pdf_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
         pdf.cell(val_w, 6, _pdf_cell_text(val, 120), 1, 1)
 
     pdf.ln(4)
-    wcols = (26, 74, 40, 30)
+    wcols = (16, 94, 30, 30)
     pdf.set_font("Helvetica", "B", 8)
-    for i, (txt, w) in enumerate(zip(["Datum", "Beschreibung", "Artikel", "EUR"], wcols)):
-        pdf.cell(w, 6, _pdf_cell_text(txt, 24), 1, 1 if i == len(wcols) - 1 else 0)
+    headers = ("Anz.", "Bezeichnung", "Einzel", "Summe")
+    for i, (txt, w) in enumerate(zip(headers, wcols)):
+        pdf.cell(w, 6, _pdf_cell_text(txt, 20), 1, 1 if i == len(wcols) - 1 else 0)
     pdf.set_font("Helvetica", "", 8)
-    for r in lines:
+    for r in aggregated_lines:
         cells = [
-            format_date_de(r["created_at"]),
-            str(r["description"]),
-            str(r["product_name"] or ""),
-            f'{int(r["amount_cents"]) / 100:.2f}',
+            str(int(r["quantity"])),
+            str(r["label"]),
+            f'{int(r["unit_cents"]) / 100:.2f}',
+            f'{int(r["total_cents"]) / 100:.2f}',
         ]
-        maxl = (22, 48, 24, 12)
+        maxl = (10, 60, 12, 12)
         for i, (c, w, m) in enumerate(zip(cells, wcols, maxl)):
             pdf.cell(w, 5.5, _pdf_cell_text(c, m), 1, 1 if i == len(wcols) - 1 else 0)
 

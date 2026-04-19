@@ -559,10 +559,6 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   color: #ffeae8;
 }
 
-.k-section-title + .k-category-title {
-  margin-top: 0.85rem;
-}
-
 .k-panel {
   background: var(--kas-surface);
   border: 1px solid var(--kas-border);
@@ -585,18 +581,6 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   font-weight: 800;
   color: var(--kas-label-on-dark-strong);
   letter-spacing: 0.02em;
-}
-
-/* Warengruppen-Überschrift auf dunklem Kiosk-Hintergrund */
-.k-category-title {
-  margin: 1.35rem 0 0.55rem;
-  padding-bottom: 0.25rem;
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--kas-accent-bright);
-  border-bottom: 1px solid rgba(212, 160, 18, 0.35);
 }
 
 .k-product-grid {
@@ -989,6 +973,14 @@ body.app-admin .table-wrap tbody tr:nth-child(even) td {
 body.app-admin .table-wrap tbody tr:hover td {
   background-color: #fff6e0;
   color: #0a0f0a;
+}
+
+body.app-admin .table-wrap .th-sort,
+body.app-admin .table-wrap .td-sort {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: middle;
 }
 
 body.app-admin .table-wrap .th-actions,

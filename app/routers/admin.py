@@ -12,6 +12,7 @@ from app import db
 from app import debt_thresholds
 from app import kiosk_notice
 from app import ledger_service
+from app import sort_order_util
 from app.auth import hash_password, verify_password
 from app.export_service import build_pdf_bytes, build_xlsx_bytes
 from app.templates_env import TEMPLATES
@@ -151,7 +152,6 @@ def admin_dashboard(request: Request) -> Response:
             "groups": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM user_groups", ())["c"],
             "users": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM users", ())["c"],
             "products": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM products", ())["c"],
-            "categories": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM product_categories", ())["c"],
         }
         finance = ledger_service.finance_overview(conn)
     return TEMPLATES.TemplateResponse(
@@ -238,7 +238,10 @@ def admin_groups(request: Request) -> Response:
     if (r := _redirect_login(request)):
         return r
     with db.get_connection() as conn:
-        groups = db.fetch_all(conn, "SELECT id, name FROM user_groups ORDER BY name")
+        groups = db.fetch_all(
+            conn,
+            "SELECT id, name FROM user_groups ORDER BY sort_order, name COLLATE NOCASE",
+        )
     return TEMPLATES.TemplateResponse(
         request,
         "admin/groups.html",
@@ -254,7 +257,29 @@ def admin_groups_create(request: Request, name: str = Form(...)) -> RedirectResp
     if not name:
         return RedirectResponse("/admin/groups", status_code=303)
     with db.get_connection() as conn:
-        conn.execute("INSERT INTO user_groups (name) VALUES (?)", (name,))
+        so = sort_order_util.next_sort_order(conn, "user_groups")
+        conn.execute(
+            "INSERT INTO user_groups (name, sort_order) VALUES (?, ?)",
+            (name, so),
+        )
+    return RedirectResponse("/admin/groups", status_code=303)
+
+
+@router.post("/groups/{group_id}/sort")
+def admin_groups_sort(
+    request: Request,
+    group_id: int,
+    direction: str = Form(...),
+) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    if direction not in ("up", "down"):
+        return RedirectResponse("/admin/groups", status_code=303)
+    with db.get_connection() as conn:
+        row = db.fetch_one(conn, "SELECT id FROM user_groups WHERE id = ?", (group_id,))
+        if not row:
+            raise HTTPException(status_code=404)
+        sort_order_util.swap_sort_order(conn, "user_groups", group_id, direction)  # type: ignore[arg-type]
     return RedirectResponse("/admin/groups", status_code=303)
 
 
@@ -307,7 +332,10 @@ def admin_users(request: Request) -> Response:
         return r
     with db.get_connection() as conn:
         users = ledger_service.users_admin_overview(conn)
-        groups = db.fetch_all(conn, "SELECT id, name FROM user_groups ORDER BY name")
+        groups = db.fetch_all(
+            conn,
+            "SELECT id, name FROM user_groups ORDER BY sort_order, name COLLATE NOCASE",
+        )
         overview_totals = {
             "open_balance_cents": sum(int(u["open_balance_cents"]) for u in users),
             "open_entries_count": sum(int(u["open_entries_count"]) for u in users),
@@ -338,7 +366,29 @@ def admin_users_create(
     if not name:
         return RedirectResponse("/admin/users", status_code=303)
     with db.get_connection() as conn:
-        conn.execute("INSERT INTO users (group_id, name) VALUES (?, ?)", (group_id, name))
+        so = sort_order_util.next_user_sort_order_in_group(conn, group_id)
+        conn.execute(
+            "INSERT INTO users (group_id, name, sort_order) VALUES (?, ?, ?)",
+            (group_id, name, so),
+        )
+    return RedirectResponse("/admin/users", status_code=303)
+
+
+@router.post("/users/{user_id}/sort")
+def admin_users_sort(
+    request: Request,
+    user_id: int,
+    direction: str = Form(...),
+) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    if direction not in ("up", "down"):
+        return RedirectResponse("/admin/users", status_code=303)
+    with db.get_connection() as conn:
+        row = db.fetch_one(conn, "SELECT id FROM users WHERE id = ?", (user_id,))
+        if not row:
+            raise HTTPException(status_code=404)
+        sort_order_util.swap_user_sort_in_group(conn, user_id, direction)  # type: ignore[arg-type]
     return RedirectResponse("/admin/users", status_code=303)
 
 
@@ -351,50 +401,6 @@ def admin_users_delete(request: Request, user_id: int) -> RedirectResponse:
     return RedirectResponse("/admin/users", status_code=303)
 
 
-@router.get("/categories", response_class=HTMLResponse)
-def admin_categories(request: Request) -> Response:
-    if (r := _redirect_login(request)):
-        return r
-    with db.get_connection() as conn:
-        cats = db.fetch_all(
-            conn,
-            "SELECT id, name, sort_order FROM product_categories ORDER BY sort_order, name",
-        )
-    return TEMPLATES.TemplateResponse(
-        request,
-        "admin/categories.html",
-        {"title": "Warengruppen", "categories": cats},
-    )
-
-
-@router.post("/categories")
-def admin_categories_create(
-    request: Request,
-    name: str = Form(...),
-    sort_order: int = Form(0),
-) -> RedirectResponse:
-    if (r := _redirect_login(request)):
-        return r
-    name = name.strip()
-    if not name:
-        return RedirectResponse("/admin/categories", status_code=303)
-    with db.get_connection() as conn:
-        conn.execute(
-            "INSERT INTO product_categories (name, sort_order) VALUES (?, ?)",
-            (name, sort_order),
-        )
-    return RedirectResponse("/admin/categories", status_code=303)
-
-
-@router.post("/categories/{cat_id}/delete")
-def admin_categories_delete(request: Request, cat_id: int) -> RedirectResponse:
-    if (r := _redirect_login(request)):
-        return r
-    with db.get_connection() as conn:
-        conn.execute("DELETE FROM product_categories WHERE id = ?", (cat_id,))
-    return RedirectResponse("/admin/categories", status_code=303)
-
-
 @router.get("/products", response_class=HTMLResponse)
 def admin_products(request: Request) -> Response:
     if (r := _redirect_login(request)):
@@ -403,24 +409,21 @@ def admin_products(request: Request) -> Response:
         products = db.fetch_all(
             conn,
             """
-            SELECT p.id, p.name, p.price_cents, p.active, c.name AS category_name, c.id AS category_id
-            FROM products p
-            JOIN product_categories c ON c.id = p.category_id
-            ORDER BY c.sort_order, c.name, p.name
+            SELECT id, name, price_cents, active
+            FROM products
+            ORDER BY sort_order, name COLLATE NOCASE
             """,
         )
-        cats = db.fetch_all(conn, "SELECT id, name FROM product_categories ORDER BY sort_order, name")
     return TEMPLATES.TemplateResponse(
         request,
         "admin/products.html",
-        {"title": "Artikel", "products": products, "categories": cats},
+        {"title": "Artikel", "products": products},
     )
 
 
 @router.post("/products")
 def admin_products_create(
     request: Request,
-    category_id: int = Form(...),
     name: str = Form(...),
     price_eur: str = Form(...),
 ) -> RedirectResponse:
@@ -434,13 +437,29 @@ def admin_products_create(
     except ValueError:
         return RedirectResponse("/admin/products", status_code=303)
     with db.get_connection() as conn:
+        so = sort_order_util.next_sort_order(conn, "products")
         conn.execute(
-            """
-            INSERT INTO products (category_id, name, price_cents, active)
-            VALUES (?, ?, ?, 1)
-            """,
-            (category_id, name, cents),
+            "INSERT INTO products (name, price_cents, active, sort_order) VALUES (?, ?, 1, ?)",
+            (name, cents, so),
         )
+    return RedirectResponse("/admin/products", status_code=303)
+
+
+@router.post("/products/{product_id}/sort")
+def admin_products_sort(
+    request: Request,
+    product_id: int,
+    direction: str = Form(...),
+) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    if direction not in ("up", "down"):
+        return RedirectResponse("/admin/products", status_code=303)
+    with db.get_connection() as conn:
+        row = db.fetch_one(conn, "SELECT id FROM products WHERE id = ?", (product_id,))
+        if not row:
+            raise HTTPException(status_code=404)
+        sort_order_util.swap_sort_order(conn, "products", product_id, direction)  # type: ignore[arg-type]
     return RedirectResponse("/admin/products", status_code=303)
 
 
@@ -499,7 +518,7 @@ def admin_settlement_start_get(request: Request) -> Response:
             SELECT u.id, u.name, g.name AS group_name
             FROM users u
             JOIN user_groups g ON g.id = u.group_id
-            ORDER BY g.name, u.name
+            ORDER BY g.sort_order, g.name COLLATE NOCASE, u.sort_order, u.name COLLATE NOCASE
             """,
         )
     return TEMPLATES.TemplateResponse(
@@ -536,8 +555,9 @@ def admin_settlement_confirm_get(request: Request, user_id: int = Query(...)) ->
         open_cents = ledger_service.user_balance_cents(conn, user_id)
         previously_settled_cents = ledger_service.total_previously_settled_cents(conn, user_id)
         settlement_count = ledger_service.settlement_count_for_user(conn, user_id)
-        open_lines = ledger_service.open_ledger_for_user(conn, user_id)
-    if open_cents == 0 or not open_lines:
+        raw_lines = ledger_service.open_ledger_for_user(conn, user_id)
+        open_agg = ledger_service.aggregate_ledger_lines(raw_lines)
+    if open_cents == 0 or not raw_lines:
         return RedirectResponse("/admin/settlements/start?err=no_open", status_code=303)
     return TEMPLATES.TemplateResponse(
         request,
@@ -548,7 +568,7 @@ def admin_settlement_confirm_get(request: Request, user_id: int = Query(...)) ->
             "open_cents": open_cents,
             "previously_settled_cents": previously_settled_cents,
             "settlement_count": settlement_count,
-            "open_lines": open_lines,
+            "open_agg": open_agg,
         },
     )
 
@@ -586,8 +606,9 @@ def admin_settlement_xlsx(request: Request, settlement_id: int) -> Response:
         if not header:
             raise HTTPException(status_code=404)
         lines = ledger_service.settlement_lines(conn, settlement_id)
+        agg = ledger_service.aggregate_ledger_lines(lines)
     stem = _settlement_filename_stem(header)
-    data = build_xlsx_bytes(header, lines)
+    data = build_xlsx_bytes(header, agg)
     return Response(
         content=data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -604,8 +625,9 @@ def admin_settlement_pdf(request: Request, settlement_id: int) -> Response:
         if not header:
             raise HTTPException(status_code=404)
         lines = ledger_service.settlement_lines(conn, settlement_id)
+        agg = ledger_service.aggregate_ledger_lines(lines)
     stem = _settlement_filename_stem(header)
-    data = build_pdf_bytes(header, lines)
+    data = build_pdf_bytes(header, agg)
     return Response(
         content=data,
         media_type="application/pdf",

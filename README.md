@@ -24,7 +24,7 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 | Bereich | Kurzbeschreibung |
 |--------|-------------------|
 | **Kiosk** | Gruppe wählen → Nutzer → Kontostand, letzte Abrechnung, Artikel mit einem Tipp buchen |
-| **Admin** | Login, Gruppen, Nutzer, Warengruppen, Artikel, Kiosk-Nachricht |
+| **Admin** | Login, Gruppen, Nutzer, Artikel, Kiosk-Nachricht |
 | **Abrechnung** | Geführter Ablauf: Nutzer wählen → offene Posten prüfen → Zahlungseingang bestätigen → Konten begleichen, **PDF** (und **XLS**) exportieren |
 
 ---
@@ -229,7 +229,7 @@ Läuft die Kasse nur mit `bash start.sh` im Vordergrund, gibt es keine `.server.
 
 Nach dem Login (`/admin`):
 
-- **Gruppen, Nutzer, Warengruppen, Artikel** pflegen  
+- **Gruppen, Nutzer, Artikel** pflegen  
 - **Abrechnungen** (`/admin/settlements`): Liste vergangener Abrechnungen mit XLS/PDF; neue Abrechnung über **„Neue Abrechnung starten“** (Nutzer wählen → Beträge prüfen → Zahlungseingang bestätigen → PDF).  
 - **Kiosk-Nachricht** (`/admin/news`): Text oben auf allen Kiosk-Seiten; leer speichern stellt den Standardhinweis wieder her.
 

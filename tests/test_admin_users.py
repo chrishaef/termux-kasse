@@ -21,12 +21,9 @@ def test_admin_users_overview_shows_balances_and_totals() -> None:
         client.post("/admin/users", data={"name": "Ben", "group_id": str(gid)})
         with db.get_connection() as conn:
             uids = [int(r[0]) for r in conn.execute("SELECT id FROM users ORDER BY name").fetchall()]
-        client.post("/admin/categories", data={"name": "C1", "sort_order": "0"})
-        with db.get_connection() as conn:
-            cid = int(conn.execute("SELECT id FROM product_categories LIMIT 1").fetchone()[0])
         client.post(
             "/admin/products",
-            data={"category_id": str(cid), "name": "Cola", "price_eur": "2.00"},
+            data={"name": "Cola", "price_eur": "2.00"},
         )
         with db.get_connection() as conn:
             pid = int(conn.execute("SELECT id FROM products LIMIT 1").fetchone()[0])

@@ -21,12 +21,9 @@ def _seed_open_balance(client: TestClient) -> int:
     client.post("/admin/users", data={"name": "Anna", "group_id": str(gid)})
     with db.get_connection() as conn:
         uid = int(conn.execute("SELECT id FROM users LIMIT 1").fetchone()[0])
-    client.post("/admin/categories", data={"name": "C1", "sort_order": "0"})
-    with db.get_connection() as conn:
-        cid = int(conn.execute("SELECT id FROM product_categories LIMIT 1").fetchone()[0])
     client.post(
         "/admin/products",
-        data={"category_id": str(cid), "name": "Cola", "price_eur": "2.00"},
+        data={"name": "Cola", "price_eur": "2.00"},
     )
     with db.get_connection() as conn:
         pid = int(conn.execute("SELECT id FROM products LIMIT 1").fetchone()[0])

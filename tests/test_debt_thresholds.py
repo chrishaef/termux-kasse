@@ -39,12 +39,9 @@ def test_admin_shows_global_alert_when_balance_reaches_t3() -> None:
         with db.get_connection() as conn:
             gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
         client.post("/admin/users", data={"name": "Max", "group_id": str(gid)})
-        client.post("/admin/categories", data={"name": "C1", "sort_order": "0"})
-        with db.get_connection() as conn:
-            cid = int(conn.execute("SELECT id FROM product_categories LIMIT 1").fetchone()[0])
         client.post(
             "/admin/products",
-            data={"category_id": str(cid), "name": "Teuer", "price_eur": "5.00"},
+            data={"name": "Teuer", "price_eur": "5.00"},
         )
         with db.get_connection() as conn:
             uid = int(conn.execute("SELECT id FROM users LIMIT 1").fetchone()[0])

@@ -2,6 +2,7 @@ from app import db
 from app.db import init_db
 from app.ledger_service import (
     add_purchase,
+    aggregate_ledger_lines,
     create_settlement_for_user,
     finance_overview,
     open_ledger_for_user,
@@ -18,11 +19,8 @@ def test_balance_and_settlement() -> None:
         gid = conn.execute("SELECT id FROM user_groups").fetchone()[0]
         conn.execute("INSERT INTO users (group_id, name) VALUES (?, 'Anna')", (gid,))
         uid = conn.execute("SELECT id FROM users").fetchone()[0]
-        conn.execute("INSERT INTO product_categories (name, sort_order) VALUES ('Snacks', 0)")
-        cid = conn.execute("SELECT id FROM product_categories").fetchone()[0]
         conn.execute(
-            "INSERT INTO products (category_id, name, price_cents, active) VALUES (?, 'Riegel', 80, 1)",
-            (cid,),
+            "INSERT INTO products (name, price_cents, active) VALUES ('Riegel', 80, 1)",
         )
         pid = conn.execute("SELECT id FROM products").fetchone()[0]
         add_purchase(conn, uid, pid, "Riegel (x1)", 80)
@@ -57,11 +55,8 @@ def test_previously_settled_totals_and_received_flag() -> None:
         gid = conn.execute("SELECT id FROM user_groups").fetchone()[0]
         conn.execute("INSERT INTO users (group_id, name) VALUES (?, 'Carl')", (gid,))
         uid = conn.execute("SELECT id FROM users").fetchone()[0]
-        conn.execute("INSERT INTO product_categories (name, sort_order) VALUES ('Snacks', 0)")
-        cid = conn.execute("SELECT id FROM product_categories").fetchone()[0]
         conn.execute(
-            "INSERT INTO products (category_id, name, price_cents, active) VALUES (?, 'Chip', 50, 1)",
-            (cid,),
+            "INSERT INTO products (name, price_cents, active) VALUES ('Chip', 50, 1)",
         )
         pid = conn.execute("SELECT id FROM products").fetchone()[0]
         add_purchase(conn, uid, pid, "Chip (x1)", 50)
@@ -96,11 +91,8 @@ def test_finance_overview() -> None:
         conn.execute("INSERT INTO users (group_id, name) VALUES (?, 'B')", (gid,))
         uid_a = conn.execute("SELECT id FROM users WHERE name='A'").fetchone()[0]
         uid_b = conn.execute("SELECT id FROM users WHERE name='B'").fetchone()[0]
-        conn.execute("INSERT INTO product_categories (name, sort_order) VALUES ('C', 0)")
-        cid = conn.execute("SELECT id FROM product_categories").fetchone()[0]
         conn.execute(
-            "INSERT INTO products (category_id, name, price_cents, active) VALUES (?, 'P', 100, 1)",
-            (cid,),
+            "INSERT INTO products (name, price_cents, active) VALUES ('P', 100, 1)",
         )
         pid = conn.execute("SELECT id FROM products").fetchone()[0]
         add_purchase(conn, uid_a, pid, "x", 300)
@@ -114,3 +106,32 @@ def test_finance_overview() -> None:
         assert fo2["open_total_cents"] == 100
         assert fo2["max_user_open_cents"] == 100
         assert fo2["settled_total_cents"] == 300
+
+
+def test_aggregate_ledger_lines_merges_same_product_and_amount() -> None:
+    lines = [
+        {
+            "product_id": 1,
+            "product_name": "Riegel",
+            "description": "Riegel (x1)",
+            "amount_cents": 80,
+        },
+        {
+            "product_id": 1,
+            "product_name": "Riegel",
+            "description": "Riegel (x1)",
+            "amount_cents": 80,
+        },
+        {
+            "product_id": 2,
+            "product_name": "Cola",
+            "description": "Cola (x1)",
+            "amount_cents": 200,
+        },
+    ]
+    agg = aggregate_ledger_lines(lines)  # type: ignore[arg-type]
+    assert len(agg) == 2
+    by_label = {a["label"]: a for a in agg}
+    assert by_label["Cola"]["quantity"] == 1
+    assert by_label["Riegel"]["quantity"] == 2
+    assert by_label["Riegel"]["total_cents"] == 160

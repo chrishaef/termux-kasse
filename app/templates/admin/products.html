@@ -6,18 +6,10 @@
 </header>
 <div class="k-toolbar">
   <a href="/admin" class="admin-back" style="margin:0">← Admin</a>
-  <a href="/admin/categories" role="button" class="outline">Warengruppen</a>
 </div>
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.1rem">Neuer Artikel</h2>
   <form method="post" action="/admin/products">
-    <label>Warengruppe
-      <select name="category_id" required>
-        {% for c in categories %}
-        <option value="{{ c['id'] }}">{{ c['name'] }}</option>
-        {% endfor %}
-      </select>
-    </label>
     <label>Name <input type="text" name="name" required placeholder="Schokoriegel" /></label>
     <label>Preis (EUR) <input type="text" name="price_eur" required placeholder="0,80" /></label>
     <button type="submit">Anlegen</button>
@@ -25,14 +17,23 @@
 </article>
 <div class="table-wrap">
   <table role="grid">
-    <thead><tr><th>Name</th><th>Gruppe</th><th>Preis</th><th>Aktiv</th><th></th></tr></thead>
+    <thead><tr><th>Name</th><th>Preis</th><th>Aktiv</th><th class="th-sort">Sort.</th><th></th></tr></thead>
     <tbody>
       {% for p in products %}
       <tr>
         <td>{{ p['name'] }}</td>
-        <td>{{ p['category_name'] }}</td>
         <td>{{ p['price_cents']|eur }}</td>
         <td>{{ 'ja' if p['active'] else 'nein' }}</td>
+        <td class="td-sort">
+          <form method="post" action="/admin/products/{{ p['id'] }}/sort" class="form-inline-action">
+            <input type="hidden" name="direction" value="up" />
+            <button type="submit" class="secondary admin-btn-sm" title="Nach oben">↑</button>
+          </form>
+          <form method="post" action="/admin/products/{{ p['id'] }}/sort" class="form-inline-action">
+            <input type="hidden" name="direction" value="down" />
+            <button type="submit" class="secondary admin-btn-sm" title="Nach unten">↓</button>
+          </form>
+        </td>
         <td>
           <form method="post" action="/admin/products/{{ p['id'] }}/toggle" style="display:inline"><button type="submit" class="secondary">Aktiv</button></form>
           <form method="post" action="/admin/products/{{ p['id'] }}/delete" style="display:inline" onsubmit="return confirm('Löschen?');">

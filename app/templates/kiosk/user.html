@@ -45,22 +45,19 @@
 {% endif %}
 
 <h2 class="k-section-title">Artikel hinzufügen</h2>
-{% for block in products_by_cat %}
-  <h3 class="k-category-title">{{ block.category['name'] }}</h3>
-  <div class="k-product-grid">
-    {% for p in block.products %}
-    <form method="post" action="/u/{{ user['id'] }}/add">
-      <input type="hidden" name="product_id" value="{{ p['id'] }}" />
-      <button type="submit" class="k-product-btn">
-        <span class="k-product-btn__name">{{ p['name'] }}</span>
-        <span class="k-product-btn__price">{{ p['price_cents']|eur }}</span>
-      </button>
-    </form>
-    {% else %}
-    <p class="k-empty" style="grid-column: 1 / -1">Keine aktiven Artikel in dieser Warengruppe.</p>
-    {% endfor %}
-  </div>
+{% if products %}
+<div class="k-product-grid">
+  {% for p in products %}
+  <form method="post" action="/u/{{ user['id'] }}/add">
+    <input type="hidden" name="product_id" value="{{ p['id'] }}" />
+    <button type="submit" class="k-product-btn">
+      <span class="k-product-btn__name">{{ p['name'] }}</span>
+      <span class="k-product-btn__price">{{ p['price_cents']|eur }}</span>
+    </button>
+  </form>
+  {% endfor %}
+</div>
 {% else %}
-<p class="k-empty">Keine Warengruppen. Bitte im Admin unter „Warengruppen“ und „Artikel“ anlegen.</p>
-{% endfor %}
+<p class="k-empty">Keine aktiven Artikel. Bitte im Admin unter „Artikel“ anlegen.</p>
+{% endif %}
 {% endblock %}

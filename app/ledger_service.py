@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
+from typing import Any
+
 from app import db
 
 
@@ -36,10 +39,41 @@ def users_admin_overview(conn: sqlite3.Connection) -> list[sqlite3.Row]:
             FROM settlements
             GROUP BY user_id
         ) st ON st.user_id = u.id
-        ORDER BY g.name COLLATE NOCASE, u.name COLLATE NOCASE
+        ORDER BY g.sort_order, g.name COLLATE NOCASE, u.sort_order, u.name COLLATE NOCASE
         """,
         (),
     )
+
+
+def aggregate_ledger_lines(
+    lines: Sequence[sqlite3.Row | Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Mehrere gleiche Buchungen (z. B. gleicher Artikel & gleicher Einzelbetrag) zu einer Zeile."""
+    groups: dict[tuple[Any, ...], dict[str, Any]] = {}
+    for r in lines:
+        amt = int(r["amount_cents"])
+        pid = r["product_id"] if r["product_id"] is not None else None
+        if pid is not None:
+            key = ("p", int(pid), amt)
+            pname = (r["product_name"] or "").strip()
+            label = pname or str(r["description"] or "").strip()
+        else:
+            desc = str(r["description"] or "").strip()
+            key = ("m", desc, amt)
+            label = desc
+        if key not in groups:
+            groups[key] = {
+                "quantity": 0,
+                "label": label,
+                "unit_cents": amt,
+                "total_cents": 0,
+            }
+        g = groups[key]
+        g["quantity"] += 1
+        g["total_cents"] += amt
+    out = list(groups.values())
+    out.sort(key=lambda x: (str(x["label"]).casefold(), int(x["unit_cents"])))
+    return out
 
 
 def finance_overview(conn: sqlite3.Connection) -> dict[str, int]:

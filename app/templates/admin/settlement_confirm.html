@@ -24,16 +24,18 @@
   </article>
 </div>
 
-<h2 class="k-section-title">Offene Posten</h2>
+<h2 class="k-section-title">Offene Posten (zusammengefasst)</h2>
+<p class="secondary" style="margin:-0.25rem 0 0.75rem;font-size:0.9rem">Gleiche Artikel mit gleichem Einzelbetrag werden zu einer Zeile zusammengefasst.</p>
 <div class="table-wrap">
   <table role="grid">
-    <thead><tr><th>Datum</th><th>Beschreibung</th><th>Betrag</th></tr></thead>
+    <thead><tr><th class="num">Anzahl</th><th>Bezeichnung</th><th class="num">Einzel</th><th class="num">Summe</th></tr></thead>
     <tbody>
-      {% for line in open_lines %}
+      {% for row in open_agg %}
       <tr>
-        <td>{{ line['created_at']|date_de }}</td>
-        <td>{{ line['description'] }}</td>
-        <td>{{ line['amount_cents']|eur }}</td>
+        <td class="num">{{ row['quantity'] }}×</td>
+        <td>{{ row['label'] }}</td>
+        <td class="num">{{ row['unit_cents']|eur }}</td>
+        <td class="num">{{ row['total_cents']|eur }}</td>
       </tr>
       {% endfor %}
     </tbody>

@@ -18,13 +18,13 @@ def test_build_pdf_starts_with_pdf_magic() -> None:
         "note": "Bar",
         "received_confirmed": 1,
     }
-    lines = [
+    agg = [
         {
-            "created_at": "2024-06-01T11:00:00+00:00",
-            "description": "Test",
-            "product_name": "Cola",
-            "amount_cents": 250,
+            "quantity": 1,
+            "label": "Cola",
+            "unit_cents": 250,
+            "total_cents": 250,
         }
     ]
-    data = build_pdf_bytes(header, lines)  # type: ignore[arg-type]
+    data = build_pdf_bytes(header, agg)  # type: ignore[arg-type]
     assert data[:4] == b"%PDF"

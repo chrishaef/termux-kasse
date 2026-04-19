@@ -32,28 +32,24 @@ def init_db() -> None:
             """
             CREATE TABLE IF NOT EXISTS user_groups (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL
+                name TEXT NOT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 group_id INTEGER NOT NULL REFERENCES user_groups(id) ON DELETE CASCADE,
                 name TEXT NOT NULL,
-                pin_hash TEXT
-            );
-
-            CREATE TABLE IF NOT EXISTS product_categories (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
+                pin_hash TEXT,
                 sort_order INTEGER NOT NULL DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS products (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                category_id INTEGER NOT NULL REFERENCES product_categories(id) ON DELETE CASCADE,
                 name TEXT NOT NULL,
                 price_cents INTEGER NOT NULL,
-                active INTEGER NOT NULL DEFAULT 1
+                active INTEGER NOT NULL DEFAULT 1,
+                sort_order INTEGER NOT NULL DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS settlements (
@@ -96,15 +92,82 @@ def init_db() -> None:
         _migrate_schema(conn)
 
 
-def _migrate_schema(conn: sqlite3.Connection) -> None:
-    rows = conn.execute("PRAGMA table_info(settlements)").fetchall()
-    if not rows:
+def _migrate_products_remove_categories(conn: sqlite3.Connection) -> None:
+    """Alte DBs: category_id entfernen, Tabelle product_categories löschen."""
+    prows = conn.execute("PRAGMA table_info(products)").fetchall()
+    if not prows:
         return
-    cols = {r[1] for r in rows}
-    if "received_confirmed" not in cols:
-        conn.execute(
-            "ALTER TABLE settlements ADD COLUMN received_confirmed INTEGER NOT NULL DEFAULT 1"
-        )
+    pcols = {r[1] for r in prows}
+    if "category_id" in pcols:
+        try:
+            conn.execute("ALTER TABLE products DROP COLUMN category_id")
+        except sqlite3.OperationalError:
+            conn.execute("PRAGMA foreign_keys=OFF")
+            try:
+                conn.executescript(
+                    """
+                    CREATE TABLE products__flat (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        price_cents INTEGER NOT NULL,
+                        active INTEGER NOT NULL DEFAULT 1,
+                        sort_order INTEGER NOT NULL DEFAULT 0
+                    );
+                    INSERT INTO products__flat (id, name, price_cents, active, sort_order)
+                        SELECT id, name, price_cents, active,
+                            COALESCE(sort_order, 0) FROM products;
+                    DROP TABLE products;
+                    ALTER TABLE products__flat RENAME TO products;
+                    """
+                )
+            finally:
+                conn.execute("PRAGMA foreign_keys=ON")
+    conn.execute("DROP TABLE IF EXISTS product_categories")
+
+
+def _migrate_schema(conn: sqlite3.Connection) -> None:
+    sinfo = conn.execute("PRAGMA table_info(settlements)").fetchall()
+    if sinfo:
+        cols = {r[1] for r in sinfo}
+        if "received_confirmed" not in cols:
+            conn.execute(
+                "ALTER TABLE settlements ADD COLUMN received_confirmed INTEGER NOT NULL DEFAULT 1"
+            )
+    _migrate_sort_order_columns(conn)
+    _migrate_products_remove_categories(conn)
+
+
+def _migrate_sort_order_columns(conn: sqlite3.Connection) -> None:
+    for table in ("user_groups", "users", "products"):
+        info = conn.execute(f"PRAGMA table_info({table})").fetchall()
+        if not info:
+            continue
+        cols = {r[1] for r in info}
+        if "sort_order" not in cols:
+            conn.execute(
+                f"ALTER TABLE {table} ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0"
+            )
+    _backfill_sort_orders(conn)
+
+
+def _backfill_sort_orders(conn: sqlite3.Connection) -> None:
+    """Eindeutige sort_order vergeben, solange MAX(sort_order)=0 (nach Migration)."""
+    for table, order_sql in (
+        ("user_groups", "SELECT id FROM user_groups ORDER BY name COLLATE NOCASE, id"),
+        ("users", "SELECT id FROM users ORDER BY group_id, name COLLATE NOCASE, id"),
+        ("products", "SELECT id FROM products ORDER BY name COLLATE NOCASE, id"),
+    ):
+        meta = conn.execute(
+            f"SELECT COUNT(*) AS c, COALESCE(MAX(sort_order), 0) AS mx FROM {table}",
+        ).fetchone()
+        if not meta or int(meta["c"]) == 0 or int(meta["mx"]) > 0:
+            continue
+        rows = conn.execute(order_sql).fetchall()
+        for i, r in enumerate(rows):
+            conn.execute(
+                f"UPDATE {table} SET sort_order = ? WHERE id = ?",
+                ((i + 1) * 10, r[0]),
+            )
 
 
 def fetch_one(conn: sqlite3.Connection, sql: str, params: Iterable = ()) -> sqlite3.Row | None:

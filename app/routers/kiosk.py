@@ -14,7 +14,10 @@ router = APIRouter(tags=["kiosk"])
 @router.get("/", response_class=HTMLResponse)
 def kiosk_home(request: Request) -> HTMLResponse:
     with db.get_connection() as conn:
-        groups = db.fetch_all(conn, "SELECT id, name FROM user_groups ORDER BY name")
+        groups = db.fetch_all(
+            conn,
+            "SELECT id, name FROM user_groups ORDER BY sort_order, name COLLATE NOCASE",
+        )
     return TEMPLATES.TemplateResponse(
         request,
         "kiosk/groups.html",
@@ -30,7 +33,11 @@ def kiosk_group(request: Request, group_id: int) -> HTMLResponse:
             raise HTTPException(status_code=404, detail="Gruppe nicht gefunden")
         users = db.fetch_all(
             conn,
-            "SELECT id, name FROM users WHERE group_id = ? ORDER BY name",
+            """
+            SELECT id, name FROM users
+            WHERE group_id = ?
+            ORDER BY sort_order, name COLLATE NOCASE
+            """,
             (group_id,),
         )
     return TEMPLATES.TemplateResponse(
@@ -59,23 +66,15 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
         t1, t2, t3 = debt_thresholds.get_thresholds(conn)
         debt_reminder_level = debt_thresholds.reminder_level(balance, t1, t2, t3)
         last_s = last_settlement(conn, user_id)
-        categories = db.fetch_all(
+        products = db.fetch_all(
             conn,
-            "SELECT id, name FROM product_categories ORDER BY sort_order, name",
+            """
+            SELECT id, name, price_cents
+            FROM products
+            WHERE active = 1
+            ORDER BY sort_order, name COLLATE NOCASE
+            """,
         )
-        products_by_cat: list[dict] = []
-        for c in categories:
-            prods = db.fetch_all(
-                conn,
-                """
-                SELECT id, name, price_cents
-                FROM products
-                WHERE category_id = ? AND active = 1
-                ORDER BY name
-                """,
-                (c["id"],),
-            )
-            products_by_cat.append({"category": c, "products": prods})
     return TEMPLATES.TemplateResponse(
         request,
         "kiosk/user.html",
@@ -85,7 +84,7 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
             "display_balance_cents": -balance,
             "debt_reminder_level": debt_reminder_level,
             "last_settlement": last_s,
-            "products_by_cat": products_by_cat,
+            "products": products,
             "title": u["name"],
         },
     )
