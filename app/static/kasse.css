@@ -30,6 +30,16 @@
   --kas-shadow-hover: 0 14px 40px rgba(0, 0, 0, 0.35);
   --kas-step: #8a9588;
   --kas-danger: #c44;
+
+  /* Lesbare Beschriftungen: auf dunklem Portal vs. auf hellen Karten */
+  --kas-label-on-dark: #dde4da;
+  --kas-label-on-dark-strong: #f2f5f0;
+  --kas-label-on-surface: #2a332d;
+  --kas-label-muted-surface: #3d4a42;
+
+  /* Einheitliche UI-Elemente */
+  --kas-radius-button: 12px;
+  --kas-control-border: rgba(212, 160, 18, 0.42);
 }
 
 body {
@@ -54,7 +64,7 @@ body {
   --pico-primary-inverse: var(--kas-accent-contrast);
   --pico-background-color: var(--kas-bg-deep);
   --pico-card-background-color: var(--kas-surface);
-  --pico-border-radius: var(--kas-radius-sm);
+  --pico-border-radius: var(--kas-radius-button);
   --pico-color: var(--kas-page-fg);
   --pico-muted-color: var(--kas-page-muted);
 }
@@ -101,13 +111,13 @@ body {
 
 .site-nav a {
   padding: 0.45rem 0.95rem;
-  border-radius: 4px;
+  border-radius: var(--kas-radius-button);
   font-size: 0.88rem;
   font-weight: 700;
   text-decoration: none;
-  color: var(--kas-page-muted);
-  border: 1px solid rgba(212, 160, 18, 0.25);
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--kas-label-on-dark);
+  border: 1px solid var(--kas-control-border);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .site-nav a:hover {
@@ -126,7 +136,7 @@ body {
   width: auto;
   margin: 0;
   padding: 0.45rem 0.95rem;
-  border-radius: 4px;
+  border-radius: var(--kas-radius-button);
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
@@ -196,6 +206,10 @@ body {
   color: var(--kas-step);
 }
 
+.app-kiosk .page-head__eyebrow {
+  color: #b4c0ac;
+}
+
 .page-head__title {
   margin: 0 0 0.4rem;
   font-size: clamp(1.5rem, 4vw, 2rem);
@@ -209,6 +223,18 @@ body {
   margin: 0;
   color: var(--kas-page-muted);
   font-size: 1rem;
+}
+
+.app-kiosk .page-head__lead {
+  color: #c4cdc0;
+}
+
+.app-admin .page-head__eyebrow {
+  color: #a8b39f;
+}
+
+.app-admin .page-head__lead {
+  color: #b8c2ae;
 }
 
 /* Kiosk-Kacheln */
@@ -251,7 +277,8 @@ body {
 .k-tile__hint {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--kas-muted);
+  font-weight: 600;
+  color: var(--kas-label-muted-surface);
 }
 
 .k-toolbar {
@@ -269,8 +296,10 @@ body {
 .k-toolbar [role="button"].secondary,
 .k-toolbar [role="button"].outline {
   color: var(--kas-page-fg);
-  border-color: rgba(212, 160, 18, 0.45);
-  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--kas-control-border);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--kas-radius-button);
+  font-weight: 700;
 }
 
 .k-toolbar [role="button"].secondary:hover,
@@ -304,19 +333,24 @@ body {
 }
 
 .k-user-head__balance {
-  border-top: 3px solid var(--kas-accent);
   border-radius: var(--kas-radius);
-  padding: 0.65rem 0 0;
-  min-width: min(100%, 11rem);
+  padding: 0.65rem 0.9rem 0.75rem;
+  min-width: min(100%, 12rem);
+  background: rgba(8, 10, 8, 0.45);
+  border: 1px solid var(--kas-control-border);
+  border-top: 3px solid var(--kas-accent);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(6px);
 }
 
 .k-user-head__balance-label {
-  margin: 0 0 0.2rem;
-  font-size: 0.82rem;
-  font-weight: 700;
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--kas-muted);
+  letter-spacing: 0.07em;
+  color: var(--kas-label-on-dark-strong);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .k-user-head__balance-value {
@@ -324,9 +358,10 @@ body {
   font-size: clamp(1.65rem, 5vw, 2.55rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #d4a012;
+  color: var(--kas-accent-bright);
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .k-user-head__last {
@@ -343,11 +378,11 @@ body {
 
 .k-user-head__last-title {
   margin: 0 0 0.45rem;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--kas-muted);
+  color: var(--kas-label-muted-surface);
 }
 
 .k-user-head__last-line {
@@ -357,6 +392,15 @@ body {
 
 .k-user-head__last-line:first-of-type {
   margin-top: 0;
+}
+
+.k-user-head__last .secondary {
+  color: var(--kas-label-muted-surface);
+  font-weight: 600;
+}
+
+.k-section-title + .k-category-title {
+  margin-top: 0.85rem;
 }
 
 .k-panel {
@@ -379,25 +423,73 @@ body {
   margin: 1.75rem 0 0.75rem;
   font-size: 1.08rem;
   font-weight: 800;
-  color: var(--kas-page-fg);
+  color: var(--kas-label-on-dark-strong);
   letter-spacing: 0.02em;
+}
+
+/* Warengruppen-Überschrift auf dunklem Kiosk-Hintergrund */
+.k-category-title {
+  margin: 1.35rem 0 0.55rem;
+  padding-bottom: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--kas-accent-bright);
+  border-bottom: 1px solid rgba(212, 160, 18, 0.35);
 }
 
 .k-product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.75rem;
+  align-items: stretch;
 }
 
 .k-product-grid form {
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
-.k-product-grid button {
+.k-product-grid button[type="submit"] {
+  flex: 1;
   width: 100%;
-  min-height: 3.25rem;
+  min-height: 4.25rem;
+  margin: 0;
+  padding: 0.85rem 0.75rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  border-radius: 4px;
+  line-height: 1.3;
+  text-align: center;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  border-radius: var(--kas-radius-button);
+  border: 1px solid var(--kas-control-border);
+  background: linear-gradient(168deg, #faf9f5 0%, #ece7dc 55%, #e2dccf 100%);
+  color: var(--kas-label-on-surface);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+}
+
+.k-product-grid button[type="submit"]:hover {
+  border-color: var(--kas-accent);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  transform: translateY(-2px);
+  background: linear-gradient(168deg, #fffefb 0%, #f3efe6 100%);
+}
+
+.k-product-grid button[type="submit"]:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.k-product-grid button[type="submit"]:focus-visible {
+  outline: 2px solid var(--kas-accent-bright);
+  outline-offset: 2px;
 }
 
 /* Admin */
@@ -432,13 +524,13 @@ body {
 
 .admin-stat__label {
   display: block;
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--kas-muted);
-  line-height: 1.2;
-  margin-bottom: 0.2rem;
+  color: var(--kas-label-muted-surface);
+  line-height: 1.25;
+  margin-bottom: 0.25rem;
 }
 
 .admin-stat__value {
@@ -504,7 +596,8 @@ body {
 
 .admin-card span {
   font-size: 0.95rem;
-  color: var(--kas-muted);
+  color: var(--kas-label-muted-surface);
+  font-weight: 600;
 }
 
 .table-wrap {
@@ -531,10 +624,11 @@ form:not(.inline) label {
 .k-empty {
   padding: 1.35rem;
   text-align: center;
-  color: var(--kas-page-muted);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px dashed rgba(212, 160, 18, 0.4);
-  border-radius: var(--kas-radius-sm);
+  font-weight: 600;
+  color: var(--kas-label-on-dark);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px dashed rgba(212, 160, 18, 0.45);
+  border-radius: var(--kas-radius);
 }
 
 /* Formulare in hellen Panels: Pico-Inputs lesbar */
@@ -542,4 +636,19 @@ form:not(.inline) label {
 .k-panel select,
 .k-panel textarea {
   background-color: #fff;
+}
+
+.app-admin .k-panel button[type="submit"],
+.app-admin .k-panel button:not([type]) {
+  border-radius: var(--kas-radius-button);
+  font-weight: 700;
+}
+
+.app-admin .table-wrap th {
+  color: var(--kas-label-on-surface);
+  font-weight: 800;
+}
+
+.app-admin .table-wrap td {
+  color: var(--kas-text);
 }

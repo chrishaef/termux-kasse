@@ -30,7 +30,7 @@
 
 <h2 class="k-section-title">Artikel hinzufügen</h2>
 {% for block in products_by_cat %}
-  <h3 class="page-head__eyebrow" style="margin-top:1rem">{{ block.category['name'] }}</h3>
+  <h3 class="k-category-title">{{ block.category['name'] }}</h3>
   <div class="k-product-grid">
     {% for p in block.products %}
     <form method="post" action="/u/{{ user['id'] }}/add">
