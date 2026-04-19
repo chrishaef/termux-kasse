@@ -120,6 +120,8 @@ cd ~/termux-kasse
 
 Alle folgenden Befehle (`start.sh`, `update.sh`) beziehen sich auf diesen Ordner (Projektroot).
 
+**pip / Termux:** In `requirements.txt` wird **ohne** `uvicorn[standard]` installiert. Die „Standard“-Extras ziehen u. a. **watchfiles** nach, das auf **Android (aarch64)** oft per Rust/Maturin gebaut werden müsste — das schlägt in Termux typischerweise fehl (`Target triple not supported`). Normales **uvicorn** reicht für dieses Projekt völlig aus.
+
 ---
 
 ## Erster Start und Betrieb
