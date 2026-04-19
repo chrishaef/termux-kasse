@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block trust %}{% endblock %}
+{% block content %}
+<h1>Nutzergruppen</h1>
+<p><a href="/admin">Admin</a></p>
+<form method="post" action="/admin/groups">
+  <label>Neue Gruppe <input type="text" name="name" required placeholder="z. B. Büro 1" /></label>
+  <button type="submit">Anlegen</button>
+</form>
+<table role="grid">
+  <thead><tr><th>Name</th><th></th></tr></thead>
+  <tbody>
+    {% for g in groups %}
+    <tr>
+      <td>{{ g['name'] }}</td>
+      <td>
+        <form method="post" action="/admin/groups/{{ g['id'] }}/delete" onsubmit="return confirm('Gruppe wirklich löschen?');">
+          <button type="submit" class="secondary">Löschen</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

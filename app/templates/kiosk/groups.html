@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Nutzergruppe wählen</h1>
+<div class="grid-cards">
+  {% for g in groups %}
+  <a class="card-link" href="/g/{{ g['id'] }}">
+    <article>
+      <header>{{ g['name'] }}</header>
+      <p>Weiter zu den Mitgliedern</p>
+    </article>
+  </a>
+  {% else %}
+  <p>Keine Gruppen vorhanden. Bitte im Admin anlegen.</p>
+  {% endfor %}
+</div>
+{% endblock %}

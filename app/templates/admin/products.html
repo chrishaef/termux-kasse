@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block trust %}{% endblock %}
+{% block content %}
+<h1>Artikel</h1>
+<p><a href="/admin">Admin</a> · <a href="/admin/categories">Warengruppen</a></p>
+<form method="post" action="/admin/products">
+  <label>Warengruppe
+    <select name="category_id" required>
+      {% for c in categories %}
+      <option value="{{ c['id'] }}">{{ c['name'] }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Name <input type="text" name="name" required placeholder="Schokoriegel" /></label>
+  <label>Preis (EUR) <input type="text" name="price_eur" required placeholder="0,80" /></label>
+  <button type="submit">Anlegen</button>
+</form>
+<table role="grid">
+  <thead><tr><th>Name</th><th>Gruppe</th><th>Preis</th><th>Aktiv</th><th></th></tr></thead>
+  <tbody>
+    {% for p in products %}
+    <tr>
+      <td>{{ p['name'] }}</td>
+      <td>{{ p['category_name'] }}</td>
+      <td>{{ p['price_cents']|eur }}</td>
+      <td>{{ 'ja' if p['active'] else 'nein' }}</td>
+      <td>
+        <form method="post" action="/admin/products/{{ p['id'] }}/toggle" style="display:inline"><button type="submit" class="secondary">Aktiv umschalten</button></form>
+        <form method="post" action="/admin/products/{{ p['id'] }}/delete" style="display:inline" onsubmit="return confirm('Löschen?');">
+          <button type="submit" class="secondary">Löschen</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

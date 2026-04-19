@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block trust %}{% endblock %}
+{% block content %}
+<h1>Nutzer</h1>
+<p><a href="/admin">Admin</a></p>
+<form method="post" action="/admin/users">
+  <label>Name <input type="text" name="name" required /></label>
+  <label>Gruppe
+    <select name="group_id" required>
+      {% for g in groups %}
+      <option value="{{ g['id'] }}">{{ g['name'] }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Anlegen</button>
+</form>
+<table role="grid">
+  <thead><tr><th>Name</th><th>Gruppe</th><th></th></tr></thead>
+  <tbody>
+    {% for u in users %}
+    <tr>
+      <td>{{ u['name'] }}</td>
+      <td>{{ u['group_name'] }}</td>
+      <td>
+        <form method="post" action="/admin/users/{{ u['id'] }}/delete" onsubmit="return confirm('Nutzer löschen?');">
+          <button type="submit" class="secondary">Löschen</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

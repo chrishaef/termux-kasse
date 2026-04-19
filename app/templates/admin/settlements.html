@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block trust %}{% endblock %}
+{% block content %}
+<h1>Abrechnungen</h1>
+<p><a href="/admin">Admin</a></p>
+{% if request.query_params.get('err') == 'no_open' %}
+<article class="contrast">Keine offenen Buchungen für diesen Nutzer (im gewählten Zeitraum).</article>
+{% endif %}
+
+<h2>Neue Abrechnung</h2>
+<p>Es werden alle <strong>offenen</strong> Buchungen des Nutzers abgerechnet. Optionaler Zeitraum filtert nur die Abrechnung, nicht die Anzeige im Kiosk.</p>
+<form method="post" action="/admin/settlements">
+  <label>Nutzer
+    <select name="user_id" required>
+      {% for u in users %}
+      <option value="{{ u['id'] }}">{{ u['group_name'] }} — {{ u['name'] }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Notiz (optional) <input type="text" name="note" /></label>
+  <label>Zeitraum von (optional, ISO) <input type="text" name="period_start" placeholder="2026-01-01T00:00:00+00:00" /></label>
+  <label>Zeitraum bis (optional, ISO) <input type="text" name="period_end" /></label>
+  <button type="submit">Abrechnung erstellen</button>
+</form>
+
+<h2>Letzte Abrechnungen</h2>
+<table role="grid">
+  <thead><tr><th>Datum</th><th>Nutzer</th><th>Gruppe</th><th>Summe</th><th>Export</th></tr></thead>
+  <tbody>
+    {% for s in settlements %}
+    <tr>
+      <td>{{ s['created_at'] }}</td>
+      <td>{{ s['user_name'] }}</td>
+      <td>{{ s['group_name'] }}</td>
+      <td>{{ s['total_cents']|eur }}</td>
+      <td>
+        <a href="/admin/settlements/{{ s['id'] }}/xlsx" role="button" class="outline">XLS</a>
+        <a href="/admin/settlements/{{ s['id'] }}/pdf" role="button" class="outline">PDF</a>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">Noch keine Abrechnungen.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

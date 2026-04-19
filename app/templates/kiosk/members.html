@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ group['name'] }}</h1>
+<p><a href="/" role="button" class="secondary">Zurück zu Gruppen</a></p>
+<h2>Mitglied wählen</h2>
+<div class="grid-cards">
+  {% for u in users %}
+  <a class="card-link" href="/u/{{ u['id'] }}">
+    <article>
+      <header>{{ u['name'] }}</header>
+    </article>
+  </a>
+  {% else %}
+  <p>Keine Mitglieder in dieser Gruppe.</p>
+  {% endfor %}
+</div>
+{% endblock %}

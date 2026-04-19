@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title }} · Vertrauenskasse</title>
+  <link rel="stylesheet" href="/static/pico.min.css" />
+  <style>
+    .trust-banner { font-size: 0.85rem; opacity: 0.85; margin-bottom: 1rem; }
+    .big-balance { font-size: 2rem; font-weight: bold; }
+    .grid-cards { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .card-link { text-decoration: none; color: inherit; }
+    .card-link article { height: 100%; margin: 0; }
+    nav.kiosk-nav { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <nav class="kiosk-nav">
+      <ul>
+        <li><a href="/">Kiosk</a></li>
+        <li><a href="/admin">Admin</a></li>
+      </ul>
+    </nav>
+    {% block trust %}
+    <p class="trust-banner">Hinweis: Vertrauenskasse — Buchungen sind nicht passwortgeschützt. Nur das Admin-Backend ist geschützt.</p>
+    {% endblock %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

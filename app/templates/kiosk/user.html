@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ user['name'] }}</h1>
+<p>{{ user['group_name'] }}</p>
+<p>
+  <a href="/" role="button" class="secondary">Start</a>
+  <a href="/g/{{ user['group_id'] }}" role="button" class="secondary">Gruppe</a>
+</p>
+
+<section>
+  <h2>Kontostand (offen)</h2>
+  <p class="big-balance">{{ balance_cents|eur }}</p>
+  <p class="secondary">Positiver Betrag = offener Verbrauch seit letzter Abrechnung.</p>
+</section>
+
+<section>
+  <h2>Letzte Abrechnung</h2>
+  {% if last_settlement %}
+  <p>Datum: {{ last_settlement['created_at'] }}</p>
+  <p>Summe damals: {{ last_settlement['total_cents']|eur }}</p>
+  {% if last_settlement['note'] %}<p>Notiz: {{ last_settlement['note'] }}</p>{% endif %}
+  {% else %}
+  <p>Noch keine Abrechnung erfasst.</p>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Artikel hinzufügen</h2>
+  {% for block in products_by_cat %}
+    <h3>{{ block.category['name'] }}</h3>
+    <div class="grid-cards">
+      {% for p in block.products %}
+      <form method="post" action="/u/{{ user['id'] }}/add">
+        <input type="hidden" name="product_id" value="{{ p['id'] }}" />
+        <button type="submit" class="outline">{{ p['name'] }} — +1 ({{ p['price_cents']|eur }})</button>
+      </form>
+      {% else %}
+      <p class="secondary">Keine aktiven Artikel.</p>
+      {% endfor %}
+    </div>
+  {% else %}
+  <p>Keine Warengruppen. Bitte im Admin anlegen.</p>
+  {% endfor %}
+</section>
+{% endblock %}
