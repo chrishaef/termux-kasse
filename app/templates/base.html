@@ -14,7 +14,9 @@
       <a href="/" class="site-brand">Vertrauenskasse</a>
       <nav class="site-nav" aria-label="Hauptnavigation">
         <a href="/">Kiosk</a>
+        {% block header_nav_extra %}
         <a href="/admin">Admin</a>
+        {% endblock %}
       </nav>
     </div>
   </header>

@@ -3,6 +3,7 @@ from app.db import init_db
 from app.ledger_service import (
     add_purchase,
     create_settlement_for_user,
+    finance_overview,
     open_ledger_for_user,
     settlement_count_for_user,
     total_previously_settled_cents,
@@ -84,3 +85,32 @@ def test_previously_settled_totals_and_received_flag() -> None:
         ).fetchone()
         assert int(row2[0]) == 0
         assert total_previously_settled_cents(conn, uid) == 150
+
+
+def test_finance_overview() -> None:
+    init_db()
+    with db.get_connection() as conn:
+        conn.execute("INSERT INTO user_groups (name) VALUES ('G1')")
+        gid = conn.execute("SELECT id FROM user_groups").fetchone()[0]
+        conn.execute("INSERT INTO users (group_id, name) VALUES (?, 'A')", (gid,))
+        conn.execute("INSERT INTO users (group_id, name) VALUES (?, 'B')", (gid,))
+        uid_a = conn.execute("SELECT id FROM users WHERE name='A'").fetchone()[0]
+        uid_b = conn.execute("SELECT id FROM users WHERE name='B'").fetchone()[0]
+        conn.execute("INSERT INTO product_categories (name, sort_order) VALUES ('C', 0)")
+        cid = conn.execute("SELECT id FROM product_categories").fetchone()[0]
+        conn.execute(
+            "INSERT INTO products (category_id, name, price_cents, active) VALUES (?, 'P', 100, 1)",
+            (cid,),
+        )
+        pid = conn.execute("SELECT id FROM products").fetchone()[0]
+        add_purchase(conn, uid_a, pid, "x", 300)
+        add_purchase(conn, uid_b, pid, "x", 100)
+        fo = finance_overview(conn)
+        assert fo["open_total_cents"] == 400
+        assert fo["max_user_open_cents"] == 300
+        assert fo["settled_total_cents"] == 0
+        create_settlement_for_user(conn, uid_a)
+        fo2 = finance_overview(conn)
+        assert fo2["open_total_cents"] == 100
+        assert fo2["max_user_open_cents"] == 100
+        assert fo2["settled_total_cents"] == 300

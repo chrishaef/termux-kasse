@@ -116,6 +116,32 @@ body {
   border-color: var(--kas-accent-bright);
 }
 
+.admin-head-logout {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin-head-logout__btn {
+  width: auto;
+  margin: 0;
+  padding: 0.45rem 0.95rem;
+  border-radius: 4px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+  background: #a82a2a;
+  border: 1px solid #c44;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.admin-head-logout__btn:hover {
+  background: #c43333;
+  border-color: #e06666;
+  color: #fff;
+}
+
 .site-main {
   max-width: 1100px;
   padding-bottom: 2.5rem;
@@ -377,6 +403,55 @@ body {
 /* Admin */
 .app-admin .page-head__title {
   font-size: 1.65rem;
+}
+
+.admin-dash-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.admin-dash-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  max-width: 100%;
+}
+
+.admin-stat {
+  background: var(--kas-surface);
+  color: var(--kas-text);
+  border: 1px solid var(--kas-border);
+  border-radius: var(--kas-radius-sm);
+  padding: 0.45rem 0.65rem;
+  min-width: 6.5rem;
+  text-align: right;
+  box-shadow: var(--kas-shadow);
+}
+
+.admin-stat__label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--kas-muted);
+  line-height: 1.2;
+  margin-bottom: 0.2rem;
+}
+
+.admin-stat__value {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #7a5f0c;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.admin-cards--tight {
+  margin-top: 0.5rem;
 }
 
 .admin-back {

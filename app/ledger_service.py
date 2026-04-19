@@ -9,6 +9,45 @@ def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
+def finance_overview(conn: sqlite3.Connection) -> dict[str, int]:
+    """Kennzahlen für die Admin-Übersicht: offene Posten gesamt, höchster Nutzer-Saldo, Summe abgeschlossener Abrechnungen."""
+    row_open = db.fetch_one(
+        conn,
+        """
+        SELECT COALESCE(SUM(amount_cents), 0) AS s
+        FROM ledger_entries
+        WHERE settlement_id IS NULL
+        """,
+        (),
+    )
+    open_total = int(row_open["s"]) if row_open else 0
+    row_max = db.fetch_one(
+        conn,
+        """
+        SELECT COALESCE(MAX(per_user), 0) AS m
+        FROM (
+            SELECT COALESCE(SUM(amount_cents), 0) AS per_user
+            FROM ledger_entries
+            WHERE settlement_id IS NULL
+            GROUP BY user_id
+        ) AS t
+        """,
+        (),
+    )
+    max_user_open = int(row_max["m"]) if row_max else 0
+    row_settled = db.fetch_one(
+        conn,
+        "SELECT COALESCE(SUM(total_cents), 0) AS s FROM settlements",
+        (),
+    )
+    settled_total = int(row_settled["s"]) if row_settled else 0
+    return {
+        "open_total_cents": open_total,
+        "max_user_open_cents": max_user_open,
+        "settled_total_cents": settled_total,
+    }
+
+
 def user_balance_cents(conn: sqlite3.Connection, user_id: int) -> int:
     row = db.fetch_one(
         conn,

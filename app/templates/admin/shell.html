@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block body_class %}app-admin{% endblock %}
+{% block trust %}{% endblock %}
+{% block header_nav_extra %}
+<form method="post" action="/admin/logout" class="admin-head-logout">
+  <button type="submit" class="admin-head-logout__btn">Abmelden</button>
+</form>
+{% endblock %}

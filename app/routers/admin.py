@@ -124,10 +124,11 @@ def admin_dashboard(request: Request) -> Response:
             "products": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM products", ())["c"],
             "categories": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM product_categories", ())["c"],
         }
+        finance = ledger_service.finance_overview(conn)
     return TEMPLATES.TemplateResponse(
         request,
         "admin/dashboard.html",
-        {"title": "Admin", "stats": stats},
+        {"title": "Admin", "stats": stats, "finance": finance},
     )
 
 
