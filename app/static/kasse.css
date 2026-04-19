@@ -135,6 +135,13 @@ body {
   color: var(--kas-accent-bright);
 }
 
+.site-brand-wrap {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
 .site-nav {
   display: flex;
   gap: 0.5rem;
@@ -154,29 +161,17 @@ body {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.secret-admin-trigger {
-  padding: 0.12rem;
-  margin: 0;
-  border-radius: 8px;
-  border: 1px solid var(--kas-control-border);
-  background: rgba(255, 255, 255, 0.06);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.secret-admin-trigger img {
+.secret-admin-logo {
   display: block;
-  width: 1.7rem;
-  height: 1.7rem;
-  object-fit: cover;
-  border-radius: 6px;
+  width: 2.2rem;
+  height: 2.2rem;
+  object-fit: contain;
+  cursor: pointer;
+  user-select: none;
 }
 
-.secret-admin-trigger:hover {
-  border-color: var(--kas-accent);
-  background: rgba(255, 255, 255, 0.11);
+.secret-admin-logo:hover {
+  filter: drop-shadow(0 0 5px rgba(232, 188, 46, 0.35));
 }
 
 .site-nav a:hover {
