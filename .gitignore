@@ -8,3 +8,5 @@ data/
 .secret_key
 *.db-journal
 .DS_Store
+.server.pid
+server.log

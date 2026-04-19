@@ -31,6 +31,24 @@ PORT=9000 bash start.sh
 - Session-Secret: `.secret_key` im Projektroot (von Git ignoriert) oder Umgebungsvariable `KASSE_SECRET_KEY`.
 - Backup: Ordner `data/` kopieren oder nur `kasse.db` sichern, während der Server **gestoppt** ist.
 
+## Updates (Hotspot / WLAN)
+
+Wenn das Tablet kurz online ist (z. B. Handy-Hotspot), im Projektordner:
+
+```bash
+bash update.sh
+```
+
+Das Skript führt `git pull --ff-only`, aktualisiert die Python-Pakete, beendet einen zuvor mit `update.sh` gestarteten Server (über `.server.pid`, sonst Fallback per `pkill`) und startet **uvicorn im Hintergrund** neu. Logdatei: `server.log`.
+
+Nur pull + Pakete, **ohne** Neustart (wenn du weiter `start.sh` im Vordergrund nutzen willst):
+
+```bash
+bash update.sh --no-restart
+```
+
+Hinweis: Läuft die Kasse nur mit `bash start.sh` im Vordergrund, hat sie keine `.server.pid` — dann beendet `update.sh` per `pkill` passende `uvicorn app.main:app`-Prozesse oder du stoppt vorher manuell (Strg+C) und startest danach `bash start.sh`.
+
 ## Offline
 
 Die App spricht keine externen Dienste an. Internet ist nur für `git pull` / `pip install` nötig, nicht für den laufenden Kiosk.
