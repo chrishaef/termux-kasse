@@ -2,32 +2,48 @@
 {% block trust %}{% endblock %}
 {% block content %}
 <header class="page-head k-user-head">
-  <div class="k-user-head__main">
-    <p class="page-head__eyebrow">Schritt 3 · {{ user['group_name'] }}</p>
-    <h1 class="page-head__title">{{ user['name'] }}</h1>
-    <p class="page-head__lead">Artikel buchen</p>
+  <div class="k-user-head__nav">
+    <a href="/" role="button" class="secondary">Start</a>
+    <a href="/g/{{ user['group_id'] }}" role="button" class="secondary">Gruppe wechseln</a>
   </div>
-  <aside class="k-user-head__aside" aria-label="Kontostand und letzte Abrechnung">
-    <div class="k-user-head__balance">
-      <p class="k-user-head__balance-label">Kontostand</p>
-      <p class="k-user-head__balance-value">{{ balance_cents|eur }}</p>
+  <div class="k-user-head__row">
+    <div class="k-user-head__main">
+      <p class="page-head__eyebrow">Schritt 3 · {{ user['group_name'] }}</p>
+      <h1 class="page-head__title">{{ user['name'] }}</h1>
+      <p class="page-head__lead">Artikel buchen</p>
     </div>
-    <div class="k-user-head__last">
-      <h2 class="k-user-head__last-title">Letzte Abrechnung</h2>
-      {% if last_settlement %}
-      <p class="k-user-head__last-line"><strong>Datum:</strong> {{ last_settlement['created_at']|date_de }}</p>
-      <p class="k-user-head__last-line"><strong>Summe damals:</strong> {{ last_settlement['total_cents']|eur }}</p>
-      {% if last_settlement['note'] %}<p class="k-user-head__last-line"><strong>Notiz:</strong> {{ last_settlement['note'] }}</p>{% endif %}
-      {% else %}
-      <p class="k-user-head__last-line secondary">Noch keine Abrechnung erfasst.</p>
-      {% endif %}
-    </div>
-  </aside>
+    <aside class="k-user-head__aside" aria-label="Kontostand und letzte Abrechnung">
+      <div class="k-user-head__balance">
+        <p class="k-user-head__balance-label">Kontostand</p>
+        <p class="k-user-head__balance-value{% if display_balance_cents < 0 %} k-user-head__balance-value--debt{% endif %}">{{ display_balance_cents|eur }}</p>
+      </div>
+      <div class="k-user-head__last">
+        <h2 class="k-user-head__last-title">Letzte Abrechnung</h2>
+        {% if last_settlement %}
+        <p class="k-user-head__last-line"><strong>Datum:</strong> {{ last_settlement['created_at']|date_de }}</p>
+        <p class="k-user-head__last-line"><strong>Summe damals:</strong> {{ last_settlement['total_cents']|eur }}</p>
+        {% if last_settlement['note'] %}<p class="k-user-head__last-line"><strong>Notiz:</strong> {{ last_settlement['note'] }}</p>{% endif %}
+        {% else %}
+        <p class="k-user-head__last-line secondary">Noch keine Abrechnung erfasst.</p>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
 </header>
-<div class="k-toolbar">
-  <a href="/" role="button" class="secondary">Start</a>
-  <a href="/g/{{ user['group_id'] }}" role="button" class="secondary">Gruppe wechseln</a>
+{% if debt_reminder_level > 0 %}
+<div class="k-debt-banner k-debt-banner--level{{ debt_reminder_level }}" role="status">
+  {% if debt_reminder_level == 1 %}
+  <p class="k-debt-banner__title">Zahlungserinnerung</p>
+  <p class="k-debt-banner__text">Es liegen offene Buchungen über dem ersten Schwellenwert. Bitte begleichen Sie den Betrag bei Gelegenheit.</p>
+  {% elif debt_reminder_level == 2 %}
+  <p class="k-debt-banner__title">Höherer Ausstand</p>
+  <p class="k-debt-banner__text">Der offene Betrag liegt über dem zweiten Schwellenwert. Bitte zahlen Sie bald nach.</p>
+  {% else %}
+  <p class="k-debt-banner__title">Sehr hoher Ausstand</p>
+  <p class="k-debt-banner__text">Der offene Betrag hat den dritten Schwellenwert erreicht oder überschritten. Bitte umgehend begleichen; der Admin wurde informiert.</p>
+  {% endif %}
 </div>
+{% endif %}
 
 <h2 class="k-section-title">Artikel hinzufügen</h2>
 {% for block in products_by_cat %}
@@ -36,7 +52,10 @@
     {% for p in block.products %}
     <form method="post" action="/u/{{ user['id'] }}/add">
       <input type="hidden" name="product_id" value="{{ p['id'] }}" />
-      <button type="submit">{{ p['name'] }} · +1 · {{ p['price_cents']|eur }}</button>
+      <button type="submit" class="k-product-btn">
+        <span class="k-product-btn__name">{{ p['name'] }}</span>
+        <span class="k-product-btn__price">{{ p['price_cents']|eur }}</span>
+      </button>
     </form>
     {% else %}
     <p class="k-empty" style="grid-column: 1 / -1">Keine aktiven Artikel in dieser Warengruppe.</p>

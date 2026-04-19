@@ -6,3 +6,17 @@
   <button type="submit" class="admin-head-logout__btn">Abmelden</button>
 </form>
 {% endblock %}
+{% block content %}
+{% if request.state.admin_debt_alert_count > 0 %}
+<div class="admin-debt-global-alert" role="status">
+  <strong>Achtung Ausstände:</strong> {{ request.state.admin_debt_alert_count }} Nutzer
+  {% if request.state.admin_debt_alert_count == 1 %}hat{% else %}haben{% endif %} den dritten Schwellenwert erreicht oder überschritten.
+  <span class="admin-debt-global-alert__links">
+    <a href="/admin/debt-thresholds">Schwellen bearbeiten</a>
+    ·
+    <a href="/admin/users">Nutzerübersicht</a>
+  </span>
+</div>
+{% endif %}
+{% block admin_page %}{% endblock %}
+{% endblock %}

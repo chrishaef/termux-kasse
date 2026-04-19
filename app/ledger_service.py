@@ -81,6 +81,26 @@ def finance_overview(conn: sqlite3.Connection) -> dict[str, int]:
     }
 
 
+def count_users_open_balance_gte(conn: sqlite3.Connection, min_cents: int) -> int:
+    """Anzahl Nutzer, deren offener Saldo (Summe offener Buchungen) >= min_cents ist."""
+    if min_cents <= 0:
+        return 0
+    row = db.fetch_one(
+        conn,
+        """
+        SELECT COUNT(*) AS c FROM (
+            SELECT user_id
+            FROM ledger_entries
+            WHERE settlement_id IS NULL
+            GROUP BY user_id
+            HAVING SUM(amount_cents) >= ?
+        ) AS t
+        """,
+        (min_cents,),
+    )
+    return int(row["c"]) if row else 0
+
+
 def user_balance_cents(conn: sqlite3.Connection, user_id: int) -> int:
     row = db.fetch_one(
         conn,

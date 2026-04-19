@@ -8,8 +8,11 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_secret_key
-from app.db import init_db
+from app import db
+from app import debt_thresholds
 from app import kiosk_notice
+from app import ledger_service
+from app.db import init_db
 from app.routers import admin, kiosk
 
 
@@ -20,18 +23,38 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Termux-Vertrauenskasse", lifespan=lifespan)
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=get_secret_key(),
-    max_age=60 * 60 * 24 * 14,
-    same_site="lax",
-)
 
 
 @app.middleware("http")
 async def attach_kiosk_notice(request: Request, call_next):
     request.state.kiosk_notice = kiosk_notice.get_display_text()
     return await call_next(request)
+
+
+@app.middleware("http")
+async def attach_admin_debt_alerts(request: Request, call_next):
+    request.state.admin_debt_alert_count = 0
+    path = request.url.path
+    if path.startswith("/admin") and path not in ("/admin/login", "/admin/setup"):
+        if request.session.get("admin_user"):
+            try:
+                with db.get_connection() as conn:
+                    _t1, _t2, t3 = debt_thresholds.get_thresholds(conn)
+                    request.state.admin_debt_alert_count = ledger_service.count_users_open_balance_gte(
+                        conn, t3
+                    )
+            except Exception:
+                request.state.admin_debt_alert_count = 0
+    return await call_next(request)
+
+
+# Zuletzt registriert = äußerste Schicht: Session steht beim Aufruf der inneren HTTP-Middleware bereit.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=get_secret_key(),
+    max_age=60 * 60 * 24 * 14,
+    same_site="lax",
+)
 
 
 static_dir = Path(__file__).resolve().parent / "static"

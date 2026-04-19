@@ -1,5 +1,5 @@
 {% extends "admin/shell.html" %}
-{% block content %}
+{% block admin_page %}
 <div class="admin-dash-header">
   <div class="admin-dash-stats" aria-label="Finanzübersicht">
     <div class="admin-stat">
@@ -51,6 +51,12 @@
     <a class="admin-card" href="/admin/news">
       <strong>News</strong>
       <span>Kiosk-Nachricht bearbeiten</span>
+    </a>
+  </li>
+  <li>
+    <a class="admin-card" href="/admin/debt-thresholds">
+      <strong>3 Stufen</strong>
+      <span>Ausstands-Schwellen</span>
     </a>
   </li>
 </ul>

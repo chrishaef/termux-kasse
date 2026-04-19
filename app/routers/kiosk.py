@@ -4,6 +4,7 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app import db
+from app import debt_thresholds
 from app.ledger_service import add_purchase, last_settlement, user_balance_cents
 from app.templates_env import TEMPLATES
 
@@ -55,6 +56,8 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
         if not u:
             raise HTTPException(status_code=404, detail="Nutzer nicht gefunden")
         balance = user_balance_cents(conn, user_id)
+        t1, t2, t3 = debt_thresholds.get_thresholds(conn)
+        debt_reminder_level = debt_thresholds.reminder_level(balance, t1, t2, t3)
         last_s = last_settlement(conn, user_id)
         categories = db.fetch_all(
             conn,
@@ -79,6 +82,8 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
         {
             "user": u,
             "balance_cents": balance,
+            "display_balance_cents": -balance,
+            "debt_reminder_level": debt_reminder_level,
             "last_settlement": last_s,
             "products_by_cat": products_by_cat,
             "title": u["name"],

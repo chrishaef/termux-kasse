@@ -7,6 +7,7 @@ from fastapi import APIRouter, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from app import db
+from app import debt_thresholds
 from app import kiosk_notice
 from app import ledger_service
 from app.auth import hash_password, verify_password
@@ -155,6 +156,53 @@ def admin_news_save(request: Request, message: str = Form("")) -> RedirectRespon
         return r
     kiosk_notice.set_custom_message(message)
     return RedirectResponse("/admin/news?saved=1", status_code=303)
+
+
+def _eur_field_from_cents(cents: int) -> str:
+    return f"{int(cents) / 100:.2f}"
+
+
+@router.get("/debt-thresholds", response_class=HTMLResponse)
+def admin_debt_thresholds_get(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    with db.get_connection() as conn:
+        t1, t2, t3 = debt_thresholds.get_thresholds(conn)
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/debt_thresholds.html",
+        {
+            "title": "Ausstands-Schwellen",
+            "t1": t1,
+            "t2": t2,
+            "t3": t3,
+            "t1_eur": _eur_field_from_cents(t1),
+            "t2_eur": _eur_field_from_cents(t2),
+            "t3_eur": _eur_field_from_cents(t3),
+            "saved": request.query_params.get("saved") == "1",
+            "error": request.query_params.get("err") == "invalid",
+        },
+    )
+
+
+@router.post("/debt-thresholds")
+def admin_debt_thresholds_post(
+    request: Request,
+    threshold_a_eur: str = Form(...),
+    threshold_b_eur: str = Form(...),
+    threshold_c_eur: str = Form(...),
+) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    try:
+        ca = _parse_price_eur_to_cents(threshold_a_eur)
+        cb = _parse_price_eur_to_cents(threshold_b_eur)
+        cc = _parse_price_eur_to_cents(threshold_c_eur)
+    except ValueError:
+        return RedirectResponse("/admin/debt-thresholds?err=invalid", status_code=303)
+    with db.get_connection() as conn:
+        debt_thresholds.save_thresholds_cents(conn, ca, cb, cc)
+    return RedirectResponse("/admin/debt-thresholds?saved=1", status_code=303)
 
 
 @router.get("/groups", response_class=HTMLResponse)
