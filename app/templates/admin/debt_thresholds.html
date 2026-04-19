@@ -1,10 +1,5 @@
 {% extends "admin/shell.html" %}
 {% block admin_page %}
-<header class="page-head">
-  <p class="page-head__eyebrow">Kiosk &amp; Finanzen</p>
-  <h1 class="page-head__title">Ausstands-Schwellen</h1>
-  <p class="page-head__lead">Drei Beträge in Euro (intern aufsteigend sortiert). Offener Saldo = Summe unabgerechneter Buchungen (wie in der Nutzerübersicht).</p>
-</header>
 <a href="/admin" class="admin-back">← Admin-Übersicht</a>
 {% if saved %}
 <article class="contrast"><strong>Gespeichert.</strong> Die Schwellen gelten sofort für Kiosk und Admin-Hinweis.</article>
@@ -15,10 +10,10 @@
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.05rem">Stufen</h2>
   <ul style="margin:0 0 1rem 1.1rem;padding:0">
-    <li><strong>Unter Schwelle 1:</strong> am Kiosk normal, keine Zusatzmeldung.</li>
-    <li><strong>Zwischen Schwelle 1 und 2:</strong> Zahlungserinnerung für den Nutzer am Kiosk.</li>
-    <li><strong>Zwischen Schwelle 2 und 3:</strong> dringlichere Hinweiszeile am Kiosk.</li>
-    <li><strong>Ab Schwelle 3:</strong> weiterhin Hinweis am Kiosk; im Admin-Bereich erscheint eine globale Benachrichtigung, solange mindestens ein Nutzer diesen Betrag erreicht oder überschreitet.</li>
+    <li><strong>&lt; S1:</strong> keine Meldung</li>
+    <li><strong>S1-S2:</strong> Hinweis 1</li>
+    <li><strong>S2-S3:</strong> Hinweis 2</li>
+    <li><strong>&gt;= S3:</strong> Hinweis 3 + Admin-Alarm</li>
   </ul>
   <form method="post" action="/admin/debt-thresholds">
     <label>Schwelle 1 (Euro) <input type="text" name="threshold_a_eur" value="{{ t1_eur }}" required inputmode="decimal" autocomplete="off" /></label>
