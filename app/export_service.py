@@ -22,10 +22,11 @@ def _received_quittance_label(header: sqlite3.Row) -> str | None:
 
 
 def _pdf_cell_text(s: str, max_len: int) -> str:
+    """PyFPDF 1.x nutzt Latin-1-Kernschriften — Umlaute ok, Rest ersetzt."""
     t = str(s).replace("\r", " ").replace("\n", " ")
     if len(t) > max_len:
-        return t[: max_len - 1] + "…"
-    return t
+        t = t[: max_len - 3] + "..."
+    return t.encode("latin-1", errors="replace").decode("latin-1")
 
 
 def build_xlsx_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
@@ -63,13 +64,13 @@ def build_xlsx_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
 
 
 def build_pdf_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
-    """PDF ohne ReportLab/Pillow — fpdf2 ist reines Python, Termux-freundlich."""
+    """PDF ohne Pillow — PyFPDF 1.x-Paket ``fpdf`` (nicht fpdf2), keine Bild-Abhängigkeiten."""
     pdf = FPDF(orientation="P", unit="mm", format="A4")
     pdf.set_margins(18, 18, 18)
-    pdf.set_auto_page_break(True, margin=18)
+    pdf.set_auto_page_break(True, 18)
     pdf.add_page()
     pdf.set_font("Helvetica", "B", 15)
-    pdf.cell(0, 9, "Abrechnung Vertrauenskasse", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 9, _pdf_cell_text("Abrechnung Vertrauenskasse", 80), 0, 1)
     pdf.ln(2)
     pdf.set_font("Helvetica", "", 9)
 
@@ -88,16 +89,15 @@ def build_pdf_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     label_w, val_w = 48, 122
     for label, val in meta:
         pdf.set_font("Helvetica", "B", 9)
-        pdf.cell(label_w, 6, _pdf_cell_text(label, 40), border=1)
+        pdf.cell(label_w, 6, _pdf_cell_text(label, 40), 1, 0)
         pdf.set_font("Helvetica", "", 9)
-        pdf.cell(val_w, 6, _pdf_cell_text(val, 120), border=1, new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(val_w, 6, _pdf_cell_text(val, 120), 1, 1)
 
     pdf.ln(4)
     wcols = (26, 74, 40, 30)
     pdf.set_font("Helvetica", "B", 8)
-    for txt, w in zip(["Datum", "Beschreibung", "Artikel", "EUR"], wcols):
-        pdf.cell(w, 6, txt, border=1)
-    pdf.ln(6)
+    for i, (txt, w) in enumerate(zip(["Datum", "Beschreibung", "Artikel", "EUR"], wcols)):
+        pdf.cell(w, 6, _pdf_cell_text(txt, 24), 1, 1 if i == len(wcols) - 1 else 0)
     pdf.set_font("Helvetica", "", 8)
     for r in lines:
         cells = [
@@ -107,11 +107,8 @@ def build_pdf_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
             f'{int(r["amount_cents"]) / 100:.2f}',
         ]
         maxl = (22, 48, 24, 12)
-        for c, w, m in zip(cells, wcols, maxl):
-            pdf.cell(w, 5.5, _pdf_cell_text(c, m), border=1)
-        pdf.ln(5.5)
+        for i, (c, w, m) in enumerate(zip(cells, wcols, maxl)):
+            pdf.cell(w, 5.5, _pdf_cell_text(c, m), 1, 1 if i == len(wcols) - 1 else 0)
 
-    out = pdf.output()
-    if out is None:
-        return b""
-    return bytes(out)
+    out = pdf.output(dest="S")
+    return out.encode("latin-1", errors="replace")

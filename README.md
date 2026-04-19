@@ -34,7 +34,7 @@ Lokal laufende **Vertrauenskasse** für kleine Gruppen: Mitglieder buchen Artike
 - **Backend:** Python 3, **FastAPI**, **Uvicorn**
 - **Datenbank:** SQLite (`kasse.db`)
 - **Templates:** Jinja2, **Pico.css** + eigenes **`app/static/kasse.css`**
-- **Export:** openpyxl (XLS), fpdf2 (PDF, ohne Pillow)
+- **Export:** openpyxl (XLS), PyFPDF 1.x / `fpdf` (PDF, ohne Pillow)
 - **Tests:** pytest
 
 ---
@@ -126,7 +126,7 @@ Alle folgenden Befehle (`start.sh`, `update.sh`) beziehen sich auf diesen Ordner
 - **FastAPI 0.99.x** und **Pydantic v1** — neuere FastAPI-Versionen brauchen **pydantic-core** (ebenfalls Rust). Ohne vorgefertigtes Rad für `cpython-313-aarch64-linux-android` muss pip kompilieren, was in Termux scheitert. Pydantic v1 ist für diese Kasse ausreichend.
 - **httpx unter 0.28** — passt zur mitgelieferten **Starlette 0.27**-Testumgebung; nur für Entwickler-Tests relevant, nicht für den Kiosk-Betrieb.
 - **passlib** (PBKDF2) statt **bcrypt** — kein Rust-Compiler nötig; alte bcrypt-Hashes in der DB werden weiter erkannt, **wenn** optional `bcrypt` installiert ist (sonst Passwort im Admin neu setzen).
-- **fpdf2** statt **reportlab** — vermeidet **Pillow** und native JPEG-Bibliotheken beim PDF-Export.
+- **fpdf** (PyFPDF 1.7) statt **reportlab** / **fpdf2** — **fpdf2** zieht **Pillow** als feste Abhängigkeit; das klassische **fpdf**-Paket nicht.
 
 ---
 
