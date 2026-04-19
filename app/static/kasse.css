@@ -789,6 +789,24 @@ body.app-admin .table-wrap th {
   border-bottom: 2px solid rgba(180, 140, 30, 0.55);
 }
 
+body.app-admin .table-wrap th.num,
+body.app-admin .table-wrap td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+body.app-admin .table-wrap tfoot th,
+body.app-admin .table-wrap tfoot td {
+  background: #dcd6ca;
+  color: #0a0f0a;
+  border-top: 2px solid rgba(180, 140, 30, 0.55);
+  font-weight: 700;
+}
+
+body.app-admin .table-wrap tfoot td.num strong {
+  font-weight: 800;
+}
+
 body.app-admin .table-wrap td {
   color: #121812;
   padding: 0.55rem 0.75rem;

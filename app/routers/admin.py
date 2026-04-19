@@ -230,20 +230,23 @@ def admin_users(request: Request) -> Response:
     if (r := _redirect_login(request)):
         return r
     with db.get_connection() as conn:
-        users = db.fetch_all(
-            conn,
-            """
-            SELECT u.id, u.name, g.id AS group_id, g.name AS group_name
-            FROM users u
-            JOIN user_groups g ON g.id = u.group_id
-            ORDER BY g.name, u.name
-            """,
-        )
+        users = ledger_service.users_admin_overview(conn)
         groups = db.fetch_all(conn, "SELECT id, name FROM user_groups ORDER BY name")
+        overview_totals = {
+            "open_balance_cents": sum(int(u["open_balance_cents"]) for u in users),
+            "open_entries_count": sum(int(u["open_entries_count"]) for u in users),
+            "settled_total_cents": sum(int(u["settled_total_cents"]) for u in users),
+            "settlements_count": sum(int(u["settlements_count"]) for u in users),
+        }
     return TEMPLATES.TemplateResponse(
         request,
         "admin/users.html",
-        {"title": "Nutzer", "users": users, "groups": groups},
+        {
+            "title": "Nutzer",
+            "users": users,
+            "groups": groups,
+            "overview_totals": overview_totals,
+        },
     )
 
 

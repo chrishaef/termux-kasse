@@ -9,6 +9,39 @@ def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
+def users_admin_overview(conn: sqlite3.Connection) -> list[sqlite3.Row]:
+    """Alle Nutzer mit Gruppe und Finanz-Kennzahlen für die Admin-Übersicht."""
+    return db.fetch_all(
+        conn,
+        """
+        SELECT u.id, u.name, g.id AS group_id, g.name AS group_name,
+            COALESCE(lo.open_cents, 0) AS open_balance_cents,
+            COALESCE(lo.open_n, 0) AS open_entries_count,
+            COALESCE(st.settled_cents, 0) AS settled_total_cents,
+            COALESCE(st.settlements_n, 0) AS settlements_count
+        FROM users u
+        JOIN user_groups g ON g.id = u.group_id
+        LEFT JOIN (
+            SELECT user_id,
+                SUM(amount_cents) AS open_cents,
+                COUNT(*) AS open_n
+            FROM ledger_entries
+            WHERE settlement_id IS NULL
+            GROUP BY user_id
+        ) lo ON lo.user_id = u.id
+        LEFT JOIN (
+            SELECT user_id,
+                SUM(total_cents) AS settled_cents,
+                COUNT(*) AS settlements_n
+            FROM settlements
+            GROUP BY user_id
+        ) st ON st.user_id = u.id
+        ORDER BY g.name COLLATE NOCASE, u.name COLLATE NOCASE
+        """,
+        (),
+    )
+
+
 def finance_overview(conn: sqlite3.Connection) -> dict[str, int]:
     """Kennzahlen für die Admin-Übersicht: offene Posten gesamt, höchster Nutzer-Saldo, Summe abgeschlossener Abrechnungen."""
     row_open = db.fetch_one(

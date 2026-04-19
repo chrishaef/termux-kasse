@@ -2,9 +2,60 @@
 {% block content %}
 <header class="page-head">
   <p class="page-head__eyebrow">Stammdaten</p>
-  <h1 class="page-head__title">Nutzer</h1>
+  <h1 class="page-head__title">Nutzerübersicht</h1>
+  <p class="page-head__lead">Alle Nutzer mit offenem Saldo, offenen Buchungen und bisherigen Abrechnungen.</p>
 </header>
 <a href="/admin" class="admin-back">← Admin-Übersicht</a>
+<div class="table-wrap">
+  <table role="grid" class="admin-user-overview">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Gruppe</th>
+        <th scope="col" class="num">Offener Saldo</th>
+        <th scope="col" class="num">Offene Buchungen</th>
+        <th scope="col" class="num">Abgerechnet (Summe)</th>
+        <th scope="col" class="num">Abrechnungen</th>
+        <th scope="col" class="th-actions">Aktion</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td><strong>{{ u['name'] }}</strong></td>
+        <td>{{ u['group_name'] }}</td>
+        <td class="num{% if u['open_balance_cents'] == 0 %} secondary{% endif %}">{{ u['open_balance_cents']|eur }}</td>
+        <td class="num{% if u['open_entries_count'] == 0 %} secondary{% endif %}">{{ u['open_entries_count'] }}</td>
+        <td class="num{% if u['settled_total_cents'] == 0 %} secondary{% endif %}">{{ u['settled_total_cents']|eur }}</td>
+        <td class="num{% if u['settlements_count'] == 0 %} secondary{% endif %}">{{ u['settlements_count'] }}</td>
+        <td class="td-actions">
+          <div class="td-actions__inner">
+            <form method="post" action="/admin/users/{{ u['id'] }}/delete" class="form-inline-action" onsubmit="return confirm('Nutzer löschen?');">
+              <button type="submit" class="secondary admin-btn-sm">Löschen</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" class="secondary">Noch keine Nutzer angelegt.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    {% if users %}
+    <tfoot>
+      <tr>
+        <th scope="row" colspan="2">Summe</th>
+        <td class="num"><strong>{{ overview_totals['open_balance_cents']|eur }}</strong></td>
+        <td class="num"><strong>{{ overview_totals['open_entries_count'] }}</strong></td>
+        <td class="num"><strong>{{ overview_totals['settled_total_cents']|eur }}</strong></td>
+        <td class="num"><strong>{{ overview_totals['settlements_count'] }}</strong></td>
+        <td></td>
+      </tr>
+    </tfoot>
+    {% endif %}
+  </table>
+</div>
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.1rem">Neuer Nutzer</h2>
   <form method="post" action="/admin/users">
@@ -19,22 +70,4 @@
     <button type="submit">Anlegen</button>
   </form>
 </article>
-<div class="table-wrap">
-  <table role="grid">
-    <thead><tr><th>Name</th><th>Gruppe</th><th></th></tr></thead>
-    <tbody>
-      {% for u in users %}
-      <tr>
-        <td>{{ u['name'] }}</td>
-        <td>{{ u['group_name'] }}</td>
-        <td>
-          <form method="post" action="/admin/users/{{ u['id'] }}/delete" onsubmit="return confirm('Nutzer löschen?');">
-            <button type="submit" class="secondary">Löschen</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
 {% endblock %}
