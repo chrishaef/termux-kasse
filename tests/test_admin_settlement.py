@@ -105,3 +105,12 @@ def test_settlement_start_filters_users_by_group() -> None:
         assert r.status_code == 200
         assert "Anna" in r.text
         assert "Ben" not in r.text
+
+
+def test_settlement_start_shows_selected_user_balance() -> None:
+    with TestClient(app) as client:
+        uid = _seed_open_balance(client)
+        r = client.get(f"/admin/settlements/start?user_id={uid}")
+        assert r.status_code == 200
+        assert "Kontostand" in r.text
+        assert "-2,00 €" in r.text

@@ -17,9 +17,9 @@ KEY_M3 = "debt_threshold_3_message"
 DEFAULT_T1 = 500
 DEFAULT_T2 = 1500
 DEFAULT_T3 = 3000
-DEFAULT_M1 = "Post-it: Konto nickt - bitte zeitnah begleichen."
-DEFAULT_M2 = "Kasse knurrt: Hoeherer Ausstand - bald zahlen."
-DEFAULT_M3 = "Stufe 3: Admin informiert - bitte zahlen."
+DEFAULT_M1 = "NaNaNa - wird wohl zeit zu zahlen"
+DEFAULT_M2 = "Die Kasse knurrt: Hoeherer Ausstand - bald mal zahlen ?"
+DEFAULT_M3 = "Die Kasse wird klamm: ZAHLE ZAHLEN ZAHLEN!!!"
 
 
 def _normalize_triple(t1: int, t2: int, t3: int) -> tuple[int, int, int]:

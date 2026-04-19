@@ -12,28 +12,32 @@
 
 <article class="k-panel">
   {% if groups %}
-  <form method="get" action="/admin/settlements/start" class="k-toolbar" style="margin-bottom:0.85rem">
-    <label>Gruppe
+  <form method="get" action="/admin/settlements/start" class="k-toolbar" style="margin-bottom:0.55rem;align-items:flex-end">
+    <label style="min-width:180px;flex:1 1 220px">Gruppe
       <select name="group_id" onchange="this.form.submit()">
         {% for g in groups %}
         <option value="{{ g['id'] }}"{% if selected_group_id == g['id'] %} selected{% endif %}>{{ g['name'] }}</option>
         {% endfor %}
       </select>
     </label>
-    <noscript><button type="submit" class="secondary">Filtern</button></noscript>
-  </form>
-  {% endif %}
-  {% if users %}
-  <form method="post" action="/admin/settlements/start">
-    <label>Nutzer
-      <select name="user_id" required>
+    <label style="min-width:220px;flex:2 1 360px">Nutzer
+      <select name="user_id">
         {% for u in users %}
-        <option value="{{ u['id'] }}">{{ u['name'] }}</option>
+        <option value="{{ u['id'] }}"{% if selected_user_id == u['id'] %} selected{% endif %}>{{ u['name'] }}</option>
         {% endfor %}
       </select>
     </label>
-    <button type="submit">Weiter zur Abrechnung</button>
+    <button type="submit" class="secondary" style="margin:0">Anzeigen</button>
+    <button type="submit" formaction="/admin/settlements/start" formmethod="post" style="margin:0">Weiter zur Abrechnung</button>
   </form>
+  {% endif %}
+  {% if selected_user %}
+  <p class="secondary" style="margin:0.3rem 0 0">
+    Aktuell gewählt: <strong>{{ selected_user['group_name'] }} — {{ selected_user['name'] }}</strong> · Kontostand:
+    <strong>{{ (-selected_balance_cents)|eur }}</strong>
+  </p>
+  {% endif %}
+  {% if users %}
   {% else %}
   <p class="secondary">Legen Sie zuerst unter „Nutzer“ mindestens einen Nutzer an.</p>
   <p><a href="/admin/users">Zu den Nutzern</a></p>

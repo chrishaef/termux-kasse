@@ -551,10 +551,15 @@ def admin_settlements_list(request: Request) -> Response:
 
 
 @router.get("/settlements/start", response_class=HTMLResponse)
-def admin_settlement_start_get(request: Request, group_id: str = "") -> Response:
+def admin_settlement_start_get(
+    request: Request,
+    group_id: str = "",
+    user_id: str = "",
+) -> Response:
     if (r := _redirect_login(request)):
         return r
     gid = int(group_id) if group_id.strip().isdigit() else None
+    uid = int(user_id) if user_id.strip().isdigit() else None
     with db.get_connection() as conn:
         groups = db.fetch_all(
             conn,
@@ -577,6 +582,25 @@ def admin_settlement_start_get(request: Request, group_id: str = "") -> Response
             """,
             (gid, gid),
         )
+        if uid is None and users:
+            uid = int(users[0]["id"])
+        selected_user = None
+        selected_balance_cents = 0
+        if uid is not None:
+            selected_user = db.fetch_one(
+                conn,
+                """
+                SELECT u.id, u.name, g.name AS group_name
+                FROM users u
+                JOIN user_groups g ON g.id = u.group_id
+                WHERE u.id = ? AND (? IS NULL OR u.group_id = ?)
+                """,
+                (uid, gid, gid),
+            )
+            if selected_user:
+                selected_balance_cents = ledger_service.user_balance_cents(conn, uid)
+            else:
+                uid = None
     return TEMPLATES.TemplateResponse(
         request,
         "admin/settlement_start.html",
@@ -585,6 +609,9 @@ def admin_settlement_start_get(request: Request, group_id: str = "") -> Response
             "users": users,
             "groups": groups,
             "selected_group_id": gid,
+            "selected_user_id": uid,
+            "selected_user": selected_user,
+            "selected_balance_cents": selected_balance_cents,
         },
     )
 
