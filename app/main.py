@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -14,6 +15,18 @@ from app import kiosk_notice
 from app import ledger_service
 from app.db import init_db
 from app.routers import admin, kiosk
+
+
+def _last_sync_label() -> str:
+    git_dir = Path(__file__).resolve().parent.parent / ".git"
+    fetch_head = git_dir / "FETCH_HEAD"
+    try:
+        if fetch_head.exists():
+            ts = datetime.fromtimestamp(fetch_head.stat().st_mtime)
+            return ts.strftime("%d.%m.%Y %H:%M")
+    except Exception:
+        pass
+    return "unbekannt"
 
 
 @asynccontextmanager
@@ -31,6 +44,7 @@ async def attach_kiosk_notice(request: Request, call_next):
         request.state.kiosk_notice = kiosk_notice.get_display_text()
     except Exception:
         request.state.kiosk_notice = kiosk_notice.DEFAULT_KIOSK_NOTICE
+    request.state.last_sync_label = _last_sync_label()
     return await call_next(request)
 
 
