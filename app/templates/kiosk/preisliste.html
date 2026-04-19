@@ -7,23 +7,24 @@
   <p class="page-head__lead">Berührung/Klick startet wieder auf der Startseite.</p>
 </header>
 
-<article class="k-panel" style="text-align:center">
-  <img src="/static/wsg-logo.png" alt="" class="k-saver-logo" />
-</article>
-
-<div class="table-wrap">
-  <table role="grid">
-    <thead><tr><th>Artikel</th><th class="num">Preis</th></tr></thead>
-    <tbody>
+<section class="k-preisliste-layout" aria-label="Preisliste">
+  <div class="k-preisliste-left">
+    <h2 class="k-preisliste-title">Artikel & Preise</h2>
+    {% if products %}
+    <ul class="k-preisliste-list">
       {% for p in products %}
-      <tr>
-        <td>{{ p['name'] }}</td>
-        <td class="num">{{ p['price_cents']|eur }}</td>
-      </tr>
-      {% else %}
-      <tr><td colspan="2" class="secondary">Keine aktiven Artikel vorhanden.</td></tr>
+      <li>
+        <span class="k-preisliste-item">{{ p['name'] }}</span>
+        <span class="k-preisliste-price">{{ p['price_cents']|eur }}</span>
+      </li>
       {% endfor %}
-    </tbody>
-  </table>
-</div>
+    </ul>
+    {% else %}
+    <p class="k-preisliste-empty">Keine aktiven Artikel vorhanden.</p>
+    {% endif %}
+  </div>
+  <div class="k-preisliste-right">
+    <img src="/static/wsg-logo.png" alt="" class="k-saver-logo" />
+  </div>
+</section>
 {% endblock %}
