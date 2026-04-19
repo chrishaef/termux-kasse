@@ -120,7 +120,11 @@ cd ~/termux-kasse
 
 Alle folgenden Befehle (`start.sh`, `update.sh`) beziehen sich auf diesen Ordner (Projektroot).
 
-**pip / Termux:** In `requirements.txt` wird **ohne** `uvicorn[standard]` installiert. Die „Standard“-Extras ziehen u. a. **watchfiles** nach, das auf **Android (aarch64)** oft per Rust/Maturin gebaut werden müsste — das schlägt in Termux typischerweise fehl (`Target triple not supported`). Normales **uvicorn** reicht für dieses Projekt völlig aus.
+**pip / Termux:** In `requirements.txt` gilt:
+
+- **Kein** `uvicorn[standard]` — die Extras ziehen u. a. **watchfiles** (Rust/Maturin) nach; unter **Android (aarch64)** schlägt das oft fehl (`Target triple not supported`). Normales **uvicorn** reicht hier.
+- **FastAPI 0.99.x** und **Pydantic v1** — neuere FastAPI-Versionen brauchen **pydantic-core** (ebenfalls Rust). Ohne vorgefertigtes Rad für `cpython-313-aarch64-linux-android` muss pip kompilieren, was in Termux scheitert. Pydantic v1 ist für diese Kasse ausreichend.
+- **httpx unter 0.28** — passt zur mitgelieferten **Starlette 0.27**-Testumgebung; nur für Entwickler-Tests relevant, nicht für den Kiosk-Betrieb.
 
 ---
 

@@ -1,4 +1,7 @@
-fastapi==0.115.6
+# FastAPI 0.100+ zieht Pydantic v2 / pydantic-core (Rust) — auf Termux/Android ohne
+# passendes Rust-Target nicht baubar. 0.99.x nutzt Pydantic v1 (reines Python).
+fastapi==0.99.1
+pydantic>=1.10.14,<2
 # Kein [standard]: vermeidet watchfiles/uvloop/httptools — auf Termux/Android sonst
 # Rust/Maturin-Builds (aarch64-unknown-linux-android) und pip-Fehler.
 uvicorn==0.32.1
@@ -9,4 +12,5 @@ bcrypt==4.2.1
 openpyxl==3.1.5
 reportlab==4.2.5
 pytest==8.3.4
-httpx==0.28.1
+# httpx 0.28: TestClient (Starlette 0.27) übergibt app= — inkompatibel; für Tests <0.28
+httpx>=0.24.0,<0.28.0
