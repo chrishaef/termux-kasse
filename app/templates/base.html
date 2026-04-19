@@ -4,14 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#252b23" />
-  <title>{{ title }} · Vertrauenskasse</title>
+  <title>{{ title }} · Shopkasse</title>
   <link rel="stylesheet" href="/static/pico.min.css" />
   <link rel="stylesheet" href="/static/kasse.css" />
 </head>
 <body class="{% block body_class %}app-kiosk{% endblock %}">
   <header class="site-header">
     <div class="site-header__inner container">
-      <a href="/" class="site-brand">Vertrauenskasse</a>
+      <a href="/" class="site-brand">Shopkasse</a>
+      <div class="site-header__center">{% block site_header_center %}{% endblock %}</div>
       <nav class="site-nav" aria-label="Hauptnavigation">
         <a href="/">Kiosk</a>
         {% block header_nav_extra %}

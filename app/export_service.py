@@ -70,7 +70,7 @@ def build_pdf_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     pdf.set_auto_page_break(True, 18)
     pdf.add_page()
     pdf.set_font("Helvetica", "B", 15)
-    pdf.cell(0, 9, _pdf_cell_text("Abrechnung Vertrauenskasse", 80), 0, 1)
+    pdf.cell(0, 9, _pdf_cell_text("Abrechnung Shopkasse", 80), 0, 1)
     pdf.ln(2)
     pdf.set_font("Helvetica", "", 9)
 

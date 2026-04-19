@@ -22,7 +22,7 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="Termux-Vertrauenskasse", lifespan=lifespan)
+app = FastAPI(title="Termux-Shopkasse", lifespan=lifespan)
 
 
 @app.middleware("http")

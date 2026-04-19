@@ -37,7 +37,7 @@ if ! python -c "import fastapi" 2>/dev/null; then
   exit 1
 fi
 
-echo "Vertrauenskasse (Port ${PORT}):"
+echo "Shopkasse (Port ${PORT}):"
 echo "  lokal:    http://127.0.0.1:${PORT}"
 if [[ "$HOST" == "0.0.0.0" ]]; then
   echo "  im LAN:   http://<IP-dieses-Rechners>:${PORT}"

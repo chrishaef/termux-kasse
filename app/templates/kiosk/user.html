@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block trust %}{% endblock %}
+{% block site_header_center %}
+<a href="/" class="site-header__midlink">Start</a>
+<a href="/g/{{ user['group_id'] }}" class="site-header__midlink">Gruppe wechseln</a>
+{% endblock %}
 {% block content %}
 <header class="page-head k-user-head">
-  <div class="k-user-head__nav">
-    <a href="/" role="button" class="secondary">Start</a>
-    <a href="/g/{{ user['group_id'] }}" role="button" class="secondary">Gruppe wechseln</a>
-  </div>
   <div class="k-user-head__row">
     <div class="k-user-head__main">
       <p class="page-head__eyebrow">Schritt 3 · {{ user['group_name'] }}</p>
@@ -13,19 +13,21 @@
       <p class="page-head__lead">Artikel buchen</p>
     </div>
     <aside class="k-user-head__aside" aria-label="Kontostand und letzte Abrechnung">
-      <div class="k-user-head__balance">
-        <p class="k-user-head__balance-label">Kontostand</p>
-        <p class="k-user-head__balance-value{% if display_balance_cents < 0 %} k-user-head__balance-value--debt{% endif %}">{{ display_balance_cents|eur }}</p>
-      </div>
-      <div class="k-user-head__last">
-        <h2 class="k-user-head__last-title">Letzte Abrechnung</h2>
-        {% if last_settlement %}
-        <p class="k-user-head__last-line"><strong>Datum:</strong> {{ last_settlement['created_at']|date_de }}</p>
-        <p class="k-user-head__last-line"><strong>Summe damals:</strong> {{ last_settlement['total_cents']|eur }}</p>
-        {% if last_settlement['note'] %}<p class="k-user-head__last-line"><strong>Notiz:</strong> {{ last_settlement['note'] }}</p>{% endif %}
-        {% else %}
-        <p class="k-user-head__last-line secondary">Noch keine Abrechnung erfasst.</p>
-        {% endif %}
+      <div class="k-user-head__metrics">
+        <div class="k-user-head__balance">
+          <p class="k-user-head__balance-label">Kontostand</p>
+          <p class="k-user-head__balance-value{% if display_balance_cents < 0 %} k-user-head__balance-value--debt{% endif %}">{{ display_balance_cents|eur }}</p>
+        </div>
+        <div class="k-user-head__last">
+          <h2 class="k-user-head__last-title">Letzte Abrechnung</h2>
+          {% if last_settlement %}
+          <p class="k-user-head__last-line"><strong>Datum</strong> {{ last_settlement['created_at']|date_de }}</p>
+          <p class="k-user-head__last-line"><strong>Summe</strong> {{ last_settlement['total_cents']|eur }}</p>
+          {% if last_settlement['note'] %}<p class="k-user-head__last-line"><strong>Notiz</strong> {{ last_settlement['note'] }}</p>{% endif %}
+          {% else %}
+          <p class="k-user-head__last-line k-user-head__last-line--muted">Noch keine Abrechnung erfasst.</p>
+          {% endif %}
+        </div>
       </div>
     </aside>
   </div>
@@ -33,14 +35,11 @@
 {% if debt_reminder_level > 0 %}
 <div class="k-debt-banner k-debt-banner--level{{ debt_reminder_level }}" role="status">
   {% if debt_reminder_level == 1 %}
-  <p class="k-debt-banner__title">Zahlungserinnerung</p>
-  <p class="k-debt-banner__text">Es liegen offene Buchungen über dem ersten Schwellenwert. Bitte begleichen Sie den Betrag bei Gelegenheit.</p>
+  <p class="k-debt-banner__text"><strong>Post-it:</strong> Konto nickt – bitte zeitnah begleichen.</p>
   {% elif debt_reminder_level == 2 %}
-  <p class="k-debt-banner__title">Höherer Ausstand</p>
-  <p class="k-debt-banner__text">Der offene Betrag liegt über dem zweiten Schwellenwert. Bitte zahlen Sie bald nach.</p>
+  <p class="k-debt-banner__text"><strong>Kasse knurrt:</strong> Höherer Ausstand – bald zahlen.</p>
   {% else %}
-  <p class="k-debt-banner__title">Sehr hoher Ausstand</p>
-  <p class="k-debt-banner__text">Der offene Betrag hat den dritten Schwellenwert erreicht oder überschritten. Bitte umgehend begleichen; der Admin wurde informiert.</p>
+  <p class="k-debt-banner__text"><strong>Stufe 3:</strong> Admin informiert – bitte zahlen.</p>
   {% endif %}
 </div>
 {% endif %}

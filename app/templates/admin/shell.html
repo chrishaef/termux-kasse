@@ -9,12 +9,9 @@
 {% block content %}
 {% if request.state.admin_debt_alert_count > 0 %}
 <div class="admin-debt-global-alert" role="status">
-  <strong>Achtung Ausstände:</strong> {{ request.state.admin_debt_alert_count }} Nutzer
-  {% if request.state.admin_debt_alert_count == 1 %}hat{% else %}haben{% endif %} den dritten Schwellenwert erreicht oder überschritten.
+  <strong>Schwelle 3:</strong> {{ request.state.admin_debt_alert_count }}× über Limit.
   <span class="admin-debt-global-alert__links">
-    <a href="/admin/debt-thresholds">Schwellen bearbeiten</a>
-    ·
-    <a href="/admin/users">Nutzerübersicht</a>
+    <a href="/admin/debt-thresholds">Schwellen</a> · <a href="/admin/users">Nutzer</a>
   </span>
 </div>
 {% endif %}
