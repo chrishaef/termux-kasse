@@ -431,7 +431,7 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   justify-content: flex-start;
   gap: 0.65rem 0.85rem;
   width: 100%;
-  max-width: 38rem;
+  max-width: 32rem;
 }
 
 .k-user-head__balance {
@@ -474,35 +474,36 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .k-user-head__last {
-  flex: 1 1 12rem;
-  min-width: min(100%, 13.5rem);
-  max-width: 20rem;
+  flex: 0 1 auto;
+  width: min(100%, 14.5rem);
+  min-width: 0;
+  max-width: 14.5rem;
   text-align: left;
   background: linear-gradient(180deg, #fafaf6 0%, #f0ede4 100%);
   border: 1px solid #b8b2a4;
   border-top: 3px solid #9a7a28;
   border-radius: var(--kas-radius);
-  padding: 0.65rem 0.85rem 0.75rem;
+  padding: 0.55rem 0.65rem 0.65rem;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
   color: #141a16;
 }
 
 .k-user-head__last-title {
-  margin: 0 0 0.4rem;
-  padding-bottom: 0.35rem;
+  margin: 0 0 0.3rem;
+  padding-bottom: 0.28rem;
   border-bottom: 1px solid rgba(26, 33, 28, 0.12);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   color: #1a211c;
 }
 
 .k-user-head__last-line {
-  margin: 0.35rem 0 0;
-  font-size: 0.92rem;
+  margin: 0.28rem 0 0;
+  font-size: 0.84rem;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.32;
   color: #1e2620;
 }
 
@@ -512,15 +513,15 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .k-user-head__last-line strong {
   display: inline-block;
-  min-width: 3.4rem;
-  margin-right: 0.35rem;
+  min-width: 2.65rem;
+  margin-right: 0.25rem;
   font-weight: 800;
   color: #0f140f;
 }
 
 .k-user-head__last-line--muted {
-  margin-top: 0.15rem;
-  font-size: 0.88rem;
+  margin-top: 0.1rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #3d4a42;
 }

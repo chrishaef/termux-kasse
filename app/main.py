@@ -27,7 +27,10 @@ app = FastAPI(title="Termux-Shopkasse", lifespan=lifespan)
 
 @app.middleware("http")
 async def attach_kiosk_notice(request: Request, call_next):
-    request.state.kiosk_notice = kiosk_notice.get_display_text()
+    try:
+        request.state.kiosk_notice = kiosk_notice.get_display_text()
+    except Exception:
+        request.state.kiosk_notice = kiosk_notice.DEFAULT_KIOSK_NOTICE
     return await call_next(request)
 
 
@@ -36,15 +39,18 @@ async def attach_admin_debt_alerts(request: Request, call_next):
     request.state.admin_debt_alert_count = 0
     path = request.url.path
     if path.startswith("/admin") and path not in ("/admin/login", "/admin/setup"):
-        if request.session.get("admin_user"):
-            try:
-                with db.get_connection() as conn:
-                    _t1, _t2, t3 = debt_thresholds.get_thresholds(conn)
-                    request.state.admin_debt_alert_count = ledger_service.count_users_open_balance_gte(
-                        conn, t3
-                    )
-            except Exception:
-                request.state.admin_debt_alert_count = 0
+        try:
+            if request.session.get("admin_user"):
+                try:
+                    with db.get_connection() as conn:
+                        _t1, _t2, t3 = debt_thresholds.get_thresholds(conn)
+                        request.state.admin_debt_alert_count = (
+                            ledger_service.count_users_open_balance_gte(conn, t3)
+                        )
+                except Exception:
+                    request.state.admin_debt_alert_count = 0
+        except Exception:
+            request.state.admin_debt_alert_count = 0
     return await call_next(request)
 
 
