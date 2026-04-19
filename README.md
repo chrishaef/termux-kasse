@@ -16,10 +16,18 @@ cd termux-kasse
 bash update.sh          # installiert bei Bedarf git/python (Termux/apt), pull, pip, startet Server im Hintergrund
 # oder klassisch:
 bash start.sh --sync   # nur venv + pip
-bash start.sh          # Vordergrund-Server auf 127.0.0.1:8000
+bash start.sh          # Vordergrund-Server, Port 8000 (Standard)
 ```
 
-Im Browser auf demselben Gerät: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+**Netz:** `start.sh` und `update.sh` binden standardmäßig an **`0.0.0.0`** — der Dienst ist damit im **lokalen Netz** unter `http://<IP-des-Geräts>:8000` erreichbar (und weiterhin auf demselben Gerät unter [http://127.0.0.1:8000](http://127.0.0.1:8000)).
+
+Nur auf diesem Gerät lauschen (kein Zugriff von anderen Rechnern im WLAN):
+
+```bash
+HOST=127.0.0.1 bash start.sh
+# bzw. nach Update:
+HOST=127.0.0.1 bash update.sh
+```
 
 Anderer Port:
 
@@ -27,21 +35,7 @@ Anderer Port:
 PORT=9000 bash start.sh
 ```
 
-### Zugriff aus dem lokalen Netz (z. B. LXC / Debian-Test)
-
-Standardmäßig lauscht der Dienst nur auf **`127.0.0.1`** — damit ist er **nur auf demselben Rechner** im Browser erreichbar, nicht unter `http://192.168.x.x:8000` von anderen Geräten.
-
-Für Tests aus dem LAN den Server an **alle Schnittstellen** binden:
-
-```bash
-HOST=0.0.0.0 PORT=8000 bash start.sh
-# oder mit update.sh (Server neu starten):
-HOST=0.0.0.0 bash update.sh
-```
-
-Dann im Browser z. B. `http://192.168.178.123:8000` (IP des Containers/Hosts). **Hinweis:** Im Heimnetz meist unkritisch; in fremden Netzen wieder `HOST=127.0.0.1` nutzen.
-
-Wenn weiterhin nichts erreichbar ist: **Firewall** im LXC oder auf Proxmox prüfen, ob Port **8000/tcp** durchgelassen wird.
+Wenn aus dem LAN nichts erreichbar ist: **Firewall** auf dem Gerät / LXC / Proxmox prüfen (Port **8000/tcp**).
 
 ## Daten & Backup
 
@@ -89,7 +83,7 @@ python -m venv .venv
 # Unix: source .venv/bin/activate
 pip install -r requirements.txt
 pytest -q
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ## Privates GitHub-Repository
