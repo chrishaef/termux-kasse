@@ -165,6 +165,19 @@ body {
   color: #fff8d4;
 }
 
+/* Gold-Links nicht auf hellen Admin-Flächen erzwingen (Pico + site-main) */
+body.app-admin .k-panel a:not([role="button"]),
+body.app-admin .table-wrap a:not([role="button"]) {
+  color: var(--kas-label-on-surface);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+body.app-admin .k-panel a:not([role="button"]):hover,
+body.app-admin .table-wrap a:not([role="button"]):hover {
+  color: #0f140f;
+}
+
 .trust-banner {
   display: flex;
   gap: 0.75rem;
@@ -551,6 +564,14 @@ body {
   margin-bottom: 1rem;
   font-weight: 700;
   font-size: 0.95rem;
+  color: var(--kas-label-on-dark-strong);
+  text-decoration: none;
+}
+
+.admin-back:hover {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .admin-cards {
@@ -631,24 +652,172 @@ form:not(.inline) label {
   border-radius: var(--kas-radius);
 }
 
-/* Formulare in hellen Panels: Pico-Inputs lesbar */
+/* Formulare in hellen Panels (Kiosk + Admin-Basis) */
 .k-panel input,
 .k-panel select,
 .k-panel textarea {
   background-color: #fff;
 }
 
-.app-admin .k-panel button[type="submit"],
-.app-admin .k-panel button:not([type]) {
+/* ---------- Admin: helle Karten/Tabellen vs. globales Pico-Dark ---------- */
+body.app-admin .k-panel {
+  color: #121812;
+}
+
+body.app-admin .k-panel h2,
+body.app-admin .k-panel h3 {
+  color: #0f140f;
+}
+
+body.app-admin .k-panel label {
+  color: #141a16;
+  font-weight: 600;
+}
+
+body.app-admin .k-panel p,
+body.app-admin .k-panel li {
+  color: #141a16;
+}
+
+body.app-admin .k-panel .secondary,
+body.app-admin .k-panel em {
+  color: #3d4740;
+}
+
+body.app-admin .k-panel strong {
+  color: #0a0f0a;
+}
+
+body.app-admin .k-panel input:not([type="checkbox"]):not([type="radio"]),
+body.app-admin .k-panel select,
+body.app-admin .k-panel textarea {
+  color: #141a16;
+  background-color: #fff;
+  border: 1px solid #8f8a7c;
+  border-radius: var(--kas-radius-sm);
+}
+
+body.app-admin .k-panel select option {
+  color: #141a16;
+  background: #fff;
+}
+
+body.app-admin .k-panel button[type="submit"] {
   border-radius: var(--kas-radius-button);
   font-weight: 700;
+  background: var(--kas-accent);
+  color: var(--kas-accent-contrast);
+  border: 1px solid var(--kas-accent-hover);
 }
 
-.app-admin .table-wrap th {
-  color: var(--kas-label-on-surface);
+body.app-admin .k-panel button[type="submit"]:hover {
+  background: var(--kas-accent-bright);
+  color: #0a0a06;
+}
+
+body.app-admin .k-panel button.secondary,
+body.app-admin .table-wrap button.secondary {
+  border-radius: var(--kas-radius-button);
+  font-weight: 700;
+  background: #e8e4da;
+  color: #1a1a12;
+  border: 1px solid #a69f88;
+}
+
+body.app-admin .k-panel button.secondary:hover,
+body.app-admin .table-wrap button.secondary:hover {
+  background: #f2efe6;
+  border-color: var(--kas-accent);
+  color: #0a0a06;
+}
+
+body.app-admin .table-wrap {
+  background: #faf8f3;
+  color: #121812;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+body.app-admin .table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+body.app-admin .table-wrap th {
+  background: #e4dfd3;
+  color: #0a0f0a;
   font-weight: 800;
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border-bottom: 2px solid rgba(180, 140, 30, 0.55);
 }
 
-.app-admin .table-wrap td {
-  color: var(--kas-text);
+body.app-admin .table-wrap td {
+  color: #141a16;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #d2cdc2;
+  vertical-align: middle;
+}
+
+body.app-admin .table-wrap tbody tr:nth-child(even) td {
+  background: #f4f2ec;
+}
+
+body.app-admin .table-wrap tbody tr:hover td {
+  background: #fff6e0;
+}
+
+body.app-admin .table-wrap td.secondary {
+  color: #4a554c;
+  font-style: italic;
+}
+
+body.app-admin .table-wrap a[role="button"] {
+  display: inline-block;
+  margin: 0.15rem 0.35rem 0.15rem 0;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #1a1a12;
+  background: linear-gradient(180deg, #faf6ec, #e8e2d4);
+  border: 1px solid #b8a878;
+  border-radius: var(--kas-radius-button);
+  text-decoration: none;
+}
+
+body.app-admin .table-wrap a[role="button"]:hover {
+  color: #050805;
+  border-color: var(--kas-accent);
+  background: #fff8e6;
+}
+
+/* Aktions-Button unterhalb der Seitenüberschrift (z. B. neue Abrechnung) */
+body.app-admin .site-main p > a[role="button"] {
+  display: inline-block;
+  margin: 0.25rem 0 1rem;
+  padding: 0.55rem 1rem;
+  font-weight: 700;
+  color: var(--kas-accent-contrast);
+  background: var(--kas-accent);
+  border: 1px solid var(--kas-accent-hover);
+  border-radius: var(--kas-radius-button);
+  text-decoration: none;
+}
+
+body.app-admin .site-main p > a[role="button"]:hover {
+  background: var(--kas-accent-bright);
+  color: #0a0a06;
+}
+
+body.app-admin article.contrast {
+  margin-bottom: 1rem;
+  padding: 0.9rem 1.15rem;
+  color: #fff8ec;
+  background: linear-gradient(135deg, #4a3018, #352410);
+  border: 1px solid rgba(232, 188, 46, 0.55);
+  border-radius: var(--kas-radius-sm);
+  border-left: 4px solid var(--kas-accent-bright);
+}
+
+body.app-admin article.contrast a {
+  color: #fff0b0;
 }
