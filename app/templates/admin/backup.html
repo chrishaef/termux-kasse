@@ -1,0 +1,31 @@
+{% extends "admin/shell.html" %}
+{% block admin_page %}
+<a href="/admin" class="admin-back">← Admin-Übersicht</a>
+
+{% if saved %}
+<article class="contrast"><strong>Import erfolgreich.</strong> Die Datenbank wurde ersetzt.</article>
+{% endif %}
+{% if error %}
+<article class="contrast" style="border-color:#b33"><strong>Import fehlgeschlagen.</strong> Bitte eine gültige SQLite-Backup-Datei auswählen.</article>
+{% endif %}
+
+<article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">Backup exportieren</h2>
+  {% if db_exists %}
+  <p><a href="/admin/backup/export" role="button">Datenbank herunterladen (.db)</a></p>
+  {% else %}
+  <p class="secondary">Aktuell keine Datenbank vorhanden.</p>
+  {% endif %}
+</article>
+
+<article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">Backup importieren</h2>
+  <form method="post" action="/admin/backup/import" enctype="multipart/form-data">
+    <label>SQLite-Datei (.db)
+      <input type="file" name="backup_file" accept=".db,application/octet-stream,application/x-sqlite3,application/vnd.sqlite3" required />
+    </label>
+    <p class="secondary" style="margin-top:0.3rem">Achtung: Beim Import wird die aktuelle Datenbank ersetzt.</p>
+    <button type="submit">Backup importieren</button>
+  </form>
+</article>
+{% endblock %}

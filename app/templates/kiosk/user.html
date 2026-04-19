@@ -67,16 +67,24 @@
     const warnLevelSound = document.getElementById("warn-level-sound");
     if (warnLevelSound && typeof warnLevelSound.play === "function") {
       let playedWarn1 = false;
+      let playingWarn1 = false;
+      const detachWarnListeners = function () {
+        document.removeEventListener("pointerdown", onFirstInteraction);
+        document.removeEventListener("keydown", onFirstInteraction);
+      };
       const tryPlayWarn1 = function () {
-        if (playedWarn1) return;
+        if (playedWarn1 || playingWarn1) return;
+        playingWarn1 = true;
         warnLevelSound.currentTime = 0;
         warnLevelSound.play().then(function () {
           playedWarn1 = true;
-        }).catch(function () {});
+          playingWarn1 = false;
+          detachWarnListeners();
+        }).catch(function () {
+          playingWarn1 = false;
+        });
       };
       const onFirstInteraction = function () {
-        document.removeEventListener("pointerdown", onFirstInteraction);
-        document.removeEventListener("keydown", onFirstInteraction);
         tryPlayWarn1();
       };
       tryPlayWarn1();

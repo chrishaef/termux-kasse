@@ -3,11 +3,12 @@ from __future__ import annotations
 import re
 import sqlite3
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Optional
 from urllib.parse import quote
 
-from fastapi import APIRouter, Form, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 
 from app import db
 from app import debt_thresholds
@@ -15,6 +16,7 @@ from app import kiosk_notice
 from app import ledger_service
 from app import sort_order_util
 from app.auth import hash_password, verify_password
+from app.config import db_path
 from app.export_service import (
     build_pdf_bytes,
     build_statistics_pdf_bytes,
@@ -36,6 +38,13 @@ def _parse_price_eur_to_cents(raw: str) -> int:
     s = raw.strip().replace(",", ".")
     if not re.fullmatch(r"\d+(\.\d{1,2})?", s):
         raise ValueError("Preis ungültig")
+    return int(round(float(s) * 100))
+
+
+def _parse_signed_eur_to_cents(raw: str) -> int:
+    s = raw.strip().replace(",", ".")
+    if not re.fullmatch(r"[+-]?\d+(\.\d{1,2})?", s):
+        raise ValueError("Betrag ungültig")
     return int(round(float(s) * 100))
 
 
@@ -188,6 +197,150 @@ def admin_dashboard(request: Request) -> Response:
         "admin/dashboard.html",
         {"title": "Admin", "stats": stats, "finance": finance},
     )
+
+
+@router.get("/special-bookings", response_class=HTMLResponse)
+def admin_special_bookings_get(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    with db.get_connection() as conn:
+        users = db.fetch_all(
+            conn,
+            """
+            SELECT u.id, u.name, g.name AS group_name
+            FROM users u
+            JOIN user_groups g ON g.id = u.group_id
+            ORDER BY g.sort_order, g.name COLLATE NOCASE, u.sort_order, u.name COLLATE NOCASE
+            """,
+        )
+        recent = db.fetch_all(
+            conn,
+            """
+            SELECT le.id, le.description, le.amount_cents, le.created_at,
+                u.name AS user_name, g.name AS group_name
+            FROM ledger_entries le
+            JOIN users u ON u.id = le.user_id
+            JOIN user_groups g ON g.id = u.group_id
+            WHERE le.product_id IS NULL
+            ORDER BY datetime(le.created_at) DESC
+            LIMIT 30
+            """,
+        )
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/special_bookings.html",
+        {
+            "title": "Sonderbuchungen",
+            "users": users,
+            "recent": recent,
+            "saved": request.query_params.get("saved") == "1",
+            "error": request.query_params.get("err") == "invalid",
+        },
+    )
+
+
+@router.post("/special-bookings")
+def admin_special_bookings_post(
+    request: Request,
+    user_id: int = Form(...),
+    amount_eur: str = Form(...),
+    description: str = Form(""),
+) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    try:
+        amount_cents = _parse_signed_eur_to_cents(amount_eur)
+    except ValueError:
+        return RedirectResponse("/admin/special-bookings?err=invalid", status_code=303)
+    if amount_cents == 0:
+        return RedirectResponse("/admin/special-bookings?err=invalid", status_code=303)
+    desc = description.strip() or "Sonderbuchung"
+    with db.get_connection() as conn:
+        row = db.fetch_one(conn, "SELECT id FROM users WHERE id = ?", (user_id,))
+        if not row:
+            raise HTTPException(status_code=404)
+        conn.execute(
+            """
+            INSERT INTO ledger_entries (user_id, product_id, description, amount_cents, created_at)
+            VALUES (?, NULL, ?, ?, ?)
+            """,
+            (user_id, desc, amount_cents, ledger_service.utc_now_iso()),
+        )
+    return RedirectResponse("/admin/special-bookings?saved=1", status_code=303)
+
+
+def _is_valid_sqlite_file(path: Path) -> bool:
+    try:
+        with sqlite3.connect(path) as conn:
+            conn.execute("PRAGMA schema_version").fetchone()
+        return True
+    except Exception:
+        return False
+
+
+@router.get("/backup", response_class=HTMLResponse)
+def admin_backup_get(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    db_file = db_path()
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/backup.html",
+        {
+            "title": "Sicherung",
+            "db_exists": db_file.exists(),
+            "saved": request.query_params.get("saved") == "1",
+            "error": request.query_params.get("err") == "invalid",
+        },
+    )
+
+
+@router.get("/backup/export")
+def admin_backup_export(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    db_file = db_path()
+    if not db_file.exists():
+        raise HTTPException(status_code=404, detail="Datenbank nicht gefunden")
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"kasse-backup-{stamp}.db"
+    return FileResponse(path=db_file, media_type="application/octet-stream", filename=filename)
+
+
+@router.post("/backup/import")
+def admin_backup_import(request: Request, backup_file: UploadFile = File(...)) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    data = backup_file.file.read()
+    if not data or not data.startswith(b"SQLite format 3\x00"):
+        return RedirectResponse("/admin/backup?err=invalid", status_code=303)
+
+    db_file = db_path()
+    db_file.parent.mkdir(parents=True, exist_ok=True)
+    tmp_file = db_file.with_name(f"{db_file.name}.importing")
+    old_file = db_file.with_name(f"{db_file.name}.before-import")
+    try:
+        tmp_file.write_bytes(data)
+        if not _is_valid_sqlite_file(tmp_file):
+            tmp_file.unlink(missing_ok=True)
+            return RedirectResponse("/admin/backup?err=invalid", status_code=303)
+        if old_file.exists():
+            old_file.unlink()
+        if db_file.exists():
+            db_file.replace(old_file)
+        tmp_file.replace(db_file)
+        try:
+            init_db()
+        except Exception:
+            if db_file.exists():
+                db_file.unlink()
+            if old_file.exists():
+                old_file.replace(db_file)
+            raise
+    finally:
+        if tmp_file.exists():
+            tmp_file.unlink(missing_ok=True)
+    return RedirectResponse("/admin/backup?saved=1", status_code=303)
 
 
 @router.get("/news", response_class=HTMLResponse)
