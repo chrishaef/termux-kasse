@@ -755,6 +755,31 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   outline-offset: 2px;
 }
 
+.k-product-grid button.k-product-btn.k-product-btn--flash {
+  animation: k-product-flash 170ms ease-out 1;
+}
+
+@keyframes k-product-flash {
+  0% {
+    transform: scale(1);
+    border-color: var(--kas-accent);
+    background: linear-gradient(168deg, #fffefb 0%, #f3efe6 100%);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  }
+  45% {
+    transform: scale(1.03);
+    border-color: var(--kas-accent-bright);
+    background: linear-gradient(168deg, #fff7dc 0%, #f0d78f 100%);
+    box-shadow: 0 0 0 0.2rem rgba(232, 188, 46, 0.26);
+  }
+  100% {
+    transform: scale(1);
+    border-color: var(--kas-accent);
+    background: linear-gradient(168deg, #fffefb 0%, #f3efe6 100%);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
+  }
+}
+
 /* Admin */
 .app-admin .page-head__title {
   font-size: 1.65rem;

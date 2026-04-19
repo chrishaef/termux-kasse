@@ -38,7 +38,6 @@
 </div>
 {% endif %}
 
-<h2 class="k-section-title">Artikel hinzufügen</h2>
 {% if products %}
 <div class="k-product-grid">
   {% for p in products %}
@@ -54,4 +53,21 @@
 {% else %}
 <p class="k-empty">Keine aktiven Artikel. Bitte im Admin unter „Artikel“ anlegen.</p>
 {% endif %}
+<script>
+  (function () {
+    const forms = document.querySelectorAll(".k-product-grid form");
+    forms.forEach(function (form) {
+      form.addEventListener("submit", function (event) {
+        const button = form.querySelector(".k-product-btn");
+        if (!button || button.dataset.submitting === "1") return;
+        event.preventDefault();
+        button.dataset.submitting = "1";
+        button.classList.add("k-product-btn--flash");
+        window.setTimeout(function () {
+          form.submit();
+        }, 170);
+      });
+    });
+  })();
+</script>
 {% endblock %}
