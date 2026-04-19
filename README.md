@@ -23,9 +23,13 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 
 | Bereich | Kurzbeschreibung |
 |--------|-------------------|
-| **Kiosk** | Gruppe wählen → Nutzer → Kontostand, letzte Abrechnung, Artikel mit einem Tipp buchen |
-| **Admin** | Login, Gruppen, Nutzer, Artikel, Kiosk-Nachricht |
-| **Abrechnung** | Geführter Ablauf: Nutzer wählen → offene Posten prüfen → Zahlungseingang bestätigen → Konten begleichen, **PDF** (und **XLS**) exportieren |
+| **Kiosk** | Gruppe wählen → Nutzer → Kontostand, letzte Abrechnung, Artikel mit einem Tipp buchen (Klicksound + visuelles Feedback) |
+| **Kiosk Extra** | Top-Ten-Seite, Preisliste, automatischer Preisliste-Bildschirmschoner bei Inaktivität |
+| **Warnstufen** | 3 konfigurierbare Schwellen mit individuellen Texten und Sounds pro Stufe (einmalig beim Erreichen der nächsten Stufe) |
+| **Admin** | Login, Gruppen, Nutzer, Artikel inkl. Sortierung und Bearbeiten, Kiosk-Nachricht |
+| **Abrechnung** | Geführter Ablauf: Gruppe/Nutzer wählen → offene Posten prüfen → Zahlungseingang bestätigen → Konten begleichen, **PDF** und **XLSX** exportieren |
+| **Statistik** | Zeitraum- und Gruppenfilter, Toplisten/Auswertung, Export als **PDF** und **XLSX** |
+| **Backup** | Kompletter Datenbank-Export und -Import direkt im Adminbereich |
 
 ---
 
@@ -194,7 +198,8 @@ Wenn aus dem LAN nichts antwortet: **Firewall** auf dem Gerät, VPN oder Router 
 | **Datenbank** | `data/kasse.db` relativ zum Projektroot |
 | **Datenverzeichnis** | Überschreibbar mit **`KASSE_DATA_DIR`** (absoluter Pfad zum Ordner; die Datei heißt darin weiter `kasse.db`) |
 | **Session-Secret** | Datei **`.secret_key`** im Projektroot (von Git ignoriert) oder Umgebungsvariable **`KASSE_SECRET_KEY`** |
-| **Backup** | Ordner `data/` kopieren oder nur `kasse.db` sichern — idealerweise bei **gestopptem** Server (`kill $(cat .server.pid)` im Projektroot oder Prozess beenden), damit die DB nicht mitten im Schreiben kopiert wird |
+| **Backup (Datei)** | Ordner `data/` kopieren oder nur `kasse.db` sichern — idealerweise bei **gestopptem** Server (`kill $(cat .server.pid)` im Projektroot oder Prozess beenden), damit die DB nicht mitten im Schreiben kopiert wird |
+| **Backup (Admin-UI)** | Unter `/admin/backup`: Datenbank als `.db` exportieren und wieder importieren (Import ersetzt die aktuelle DB) |
 
 ---
 
@@ -229,9 +234,12 @@ Läuft die Kasse nur mit `bash start.sh` im Vordergrund, gibt es keine `.server.
 
 Nach dem Login (`/admin`):
 
-- **Gruppen, Nutzer, Artikel** pflegen  
-- **Abrechnungen** (`/admin/settlements`): Liste vergangener Abrechnungen mit XLS/PDF; neue Abrechnung über **„Neue Abrechnung starten“** (Nutzer wählen → Beträge prüfen → Zahlungseingang bestätigen → PDF).  
-- **Kiosk-Nachricht** (`/admin/news`): Text oben auf allen Kiosk-Seiten; leer speichern stellt den Standardhinweis wieder her.
+- **Gruppen, Nutzer, Artikel** pflegen (inkl. manueller Reihenfolge via Pfeile und Bearbeiten-Ansichten)  
+- **Abrechnungen** (`/admin/settlements`): Liste vergangener Abrechnungen mit XLS/PDF; neue Abrechnung über **„Neue Abrechnung starten“** (Gruppe/Nutzer wählen → Beträge prüfen → Zahlungseingang bestätigen → PDF)  
+- **Statistik** (`/admin/statistics`): Zeitraum + Nutzergruppe filtern, Toplisten sehen, PDF/XLSX herunterladen  
+- **Warnstufen** (`/admin/debt-thresholds`): Schwellen und Meldungstexte für Kiosk-Warnungen pflegen  
+- **Kiosk-Nachricht** (`/admin/news`): Text oben auf allen Kiosk-Seiten; leer speichern stellt den Standardhinweis wieder her  
+- **Backup** (`/admin/backup`): komplette Datenbank exportieren/importieren
 
 ---
 
@@ -274,4 +282,4 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ## Lizenz / Hinweise
 
-Nutzt u. a. **Pico.css** (MIT), **FastAPI**, **ReportLab**, **openpyxl** — Lizenzbedingungen der jeweiligen Pakete beachten. Die Kiosk-Oberfläche nutzt eine eigene Hintergrundkachel unter `app/static/` (lokal eingebunden).
+Nutzt u. a. **Pico.css** (MIT), **FastAPI**, **openpyxl**, **fpdf** — Lizenzbedingungen der jeweiligen Pakete beachten. Die Kiosk-Oberfläche nutzt eigene statische Assets unter `app/static/` (lokal eingebunden).
