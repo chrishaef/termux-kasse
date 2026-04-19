@@ -6,6 +6,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
 
 export PORT="${PORT:-8000}"
+# Nur localhost: 127.0.0.1 (Standard). LAN-Zugriff: HOST=0.0.0.0
+export HOST="${HOST:-127.0.0.1}"
 NO_RESTART=0
 NO_SYSTEM_INSTALL=0
 for arg in "$@"; do
@@ -148,11 +150,14 @@ stop_old() {
 
 stop_old
 
-echo ">>> Starte Server (Hintergrund), Port ${PORT}"
-nohup "$ROOT/.venv/bin/uvicorn" app.main:app --host 127.0.0.1 --port "${PORT}" >>"$LOG_FILE" 2>&1 &
+echo ">>> Starte Server (Hintergrund), Host ${HOST}, Port ${PORT}"
+nohup "$ROOT/.venv/bin/uvicorn" app.main:app --host "${HOST}" --port "${PORT}" >>"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"
 
 echo "Log: $LOG_FILE"
-echo "URL:  http://127.0.0.1:${PORT}"
+echo "URL:  http://${HOST}:${PORT}"
+if [[ "$HOST" == "0.0.0.0" ]]; then
+  echo "      (vom LAN: http://<IP-des-Containers>:${PORT})"
+fi
 echo "PID: $(cat "$PID_FILE")"
 echo "Stoppen (Beispiel): kill \$(cat .server.pid)   # im Projektroot ausführen"

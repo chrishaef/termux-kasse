@@ -27,6 +27,22 @@ Anderer Port:
 PORT=9000 bash start.sh
 ```
 
+### Zugriff aus dem lokalen Netz (z. B. LXC / Debian-Test)
+
+Standardmäßig lauscht der Dienst nur auf **`127.0.0.1`** — damit ist er **nur auf demselben Rechner** im Browser erreichbar, nicht unter `http://192.168.x.x:8000` von anderen Geräten.
+
+Für Tests aus dem LAN den Server an **alle Schnittstellen** binden:
+
+```bash
+HOST=0.0.0.0 PORT=8000 bash start.sh
+# oder mit update.sh (Server neu starten):
+HOST=0.0.0.0 bash update.sh
+```
+
+Dann im Browser z. B. `http://192.168.178.123:8000` (IP des Containers/Hosts). **Hinweis:** Im Heimnetz meist unkritisch; in fremden Netzen wieder `HOST=127.0.0.1` nutzen.
+
+Wenn weiterhin nichts erreichbar ist: **Firewall** im LXC oder auf Proxmox prüfen, ob Port **8000/tcp** durchgelassen wird.
+
 ## Daten & Backup
 
 - SQLite-Datei: `data/kasse.db` (relativ zum Projektroot), außer du setzt `KASSE_DATA_DIR` auf einen absoluten Pfad.
