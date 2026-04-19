@@ -17,12 +17,12 @@
 </article>
 <div class="table-wrap">
   <table role="grid">
-    <thead><tr><th>Name</th><th>Preis</th><th>Aktiv</th><th class="th-sort">Sort.</th><th></th></tr></thead>
+    <thead><tr><th>Name</th><th class="num">Preis</th><th>Aktiv</th><th class="th-sort">Sort.</th><th class="th-actions">Aktionen</th></tr></thead>
     <tbody>
       {% for p in products %}
       <tr>
         <td>{{ p['name'] }}</td>
-        <td>{{ p['price_cents']|eur }}</td>
+        <td class="num">{{ p['price_cents']|eur }}</td>
         <td>{{ 'ja' if p['active'] else 'nein' }}</td>
         <td class="td-sort">
           <form method="post" action="/admin/products/{{ p['id'] }}/sort" class="form-inline-action">
@@ -34,11 +34,15 @@
             <button type="submit" class="secondary admin-btn-sm" title="Nach unten">↓</button>
           </form>
         </td>
-        <td>
-          <form method="post" action="/admin/products/{{ p['id'] }}/toggle" style="display:inline"><button type="submit" class="secondary">Aktiv</button></form>
-          <form method="post" action="/admin/products/{{ p['id'] }}/delete" style="display:inline" onsubmit="return confirm('Löschen?');">
-            <button type="submit" class="secondary">Löschen</button>
-          </form>
+        <td class="td-actions">
+          <div class="td-actions__inner">
+            <form method="post" action="/admin/products/{{ p['id'] }}/toggle" class="form-inline-action">
+              <button type="submit" class="secondary admin-btn-sm">Aktiv</button>
+            </form>
+            <form method="post" action="/admin/products/{{ p['id'] }}/delete" class="form-inline-action" onsubmit="return confirm('Löschen?');">
+              <button type="submit" class="secondary admin-btn-sm">Löschen</button>
+            </form>
+          </div>
         </td>
       </tr>
       {% endfor %}
