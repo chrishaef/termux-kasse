@@ -5,11 +5,25 @@ cd "$ROOT"
 
 export PORT="${PORT:-8000}"
 
-if [[ ! -d .venv ]]; then
-  python -m venv .venv
+VENV_DIR="$ROOT/.venv"
+VENV_ACTIVATE="$VENV_DIR/bin/activate"
+if command -v python3 >/dev/null 2>&1; then
+  PY=python3
+else
+  PY=python
+fi
+if [[ ! -f "$VENV_ACTIVATE" ]]; then
+  if [[ -d "$VENV_DIR" ]]; then
+    echo ">>> .venv unvollständig — wird neu angelegt" >&2
+    rm -rf "$VENV_DIR"
+  fi
+  "$PY" -m venv "$VENV_DIR" || {
+    echo "venv fehlgeschlagen. Debian: apt install python3-venv" >&2
+    exit 1
+  }
 fi
 # shellcheck source=/dev/null
-source .venv/bin/activate
+source "$VENV_ACTIVATE"
 
 if [[ "${1:-}" == "--sync" ]]; then
   pip install -r requirements.txt

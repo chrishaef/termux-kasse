@@ -97,12 +97,27 @@ fi
 echo ">>> git pull"
 git pull --ff-only
 
-if [[ ! -d .venv ]]; then
+VENV_DIR="$ROOT/.venv"
+VENV_ACTIVATE="$VENV_DIR/bin/activate"
+if [[ ! -f "$VENV_ACTIVATE" ]]; then
+  if [[ -d "$VENV_DIR" ]]; then
+    echo ">>> .venv unvollständig (kein bin/activate) — wird neu angelegt"
+    rm -rf "$VENV_DIR"
+  fi
   echo ">>> Lege virtuelle Umgebung (.venv) an"
-  "$PYTHON" -m venv .venv
+  if ! "$PYTHON" -m venv "$VENV_DIR"; then
+    echo "Fehler: python -m venv ist fehlgeschlagen."
+    echo "Debian/Ubuntu: sudo apt-get install -y python3-venv python3-pip"
+    echo "Termux: pkg install python"
+    exit 1
+  fi
+fi
+if [[ ! -f "$VENV_ACTIVATE" ]]; then
+  echo "Fehler: Erwartet $VENV_ACTIVATE — bitte .venv löschen und erneut ausführen."
+  exit 1
 fi
 # shellcheck source=/dev/null
-source .venv/bin/activate
+source "$VENV_ACTIVATE"
 
 echo ">>> pip install -r requirements.txt"
 pip install -q -r requirements.txt
