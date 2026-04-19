@@ -93,6 +93,18 @@ def init_db() -> None:
                 ON ledger_entries(settlement_id);
             """
         )
+        _migrate_schema(conn)
+
+
+def _migrate_schema(conn: sqlite3.Connection) -> None:
+    rows = conn.execute("PRAGMA table_info(settlements)").fetchall()
+    if not rows:
+        return
+    cols = {r[1] for r in rows}
+    if "received_confirmed" not in cols:
+        conn.execute(
+            "ALTER TABLE settlements ADD COLUMN received_confirmed INTEGER NOT NULL DEFAULT 1"
+        )
 
 
 def fetch_one(conn: sqlite3.Connection, sql: str, params: Iterable = ()) -> sqlite3.Row | None:

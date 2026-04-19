@@ -22,6 +22,24 @@ def user_balance_cents(conn: sqlite3.Connection, user_id: int) -> int:
     return int(row["b"]) if row else 0
 
 
+def total_previously_settled_cents(conn: sqlite3.Connection, user_id: int) -> int:
+    row = db.fetch_one(
+        conn,
+        "SELECT COALESCE(SUM(total_cents), 0) AS s FROM settlements WHERE user_id = ?",
+        (user_id,),
+    )
+    return int(row["s"]) if row else 0
+
+
+def settlement_count_for_user(conn: sqlite3.Connection, user_id: int) -> int:
+    row = db.fetch_one(
+        conn,
+        "SELECT COUNT(*) AS c FROM settlements WHERE user_id = ?",
+        (user_id,),
+    )
+    return int(row["c"]) if row else 0
+
+
 def last_settlement(conn: sqlite3.Connection, user_id: int) -> sqlite3.Row | None:
     return db.fetch_one(
         conn,
@@ -81,6 +99,8 @@ def create_settlement_for_user(
     note: str | None = None,
     period_start: str | None = None,
     period_end: str | None = None,
+    *,
+    received_confirmed: int = 1,
 ) -> int | None:
     lines = open_ledger_for_user(conn, user_id, period_start, period_end)
     if not lines:
@@ -89,10 +109,10 @@ def create_settlement_for_user(
     created = utc_now_iso()
     cur = conn.execute(
         """
-        INSERT INTO settlements (user_id, total_cents, created_at, note, period_start, period_end)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO settlements (user_id, total_cents, created_at, note, period_start, period_end, received_confirmed)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
-        (user_id, total, created, note, period_start, period_end),
+        (user_id, total, created, note, period_start, period_end, 1 if received_confirmed else 0),
     )
     sid = int(cur.lastrowid)
     ids = [int(r["id"]) for r in lines]

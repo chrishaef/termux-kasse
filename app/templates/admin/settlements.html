@@ -5,31 +5,20 @@
 <header class="page-head">
   <p class="page-head__eyebrow">Buchhaltung</p>
   <h1 class="page-head__title">Abrechnungen</h1>
+  <p class="page-head__lead">Neue Abrechnungen laufen über den geführten Ablauf (Nutzer wählen → Betrag prüfen → Quittung → PDF).</p>
 </header>
 <a href="/admin" class="admin-back">← Admin-Übersicht</a>
+
 {% if request.query_params.get('err') == 'no_open' %}
-<article class="contrast">Keine offenen Buchungen für diesen Nutzer (im gewählten Zeitraum).</article>
+<article class="contrast">Für diesen Nutzer gibt es keine offenen Buchungen.</article>
+{% endif %}
+{% if request.query_params.get('err') == 'noconfirm' %}
+<article class="contrast">Bitte bestätigen Sie den Zahlungseingang per Checkbox.</article>
 {% endif %}
 
-<article class="k-panel">
-  <h2 style="margin-top:0;font-size:1.1rem">Neue Abrechnung</h2>
-  <p class="secondary">Es werden alle <strong>offenen</strong> Buchungen des Nutzers geschlossen. Optionaler Zeitraum filtert nur die Abrechnung.</p>
-  <form method="post" action="/admin/settlements">
-    <label>Nutzer
-      <select name="user_id" required>
-        {% for u in users %}
-        <option value="{{ u['id'] }}">{{ u['group_name'] }} — {{ u['name'] }}</option>
-        {% endfor %}
-      </select>
-    </label>
-    <label>Notiz (optional) <input type="text" name="note" /></label>
-    <label>Zeitraum von (optional, ISO-Datum) <input type="text" name="period_start" placeholder="2026-01-01" /></label>
-    <label>Zeitraum bis (optional, ISO-Datum) <input type="text" name="period_end" placeholder="2026-04-30" /></label>
-    <button type="submit">Abrechnung erstellen</button>
-  </form>
-</article>
+<p><a href="/admin/settlements/start" role="button">Neue Abrechnung starten</a></p>
 
-<h2 class="k-section-title">Letzte Abrechnungen</h2>
+<h2 class="k-section-title">Abgeschlossene Abrechnungen</h2>
 <div class="table-wrap">
   <table role="grid">
     <thead><tr><th>Datum</th><th>Nutzer</th><th>Gruppe</th><th>Summe</th><th>Export</th></tr></thead>

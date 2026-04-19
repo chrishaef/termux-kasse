@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block body_class %}app-admin{% endblock %}
+{% block trust %}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <p class="page-head__eyebrow">Abrechnung · Schritt 2</p>
+  <h1 class="page-head__title">Kontrolle &amp; Quittung</h1>
+  <p class="page-head__lead">{{ user['group_name'] }} — <strong>{{ user['name'] }}</strong></p>
+</header>
+<a href="/admin/settlements/start" class="admin-back">← Anderen Nutzer wählen</a>
+
+{% if request.query_params.get('err') == 'noconfirm' %}
+<article class="contrast">Bitte aktivieren Sie die Checkbox, wenn Sie den Betrag erhalten haben.</article>
+{% endif %}
+
+<div class="k-toolbar" style="margin-top:1rem">
+  <article class="k-panel" style="flex:1;min-width:200px;margin:0">
+    <h3 style="margin:0 0 0.35rem;font-size:0.85rem;text-transform:uppercase;color:var(--kas-muted)">Bisher abgerechnet</h3>
+    <p style="margin:0;font-size:1.5rem;font-weight:800;color:#7a5f0c">{{ previously_settled_cents|eur }}</p>
+    <p class="secondary" style="margin:0.35rem 0 0;font-size:0.85rem">Summe aller früheren Abrechnungen ({{ settlement_count }}×)</p>
+  </article>
+  <article class="k-panel" style="flex:1;min-width:200px;margin:0;border-top:3px solid var(--kas-accent)">
+    <h3 style="margin:0 0 0.35rem;font-size:0.85rem;text-transform:uppercase;color:var(--kas-muted)">Jetzt offen</h3>
+    <p style="margin:0;font-size:1.75rem;font-weight:800;color:#7a5f0c">{{ open_cents|eur }}</p>
+    <p class="secondary" style="margin:0.35rem 0 0;font-size:0.85rem">Wird mit dieser Abrechnung beglichen</p>
+  </article>
+</div>
+
+<h2 class="k-section-title">Offene Posten</h2>
+<div class="table-wrap">
+  <table role="grid">
+    <thead><tr><th>Datum</th><th>Beschreibung</th><th>Betrag</th></tr></thead>
+    <tbody>
+      {% for line in open_lines %}
+      <tr>
+        <td>{{ line['created_at']|date_de }}</td>
+        <td>{{ line['description'] }}</td>
+        <td>{{ line['amount_cents']|eur }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">Zahlungseingang bestätigen</h2>
+  <p>Sie begleichen damit den <strong>offenen Betrag von {{ open_cents|eur }}</strong> auf dem Konto dieses Nutzers. Anschließend wird die Abrechnung als <strong>PDF</strong> heruntergeladen (optional danach XLS in der Übersicht).</p>
+  <form method="post" action="/admin/settlements/confirm">
+    <input type="hidden" name="user_id" value="{{ user['id'] }}" />
+    <label>Notiz (optional, erscheint auf der Abrechnung) <input type="text" name="note" placeholder="z. B. Barzahlung Küche" /></label>
+    <label style="display:flex;align-items:flex-start;gap:0.6rem;margin-top:0.75rem">
+      <input type="checkbox" name="received_confirmed" value="1" required style="width:auto;margin-top:0.25rem" />
+      <span>Ich bestätige, den offenen Betrag von <strong>{{ open_cents|eur }}</strong> von diesem Nutzer erhalten zu haben.</span>
+    </label>
+    <button type="submit" style="margin-top:1rem">Abrechnung buchen &amp; PDF laden</button>
+  </form>
+</article>
+{% endblock %}

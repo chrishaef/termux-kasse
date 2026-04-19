@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import APIRouter, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from app import db
@@ -367,6 +367,18 @@ def admin_settlements_list(request: Request) -> Response:
             LIMIT 100
             """,
         )
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/settlements.html",
+        {"title": "Abrechnungen", "settlements": settlements},
+    )
+
+
+@router.get("/settlements/start", response_class=HTMLResponse)
+def admin_settlement_start_get(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    with db.get_connection() as conn:
         users = db.fetch_all(
             conn,
             """
@@ -378,29 +390,77 @@ def admin_settlements_list(request: Request) -> Response:
         )
     return TEMPLATES.TemplateResponse(
         request,
-        "admin/settlements.html",
-        {"title": "Abrechnungen", "settlements": settlements, "users": users},
+        "admin/settlement_start.html",
+        {"title": "Abrechnung starten", "users": users},
     )
 
 
-@router.post("/settlements")
-def admin_settlements_create(
+@router.post("/settlements/start")
+def admin_settlement_start_post(request: Request, user_id: int = Form(...)) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    return RedirectResponse(f"/admin/settlements/confirm?user_id={user_id}", status_code=303)
+
+
+@router.get("/settlements/confirm", response_class=HTMLResponse)
+def admin_settlement_confirm_get(request: Request, user_id: int = Query(...)) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    with db.get_connection() as conn:
+        user = db.fetch_one(
+            conn,
+            """
+            SELECT u.id, u.name, g.name AS group_name
+            FROM users u
+            JOIN user_groups g ON g.id = u.group_id
+            WHERE u.id = ?
+            """,
+            (user_id,),
+        )
+        if not user:
+            raise HTTPException(status_code=404)
+        open_cents = ledger_service.user_balance_cents(conn, user_id)
+        previously_settled_cents = ledger_service.total_previously_settled_cents(conn, user_id)
+        settlement_count = ledger_service.settlement_count_for_user(conn, user_id)
+        open_lines = ledger_service.open_ledger_for_user(conn, user_id)
+    if open_cents == 0 or not open_lines:
+        return RedirectResponse("/admin/settlements/start?err=no_open", status_code=303)
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/settlement_confirm.html",
+        {
+            "title": "Abrechnung bestätigen",
+            "user": user,
+            "open_cents": open_cents,
+            "previously_settled_cents": previously_settled_cents,
+            "settlement_count": settlement_count,
+            "open_lines": open_lines,
+        },
+    )
+
+
+@router.post("/settlements/confirm")
+def admin_settlement_confirm_post(
     request: Request,
     user_id: int = Form(...),
     note: str = Form(""),
-    period_start: str = Form(""),
-    period_end: str = Form(""),
+    received_confirmed: str | None = Form(None),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
-    ps = period_start.strip() or None
-    pe = period_end.strip() or None
+    if received_confirmed not in ("1", "on", "yes", "true"):
+        return RedirectResponse(
+            f"/admin/settlements/confirm?user_id={user_id}&err=noconfirm",
+            status_code=303,
+        )
     note = note.strip() or None
     with db.get_connection() as conn:
-        sid = ledger_service.create_settlement_for_user(conn, user_id, note, ps, pe)
+        sid = ledger_service.create_settlement_for_user(
+            conn, user_id, note, None, None, received_confirmed=1
+        )
     if sid is None:
-        return RedirectResponse("/admin/settlements?err=no_open", status_code=303)
-    return RedirectResponse(f"/admin/settlements", status_code=303)
+        return RedirectResponse("/admin/settlements/start?err=no_open", status_code=303)
+    return RedirectResponse(f"/admin/settlements/{sid}/pdf", status_code=303)
 
 
 @router.get("/settlements/{settlement_id}/xlsx")

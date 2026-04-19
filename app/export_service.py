@@ -17,6 +17,14 @@ if TYPE_CHECKING:
 from app.dates import format_date_de
 
 
+def _received_quittance_label(header: sqlite3.Row) -> str | None:
+    try:
+        v = header["received_confirmed"]
+    except (KeyError, IndexError):
+        return None
+    return "Ja" if int(v) == 1 else "Nein"
+
+
 def build_xlsx_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     wb = Workbook()
     ws = wb.active
@@ -30,6 +38,9 @@ def build_xlsx_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     ws.append(["Summe (EUR)", round(int(header["total_cents"]) / 100, 2)])
     if header["note"]:
         ws.append(["Notiz", header["note"]])
+    rq = _received_quittance_label(header)
+    if rq is not None:
+        ws.append(["Zahlungseingang bestätigt", rq])
     ws.append([])
     ws.append(["Datum", "Beschreibung", "Artikel", "Betrag EUR"])
     for cell in ws[ws.max_row]:
@@ -63,6 +74,9 @@ def build_pdf_bytes(header: sqlite3.Row, lines: list[sqlite3.Row]) -> bytes:
     ]
     if header["note"]:
         meta.append(["Notiz", str(header["note"])])
+    rq = _received_quittance_label(header)
+    if rq is not None:
+        meta.append(["Zahlungseingang bestätigt", rq])
     t = Table(meta, colWidths=[4 * cm, 12 * cm])
     t.setStyle(
         TableStyle(
