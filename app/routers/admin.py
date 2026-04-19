@@ -254,6 +254,9 @@ def admin_special_bookings_post(
         return RedirectResponse("/admin/special-bookings?err=invalid", status_code=303)
     if amount_cents == 0:
         return RedirectResponse("/admin/special-bookings?err=invalid", status_code=303)
+    # Ledger-Konvention: positive Werte erhöhen den offenen Ausstand.
+    # Sonderbuchung im Admin soll intuitiv sein: + = Gutschrift, - = Belastung.
+    ledger_amount_cents = -amount_cents
     desc = description.strip() or "Sonderbuchung"
     with db.get_connection() as conn:
         row = db.fetch_one(conn, "SELECT id FROM users WHERE id = ?", (user_id,))
@@ -264,7 +267,7 @@ def admin_special_bookings_post(
             INSERT INTO ledger_entries (user_id, product_id, description, amount_cents, created_at)
             VALUES (?, NULL, ?, ?, ?)
             """,
-            (user_id, desc, amount_cents, ledger_service.utc_now_iso()),
+            (user_id, desc, ledger_amount_cents, ledger_service.utc_now_iso()),
         )
     return RedirectResponse("/admin/special-bookings?saved=1", status_code=303)
 
