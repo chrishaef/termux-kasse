@@ -756,7 +756,7 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .k-product-grid button.k-product-btn.k-product-btn--flash {
-  animation: k-product-flash 170ms ease-out 1;
+  animation: k-product-flash 320ms cubic-bezier(0.2, 0.7, 0.2, 1) 1;
 }
 
 @keyframes k-product-flash {
@@ -766,11 +766,21 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
     background: linear-gradient(168deg, #fffefb 0%, #f3efe6 100%);
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
   }
-  45% {
+  40% {
+    transform: scale(1.07);
+    border-color: var(--kas-accent-bright);
+    background: linear-gradient(168deg, #fff9e8 0%, #f3d067 100%);
+    box-shadow:
+      0 0 0 0.28rem rgba(232, 188, 46, 0.34),
+      0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+  70% {
     transform: scale(1.03);
     border-color: var(--kas-accent-bright);
-    background: linear-gradient(168deg, #fff7dc 0%, #f0d78f 100%);
-    box-shadow: 0 0 0 0.2rem rgba(232, 188, 46, 0.26);
+    background: linear-gradient(168deg, #fff8e0 0%, #efcd66 100%);
+    box-shadow:
+      0 0 0 0.16rem rgba(232, 188, 46, 0.3),
+      0 8px 22px rgba(0, 0, 0, 0.26);
   }
   100% {
     transform: scale(1);
