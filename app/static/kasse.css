@@ -129,6 +129,7 @@ body {
   text-transform: uppercase;
   color: var(--kas-page-fg);
   text-decoration: none;
+  margin-left: 0.25rem;
 }
 
 .site-brand:hover {
@@ -139,7 +140,7 @@ body {
   justify-self: start;
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.7rem;
 }
 
 .site-nav {
