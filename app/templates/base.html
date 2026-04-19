@@ -14,10 +14,18 @@
       <a href="/" class="site-brand">Shopkasse</a>
       <div class="site-header__center">{% block site_header_center %}{% endblock %}</div>
       <nav class="site-nav" aria-label="Hauptnavigation">
+        <button
+          type="button"
+          class="secret-admin-trigger"
+          id="secret-admin-trigger"
+          aria-label="Geheimer Adminzugang"
+          title=" "
+        >
+          <img src="/static/wsg-logo.png" alt="" />
+        </button>
         <a href="/">Kiosk</a>
         <a href="/top-ten">Top Ten</a>
         {% block header_nav_extra %}
-        <a href="/admin">Admin</a>
         {% endblock %}
       </nav>
     </div>
@@ -26,5 +34,23 @@
     {% block trust %}{% endblock %}
     {% block content %}{% endblock %}
   </main>
+  <script>
+    (function () {
+      const trigger = document.getElementById("secret-admin-trigger");
+      if (!trigger) return;
+      let count = 0;
+      let last = 0;
+      const needed = 5;
+      trigger.addEventListener("click", function () {
+        const now = Date.now();
+        if (now - last > 2200) count = 0;
+        last = now;
+        count += 1;
+        if (count >= needed) {
+          window.location.href = "/admin";
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

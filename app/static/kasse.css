@@ -154,6 +154,31 @@ body {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.secret-admin-trigger {
+  padding: 0.12rem;
+  margin: 0;
+  border-radius: 8px;
+  border: 1px solid var(--kas-control-border);
+  background: rgba(255, 255, 255, 0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.secret-admin-trigger img {
+  display: block;
+  width: 1.7rem;
+  height: 1.7rem;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.secret-admin-trigger:hover {
+  border-color: var(--kas-accent);
+  background: rgba(255, 255, 255, 0.11);
+}
+
 .site-nav a:hover {
   color: var(--kas-accent-contrast);
   background: var(--kas-accent);
