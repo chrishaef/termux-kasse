@@ -1,6 +1,6 @@
 # Termux-Vertrauenskasse
 
-Lokal laufende Vertrauenskasse (FastAPI, SQLite, Jinja2). UI: **Pico.css** plus **`app/static/kasse.css`** — Oliv-/Feld-Hintergrund und Goldakzente (rein CSS, offline), optisch in der Tradition öffentlicher Informationsportale; **kein** Bezug zu offiziellen Markenassets der Bundeswehr.
+Lokal laufende Vertrauenskasse (FastAPI, SQLite, Jinja2). UI: **Pico.css** plus **`app/static/kasse.css`** — Hintergrundkachel **`app/static/camo-tile.png`** mit Abdunklung, Goldakzente; alles offline aus `/static`. Die Kachelgrafik ist eine eigene Datei im Repo, keine Einbindung von bundeswehr.de.
 
 ## Voraussetzungen (Termux auf dem Tablet)
 

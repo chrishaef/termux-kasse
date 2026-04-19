@@ -1,5 +1,4 @@
-/* Vertrauenskasse — Anmutung inspiriert an bundeswehr.de (Oliv, Gold, helle Flächen).
-   Keine externen Assets: Hintergrund rein per CSS-Gradienten + feiner Struktur. */
+/* Vertrauenskasse — Oliv/Gold-Portal; Hintergrund: lokales Kachel-PNG + Abdunklung für Lesbarkeit. */
 
 :root {
   /* Seitenhintergrund (Oliv / Feld) */
@@ -37,20 +36,14 @@ body {
   min-height: 100vh;
   color: var(--kas-page-fg);
   background-color: var(--kas-bg-deep);
-  /* Mehrschichtiger „Feld“-Hintergrund ähnlich hero/Übersichtsseiten */
+  /* Kachel-PNG, darüber halbtransparente Schicht damit Text/UI lesbar bleiben */
   background-image:
-    radial-gradient(ellipse 120% 70% at 50% -15%, rgba(90, 102, 78, 0.45), transparent 52%),
-    radial-gradient(ellipse 90% 55% at 110% 60%, rgba(35, 42, 32, 0.95), transparent),
-    radial-gradient(ellipse 70% 45% at -10% 85%, rgba(48, 56, 42, 0.75), transparent),
-    repeating-linear-gradient(
-      -12deg,
-      transparent 0,
-      transparent 11px,
-      rgba(0, 0, 0, 0.035) 11px,
-      rgba(0, 0, 0, 0.035) 12px
-    ),
-    linear-gradient(168deg, var(--kas-bg-top) 0%, var(--kas-bg-mid) 42%, var(--kas-bg-deep) 100%);
-  background-attachment: fixed;
+    linear-gradient(rgba(12, 15, 11, 0.68), rgba(18, 22, 17, 0.82)),
+    url("/static/camo-tile.png");
+  background-repeat: repeat, repeat;
+  background-size: auto, auto;
+  background-attachment: fixed, fixed;
+  background-position: 0 0, 0 0;
 }
 
 /* Pico an dunkles Portal anbinden */
