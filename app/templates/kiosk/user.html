@@ -53,10 +53,36 @@
 <p class="k-empty">Keine aktiven Artikel. Bitte im Admin unter „Artikel“ anlegen.</p>
 {% endif %}
 <audio id="payment-sound" preload="auto" src="/static/payed.mp3"></audio>
+{% if debt_reminder_level == 1 %}
+<audio id="warn-level-sound" preload="auto" src="/static/warn1.mp3"></audio>
+{% elif debt_reminder_level == 2 %}
+<audio id="warn-level-sound" preload="auto" src="/static/warn2.mp3"></audio>
+{% elif debt_reminder_level == 3 %}
+<audio id="warn-level-sound" preload="auto" src="/static/warn3.mp3"></audio>
+{% endif %}
 <script>
   (function () {
     const forms = document.querySelectorAll(".k-product-grid form");
     const paymentSound = document.getElementById("payment-sound");
+    const warnLevelSound = document.getElementById("warn-level-sound");
+    if (warnLevelSound && typeof warnLevelSound.play === "function") {
+      let playedWarn1 = false;
+      const tryPlayWarn1 = function () {
+        if (playedWarn1) return;
+        warnLevelSound.currentTime = 0;
+        warnLevelSound.play().then(function () {
+          playedWarn1 = true;
+        }).catch(function () {});
+      };
+      const onFirstInteraction = function () {
+        document.removeEventListener("pointerdown", onFirstInteraction);
+        document.removeEventListener("keydown", onFirstInteraction);
+        tryPlayWarn1();
+      };
+      tryPlayWarn1();
+      document.addEventListener("pointerdown", onFirstInteraction, { once: true });
+      document.addEventListener("keydown", onFirstInteraction, { once: true });
+    }
     forms.forEach(function (form) {
       form.addEventListener("submit", function (event) {
         const button = form.querySelector(".k-product-btn");
