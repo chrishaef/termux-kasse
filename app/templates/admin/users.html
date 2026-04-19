@@ -26,14 +26,16 @@
         <td><strong>{{ u['name'] }}</strong></td>
         <td>{{ u['group_name'] }}</td>
         <td class="td-sort">
-          <form method="post" action="/admin/users/{{ u['id'] }}/sort" class="form-inline-action">
-            <input type="hidden" name="direction" value="up" />
-            <button type="submit" class="secondary admin-btn-sm" title="In der Gruppe nach oben">↑</button>
-          </form>
-          <form method="post" action="/admin/users/{{ u['id'] }}/sort" class="form-inline-action">
-            <input type="hidden" name="direction" value="down" />
-            <button type="submit" class="secondary admin-btn-sm" title="In der Gruppe nach unten">↓</button>
-          </form>
+          <div class="td-sort__inner">
+            <form method="post" action="/admin/users/{{ u['id'] }}/sort" class="form-inline-action">
+              <input type="hidden" name="direction" value="up" />
+              <button type="submit" class="secondary admin-btn-sm" title="In der Gruppe nach oben">↑</button>
+            </form>
+            <form method="post" action="/admin/users/{{ u['id'] }}/sort" class="form-inline-action">
+              <input type="hidden" name="direction" value="down" />
+              <button type="submit" class="secondary admin-btn-sm" title="In der Gruppe nach unten">↓</button>
+            </form>
+          </div>
         </td>
         <td class="num{% if u['open_balance_cents'] == 0 %} secondary{% endif %}">{{ (-u['open_balance_cents'])|eur }}</td>
         <td class="num{% if u['open_entries_count'] == 0 %} secondary{% endif %}">{{ u['open_entries_count'] }}</td>

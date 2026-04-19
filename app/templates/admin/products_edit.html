@@ -1,0 +1,20 @@
+{% extends "admin/shell.html" %}
+{% block admin_page %}
+<header class="page-head">
+  <p class="page-head__eyebrow">Sortiment</p>
+  <h1 class="page-head__title">Artikel bearbeiten</h1>
+</header>
+<a href="/admin/products" class="admin-back">← Zurück zu Artikel</a>
+
+<article class="k-panel">
+  <form method="post" action="/admin/products/{{ product['id'] }}/edit">
+    <label>Name
+      <input type="text" name="name" value="{{ product['name'] }}" required />
+    </label>
+    <label>Preis (EUR)
+      <input type="text" name="price_eur" value="{{ price_eur }}" required inputmode="decimal" autocomplete="off" />
+    </label>
+    <button type="submit">Speichern</button>
+  </form>
+</article>
+{% endblock %}

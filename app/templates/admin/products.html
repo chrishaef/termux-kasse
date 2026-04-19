@@ -25,17 +25,20 @@
         <td class="num">{{ p['price_cents']|eur }}</td>
         <td>{{ 'ja' if p['active'] else 'nein' }}</td>
         <td class="td-sort">
-          <form method="post" action="/admin/products/{{ p['id'] }}/sort" class="form-inline-action">
-            <input type="hidden" name="direction" value="up" />
-            <button type="submit" class="secondary admin-btn-sm" title="Nach oben">↑</button>
-          </form>
-          <form method="post" action="/admin/products/{{ p['id'] }}/sort" class="form-inline-action">
-            <input type="hidden" name="direction" value="down" />
-            <button type="submit" class="secondary admin-btn-sm" title="Nach unten">↓</button>
-          </form>
+          <div class="td-sort__inner">
+            <form method="post" action="/admin/products/{{ p['id'] }}/sort" class="form-inline-action">
+              <input type="hidden" name="direction" value="up" />
+              <button type="submit" class="secondary admin-btn-sm" title="Nach oben">↑</button>
+            </form>
+            <form method="post" action="/admin/products/{{ p['id'] }}/sort" class="form-inline-action">
+              <input type="hidden" name="direction" value="down" />
+              <button type="submit" class="secondary admin-btn-sm" title="Nach unten">↓</button>
+            </form>
+          </div>
         </td>
         <td class="td-actions">
           <div class="td-actions__inner">
+            <a href="/admin/products/{{ p['id'] }}/edit" class="admin-btn-sm admin-btn-edit">Bearbeiten</a>
             <form method="post" action="/admin/products/{{ p['id'] }}/toggle" class="form-inline-action">
               <button type="submit" class="secondary admin-btn-sm">Aktiv</button>
             </form>

@@ -1136,7 +1136,7 @@ body.app-admin .table-wrap .td-sort {
   vertical-align: middle;
 }
 
-body.app-admin .table-wrap .td-sort {
+body.app-admin .table-wrap .td-sort__inner {
   display: flex;
   align-items: center;
   justify-content: center;

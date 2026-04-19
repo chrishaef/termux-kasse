@@ -488,6 +488,56 @@ def admin_products_create(
     return RedirectResponse("/admin/products", status_code=303)
 
 
+@router.get("/products/{product_id}/edit", response_class=HTMLResponse)
+def admin_products_edit_form(request: Request, product_id: int) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    with db.get_connection() as conn:
+        product = db.fetch_one(
+            conn,
+            "SELECT id, name, price_cents, active FROM products WHERE id = ?",
+            (product_id,),
+        )
+        if not product:
+            raise HTTPException(status_code=404)
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/products_edit.html",
+        {
+            "title": "Artikel bearbeiten",
+            "product": product,
+            "price_eur": _eur_field_from_cents(int(product["price_cents"])),
+        },
+    )
+
+
+@router.post("/products/{product_id}/edit")
+def admin_products_edit_save(
+    request: Request,
+    product_id: int,
+    name: str = Form(...),
+    price_eur: str = Form(...),
+) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    name = name.strip()
+    if not name:
+        return RedirectResponse(f"/admin/products/{product_id}/edit", status_code=303)
+    try:
+        cents = _parse_price_eur_to_cents(price_eur)
+    except ValueError:
+        return RedirectResponse(f"/admin/products/{product_id}/edit", status_code=303)
+    with db.get_connection() as conn:
+        row = db.fetch_one(conn, "SELECT id FROM products WHERE id = ?", (product_id,))
+        if not row:
+            raise HTTPException(status_code=404)
+        conn.execute(
+            "UPDATE products SET name = ?, price_cents = ? WHERE id = ?",
+            (name, cents, product_id),
+        )
+    return RedirectResponse("/admin/products", status_code=303)
+
+
 @router.post("/products/{product_id}/sort")
 def admin_products_sort(
     request: Request,

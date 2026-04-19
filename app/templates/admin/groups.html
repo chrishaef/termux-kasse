@@ -16,14 +16,16 @@
       <tr>
         <td>{{ g['name'] }}</td>
         <td class="td-sort">
-          <form method="post" action="/admin/groups/{{ g['id'] }}/sort" class="form-inline-action">
-            <input type="hidden" name="direction" value="up" />
-            <button type="submit" class="secondary admin-btn-sm" title="Nach oben">↑</button>
-          </form>
-          <form method="post" action="/admin/groups/{{ g['id'] }}/sort" class="form-inline-action">
-            <input type="hidden" name="direction" value="down" />
-            <button type="submit" class="secondary admin-btn-sm" title="Nach unten">↓</button>
-          </form>
+          <div class="td-sort__inner">
+            <form method="post" action="/admin/groups/{{ g['id'] }}/sort" class="form-inline-action">
+              <input type="hidden" name="direction" value="up" />
+              <button type="submit" class="secondary admin-btn-sm" title="Nach oben">↑</button>
+            </form>
+            <form method="post" action="/admin/groups/{{ g['id'] }}/sort" class="form-inline-action">
+              <input type="hidden" name="direction" value="down" />
+              <button type="submit" class="secondary admin-btn-sm" title="Nach unten">↓</button>
+            </form>
+          </div>
         </td>
         <td class="td-actions">
           <div class="td-actions__inner">
