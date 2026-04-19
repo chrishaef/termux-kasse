@@ -1151,7 +1151,7 @@ body.app-admin .table-wrap .td-actions {
 
 body.app-admin .table-wrap .td-actions__inner {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
   gap: 0.35rem;
@@ -1159,7 +1159,8 @@ body.app-admin .table-wrap .td-actions__inner {
 
 body.app-admin .table-wrap .form-inline-action {
   margin: 0;
-  display: inline;
+  display: inline-flex;
+  align-items: center;
 }
 
 body.app-admin .table-wrap button.admin-btn-sm {
@@ -1179,28 +1180,28 @@ body.app-admin .table-wrap a.admin-btn-edit {
   line-height: 1.2;
   border-radius: var(--kas-radius-button);
   text-decoration: none;
-  color: #1a1a12;
-  background: #e8e4da;
-  border: 1px solid #a69f88;
+  color: #141414 !important;
+  background: #e8e4da !important;
+  border: 1px solid #a69f88 !important;
 }
 
 body.app-admin .table-wrap a.admin-btn-edit:hover {
-  background: #f2efe6;
-  border-color: var(--kas-accent);
-  color: #0a0a06;
+  background: #f2efe6 !important;
+  border-color: #8f8872 !important;
+  color: #0a0a06 !important;
 }
 
 body.app-admin .table-wrap .admin-btn-danger {
-  background: #d74a4a;
-  border-color: #b83333;
-  color: #fff;
-  font-weight: 800;
+  background: #d74a4a !important;
+  border-color: #b83333 !important;
+  color: #fff !important;
+  font-weight: 800 !important;
 }
 
 body.app-admin .table-wrap .admin-btn-danger:hover {
-  background: #c93d3d;
-  border-color: #992a2a;
-  color: #fff;
+  background: #c93d3d !important;
+  border-color: #992a2a !important;
+  color: #fff !important;
 }
 
 body.app-admin .table-wrap td.secondary {
