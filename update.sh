@@ -1,28 +1,96 @@
 #!/usr/bin/env bash
-# Nach Verbindung mit Hotspot/WLAN: Repo aktualisieren, Abhängigkeiten synchronisieren,
-# laufenden Uvicorn beenden und neu starten (Hintergrund + Log).
+# Install + Update: Systemvoraussetzungen prüfen/ggf. installieren, Repo pullen,
+# Python-Deps, Server neu starten (Hintergrund) — gedacht für Hotspot/WLAN.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
 
 export PORT="${PORT:-8000}"
 NO_RESTART=0
+NO_SYSTEM_INSTALL=0
 for arg in "$@"; do
   case "$arg" in
     --no-restart) NO_RESTART=1 ;;
+    --no-system-install) NO_SYSTEM_INSTALL=1 ;;
   esac
 done
 
-if command -v python3 >/dev/null 2>&1; then
-  PYTHON=python3
-else
-  PYTHON=python
-fi
+is_termux() {
+  [[ -n "${TERMUX_VERSION:-}" ]]
+}
 
-echo ">>> Repository: $ROOT"
+is_apt() {
+  command -v apt-get >/dev/null 2>&1
+}
+
+pick_python() {
+  if command -v python3 >/dev/null 2>&1; then
+    PYTHON=python3
+  elif command -v python >/dev/null 2>&1; then
+    PYTHON=python
+  else
+    echo "Fehler: Kein python3/python nach der Installation gefunden."
+    exit 1
+  fi
+}
+
+ensure_system_packages() {
+  local need_git=0 need_py=0
+  command -v git >/dev/null 2>&1 || need_git=1
+  if ! command -v python3 >/dev/null 2>&1 && ! command -v python >/dev/null 2>&1; then
+    need_py=1
+  fi
+
+  if [[ "$need_git" -eq 0 && "$need_py" -eq 0 ]]; then
+    echo ">>> System: git und Python sind vorhanden."
+    return 0
+  fi
+
+  if [[ "$NO_SYSTEM_INSTALL" -eq 1 ]]; then
+    echo "Fehler: git und/oder Python fehlt. Ohne --no-system-install erneut ausführen oder manuell installieren."
+    exit 1
+  fi
+
+  if is_termux; then
+    echo ">>> Termux: Paketlisten + Installation (git, python) — braucht Internet…"
+    pkg update -y
+    pkg install -y git python
+  elif is_apt; then
+    echo ">>> Debian/Ubuntu (apt): Installation (git, python3, venv, pip) — braucht Internet…"
+    if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+      apt-get update -y
+      apt-get install -y git python3 python3-venv python3-pip ca-certificates
+    elif command -v sudo >/dev/null 2>&1; then
+      sudo apt-get update -y
+      sudo apt-get install -y git python3 python3-venv python3-pip ca-certificates
+    else
+      echo "Fehler: apt gefunden, aber weder root noch sudo. Bitte als root ausführen oder Pakete manuell installieren."
+      exit 1
+    fi
+  else
+    echo "Fehler: Weder Termux noch apt-get erkannt. Bitte manuell installieren: git, Python 3 inkl. venv und pip."
+    exit 1
+  fi
+
+  command -v git >/dev/null 2>&1 || {
+    echo "Fehler: git ist nach der Installation nicht verfügbar."
+    exit 1
+  }
+  pick_python
+  command -v "$PYTHON" >/dev/null 2>&1 || {
+    echo "Fehler: Python ist nach der Installation nicht verfügbar."
+    exit 1
+  }
+}
+
+echo ">>> Projekt: $ROOT"
+
+ensure_system_packages
+pick_python
+echo ">>> Verwende Python: $(${PYTHON} --version 2>&1)"
 
 if [[ ! -d .git ]]; then
-  echo "Fehler: Kein Git-Repository (.git fehlt)."
+  echo "Fehler: Kein Git-Repository (.git fehlt). Zuerst klonen, dann update.sh im Projektroot ausführen."
   exit 1
 fi
 
@@ -30,7 +98,7 @@ echo ">>> git pull"
 git pull --ff-only
 
 if [[ ! -d .venv ]]; then
-  echo ">>> Lege .venv an"
+  echo ">>> Lege virtuelle Umgebung (.venv) an"
   "$PYTHON" -m venv .venv
 fi
 # shellcheck source=/dev/null
@@ -40,7 +108,7 @@ echo ">>> pip install -r requirements.txt"
 pip install -q -r requirements.txt
 
 if [[ "$NO_RESTART" -eq 1 ]]; then
-  echo "Fertig (--no-restart). Server manuell starten: bash start.sh"
+  echo "Fertig (--no-restart). Server starten: bash start.sh  oder erneut: bash update.sh"
   exit 0
 fi
 
@@ -57,7 +125,6 @@ stop_old() {
     fi
     rm -f "$PID_FILE"
   fi
-  # Fallback, falls ohne PID-Datei gestartet wurde
   if command -v pkill >/dev/null 2>&1; then
     pkill -f "uvicorn app.main:app" 2>/dev/null || true
     sleep 1
@@ -67,7 +134,7 @@ stop_old() {
 stop_old
 
 echo ">>> Starte Server (Hintergrund), Port ${PORT}"
-nohup uvicorn app.main:app --host 127.0.0.1 --port "${PORT}" >>"$LOG_FILE" 2>&1 &
+nohup "$ROOT/.venv/bin/uvicorn" app.main:app --host 127.0.0.1 --port "${PORT}" >>"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"
 
 echo "Log: $LOG_FILE"

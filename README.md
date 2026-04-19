@@ -4,8 +4,8 @@ Lokal laufende Vertrauenskasse (FastAPI, SQLite, Jinja2). Keine CDN-Assets: `pic
 
 ## Voraussetzungen (Termux auf dem Tablet)
 
-- `pkg install python git`
-- Optional: `pkg install curl` (nur falls du Abhängigkeiten manuell laden willst)
+- Entweder manuell: `pkg install python git`
+- Oder automatisch beim ersten Lauf von **`update.sh`** (siehe unten)
 
 ## Installation
 
@@ -13,8 +13,10 @@ Lokal laufende Vertrauenskasse (FastAPI, SQLite, Jinja2). Keine CDN-Assets: `pic
 cd ~
 git clone <DEIN_PRIVATE_CLONE_URL> termux-kasse
 cd termux-kasse
-bash start.sh --sync   # einmalig: venv + pip install
-bash start.sh           # startet uvicorn auf 127.0.0.1:8000
+bash update.sh          # installiert bei Bedarf git/python (Termux/apt), pull, pip, startet Server im Hintergrund
+# oder klassisch:
+bash start.sh --sync   # nur venv + pip
+bash start.sh          # Vordergrund-Server auf 127.0.0.1:8000
 ```
 
 Im Browser auf demselben Gerät: [http://127.0.0.1:8000](http://127.0.0.1:8000)
@@ -39,12 +41,18 @@ Wenn das Tablet kurz online ist (z. B. Handy-Hotspot), im Projektordner:
 bash update.sh
 ```
 
-Das Skript führt `git pull --ff-only`, aktualisiert die Python-Pakete, beendet einen zuvor mit `update.sh` gestarteten Server (über `.server.pid`, sonst Fallback per `pkill`) und startet **uvicorn im Hintergrund** neu. Logdatei: `server.log`.
+**`update.sh`** ist Install- und Update-Skript in einem:
 
-Nur pull + Pakete, **ohne** Neustart (wenn du weiter `start.sh` im Vordergrund nutzen willst):
+1. **System:** Prüft `git` und Python; fehlt etwas, wird installiert — **Termux** mit `pkg`, **Debian/Ubuntu** (und typische LXC) mit `apt-get` (bei Bedarf `sudo`). Ohne erkanntes System: Hinweis und Abbruch.
+2. **`git pull --ff-only`**
+3. **`.venv`** anlegen falls nötig, **`pip install -r requirements.txt`**
+4. Laufenden Server beenden (`.server.pid` oder `pkill`) und **uvicorn im Hintergrund** neu starten. Log: `server.log`.
+
+Optionen:
 
 ```bash
-bash update.sh --no-restart
+bash update.sh --no-restart          # kein Neustart (nur Systemcheck/pull/pip)
+bash update.sh --no-system-install   # keine Paketinstallation (nur prüfen; bricht ab, wenn git/Python fehlt)
 ```
 
 Hinweis: Läuft die Kasse nur mit `bash start.sh` im Vordergrund, hat sie keine `.server.pid` — dann beendet `update.sh` per `pkill` passende `uvicorn app.main:app`-Prozesse oder du stoppt vorher manuell (Strg+C) und startest danach `bash start.sh`.
