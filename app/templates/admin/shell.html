@@ -7,7 +7,7 @@
 </form>
 {% endblock %}
 {% block content %}
-{% if request.state.admin_debt_alert_count > 0 %}
+{% if request.state.admin_debt_alert_count > 0 and request.url.path == "/admin" %}
 <div class="admin-debt-global-alert" role="status">
   <strong>Schwelle 3:</strong> {{ request.state.admin_debt_alert_count }}× über Limit.
   <span class="admin-debt-global-alert__links">

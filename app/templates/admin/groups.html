@@ -10,13 +10,13 @@
 </article>
 <div class="table-wrap">
   <table role="grid" class="admin-table-groups">
-    <thead><tr><th>Name</th><th class="th-sort">Reihenfolge</th><th class="th-actions">Aktionen</th></tr></thead>
+    <thead><tr><th>Name</th><th class="th-actions">Aktionen</th></tr></thead>
     <tbody>
       {% for g in groups %}
       <tr>
         <td>{{ g['name'] }}</td>
-        <td class="td-sort">
-          <div class="td-sort__inner">
+        <td class="td-actions">
+          <div class="td-actions__inner">
             <form method="post" action="/admin/groups/{{ g['id'] }}/sort" class="form-inline-action">
               <input type="hidden" name="direction" value="up" />
               <button type="submit" class="secondary admin-btn-sm" title="Nach oben">↑</button>
@@ -25,13 +25,9 @@
               <input type="hidden" name="direction" value="down" />
               <button type="submit" class="secondary admin-btn-sm" title="Nach unten">↓</button>
             </form>
-          </div>
-        </td>
-        <td class="td-actions">
-          <div class="td-actions__inner">
             <a href="/admin/groups/{{ g['id'] }}/edit" class="admin-btn-sm admin-btn-edit">Bearbeiten</a>
             <form method="post" action="/admin/groups/{{ g['id'] }}/delete" class="form-inline-action" onsubmit="return confirm('Gruppe wirklich löschen?');">
-              <button type="submit" class="secondary admin-btn-sm">Löschen</button>
+              <button type="submit" class="secondary admin-btn-sm admin-btn-danger">Löschen</button>
             </form>
           </div>
         </td>

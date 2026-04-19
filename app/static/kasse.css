@@ -1173,21 +1173,34 @@ body.app-admin .table-wrap button.admin-btn-sm {
 
 body.app-admin .table-wrap a.admin-btn-edit {
   display: inline-block;
-  padding: 0.2rem 0.5rem;
+  padding: 0.2rem 0.45rem;
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
-  border-radius: 6px;
+  border-radius: var(--kas-radius-button);
   text-decoration: none;
   color: #1a1a12;
-  background: #e4dfd4;
-  border: 1px solid #9a926e;
+  background: #e8e4da;
+  border: 1px solid #a69f88;
 }
 
 body.app-admin .table-wrap a.admin-btn-edit:hover {
-  background: #f5f0e6;
+  background: #f2efe6;
   border-color: var(--kas-accent);
-  color: #050805;
+  color: #0a0a06;
+}
+
+body.app-admin .table-wrap .admin-btn-danger {
+  background: #d74a4a;
+  border-color: #b83333;
+  color: #fff;
+  font-weight: 800;
+}
+
+body.app-admin .table-wrap .admin-btn-danger:hover {
+  background: #c93d3d;
+  border-color: #992a2a;
+  color: #fff;
 }
 
 body.app-admin .table-wrap td.secondary {
