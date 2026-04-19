@@ -25,6 +25,7 @@
       <nav class="site-nav" aria-label="Hauptnavigation">
         <a href="/">Kiosk</a>
         <a href="/top-ten">Top Ten</a>
+        <a href="/preisliste">Preisliste</a>
         {% block header_nav_extra %}
         {% endblock %}
       </nav>
@@ -37,19 +38,44 @@
   <script>
     (function () {
       const trigger = document.getElementById("secret-admin-trigger");
-      if (!trigger) return;
-      let count = 0;
-      let last = 0;
-      const needed = 5;
-      trigger.addEventListener("click", function () {
-        const now = Date.now();
-        if (now - last > 2200) count = 0;
-        last = now;
-        count += 1;
-        if (count >= needed) {
-          window.location.href = "/admin";
+      if (trigger) {
+        let count = 0;
+        let last = 0;
+        const needed = 5;
+        trigger.addEventListener("click", function () {
+          const now = Date.now();
+          if (now - last > 2200) count = 0;
+          last = now;
+          count += 1;
+          if (count >= needed) {
+            window.location.href = "/admin";
+          }
+        });
+      }
+
+      if (document.body.classList.contains("app-kiosk")) {
+        const path = window.location.pathname;
+        if (path === "/preisliste") {
+          const goHome = function () {
+            window.location.href = "/";
+          };
+          document.addEventListener("pointerdown", goHome, { once: true });
+          document.addEventListener("keydown", goHome, { once: true });
+        } else {
+          const idleMs = 90000;
+          let timer = 0;
+          const reset = function () {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(function () {
+              window.location.href = "/preisliste";
+            }, idleMs);
+          };
+          ["pointerdown", "pointermove", "keydown", "touchstart", "scroll"].forEach(function (ev) {
+            document.addEventListener(ev, reset, { passive: true });
+          });
+          reset();
         }
-      });
+      }
     })();
   </script>
 </body>

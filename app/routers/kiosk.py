@@ -37,6 +37,25 @@ def kiosk_top_ten(request: Request) -> HTMLResponse:
     )
 
 
+@router.get("/preisliste", response_class=HTMLResponse)
+def kiosk_preisliste(request: Request) -> HTMLResponse:
+    with db.get_connection() as conn:
+        products = db.fetch_all(
+            conn,
+            """
+            SELECT name, price_cents
+            FROM products
+            WHERE active = 1
+            ORDER BY sort_order, name COLLATE NOCASE
+            """,
+        )
+    return TEMPLATES.TemplateResponse(
+        request,
+        "kiosk/preisliste.html",
+        {"title": "Preisliste", "products": products},
+    )
+
+
 @router.get("/g/{group_id}", response_class=HTMLResponse)
 def kiosk_group(request: Request, group_id: int) -> HTMLResponse:
     with db.get_connection() as conn:

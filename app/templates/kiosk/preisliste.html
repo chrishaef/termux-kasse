@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block trust %}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <p class="page-head__eyebrow">Kiosk</p>
+  <h1 class="page-head__title">Preisliste</h1>
+  <p class="page-head__lead">Berührung/Klick startet wieder auf der Startseite.</p>
+</header>
+
+<article class="k-panel" style="text-align:center">
+  <img src="/static/wsg-logo.png" alt="" class="k-saver-logo" />
+</article>
+
+<div class="table-wrap">
+  <table role="grid">
+    <thead><tr><th>Artikel</th><th class="num">Preis</th></tr></thead>
+    <tbody>
+      {% for p in products %}
+      <tr>
+        <td>{{ p['name'] }}</td>
+        <td class="num">{{ p['price_cents']|eur }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="2" class="secondary">Keine aktiven Artikel vorhanden.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -12,6 +12,7 @@ def test_kiosk_home() -> None:
         assert "k-tiles" in r.text or "k-empty" in r.text
         assert "kasse.css" in r.text
         assert "Top Ten" in r.text
+        assert "Preisliste" in r.text
 
 
 def test_kiosk_top_ten_shows_active_users() -> None:
@@ -40,3 +41,17 @@ def test_kiosk_top_ten_shows_active_users() -> None:
         assert "Top Ten" in r.text
         # Ben hat mehr Buchungen und sollte vor Anna erscheinen.
         assert r.text.find("Ben") < r.text.find("Anna")
+
+
+def test_kiosk_preisliste_shows_products() -> None:
+    with TestClient(app) as c:
+        c.post(
+            "/admin/setup",
+            data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
+            follow_redirects=False,
+        )
+        c.post("/admin/products", data={"name": "Wasser", "price_eur": "1.20"})
+        r = c.get("/preisliste")
+        assert r.status_code == 200
+        assert "Preisliste" in r.text
+        assert "Wasser" in r.text
