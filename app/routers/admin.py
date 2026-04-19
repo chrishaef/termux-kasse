@@ -551,23 +551,41 @@ def admin_settlements_list(request: Request) -> Response:
 
 
 @router.get("/settlements/start", response_class=HTMLResponse)
-def admin_settlement_start_get(request: Request) -> Response:
+def admin_settlement_start_get(request: Request, group_id: str = "") -> Response:
     if (r := _redirect_login(request)):
         return r
+    gid = int(group_id) if group_id.strip().isdigit() else None
     with db.get_connection() as conn:
+        groups = db.fetch_all(
+            conn,
+            "SELECT id, name FROM user_groups ORDER BY sort_order, name COLLATE NOCASE",
+        )
+        if gid is None and groups:
+            gid = int(groups[0]["id"])
+        if gid is not None:
+            grow = db.fetch_one(conn, "SELECT id FROM user_groups WHERE id = ?", (gid,))
+            if not grow:
+                raise HTTPException(status_code=404, detail="Nutzergruppe nicht gefunden")
         users = db.fetch_all(
             conn,
             """
             SELECT u.id, u.name, g.name AS group_name
             FROM users u
             JOIN user_groups g ON g.id = u.group_id
-            ORDER BY g.sort_order, g.name COLLATE NOCASE, u.sort_order, u.name COLLATE NOCASE
+            WHERE (? IS NULL OR u.group_id = ?)
+            ORDER BY u.sort_order, u.name COLLATE NOCASE
             """,
+            (gid, gid),
         )
     return TEMPLATES.TemplateResponse(
         request,
         "admin/settlement_start.html",
-        {"title": "Abrechnung starten", "users": users},
+        {
+            "title": "Abrechnung starten",
+            "users": users,
+            "groups": groups,
+            "selected_group_id": gid,
+        },
     )
 
 

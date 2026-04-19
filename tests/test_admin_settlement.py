@@ -85,3 +85,23 @@ def test_settlement_confirm_no_open_redirects() -> None:
         r = client.get(f"/admin/settlements/confirm?user_id={uid}", follow_redirects=False)
         assert r.status_code == 303
         assert "err=no_open" in r.headers["location"]
+
+
+def test_settlement_start_filters_users_by_group() -> None:
+    with TestClient(app) as client:
+        client.post(
+            "/admin/setup",
+            data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
+            follow_redirects=False,
+        )
+        client.post("/admin/groups", data={"name": "G1"})
+        client.post("/admin/groups", data={"name": "G2"})
+        with db.get_connection() as conn:
+            g1 = int(conn.execute("SELECT id FROM user_groups WHERE name='G1'").fetchone()[0])
+            g2 = int(conn.execute("SELECT id FROM user_groups WHERE name='G2'").fetchone()[0])
+        client.post("/admin/users", data={"name": "Anna", "group_id": str(g1)})
+        client.post("/admin/users", data={"name": "Ben", "group_id": str(g2)})
+        r = client.get(f"/admin/settlements/start?group_id={g1}")
+        assert r.status_code == 200
+        assert "Anna" in r.text
+        assert "Ben" not in r.text

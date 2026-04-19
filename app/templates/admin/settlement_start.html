@@ -11,12 +11,24 @@
 {% endif %}
 
 <article class="k-panel">
+  {% if groups %}
+  <form method="get" action="/admin/settlements/start" class="k-toolbar" style="margin-bottom:0.85rem">
+    <label>Gruppe
+      <select name="group_id" onchange="this.form.submit()">
+        {% for g in groups %}
+        <option value="{{ g['id'] }}"{% if selected_group_id == g['id'] %} selected{% endif %}>{{ g['name'] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <noscript><button type="submit" class="secondary">Filtern</button></noscript>
+  </form>
+  {% endif %}
   {% if users %}
   <form method="post" action="/admin/settlements/start">
     <label>Nutzer
       <select name="user_id" required>
         {% for u in users %}
-        <option value="{{ u['id'] }}">{{ u['group_name'] }} — {{ u['name'] }}</option>
+        <option value="{{ u['id'] }}">{{ u['name'] }}</option>
         {% endfor %}
       </select>
     </label>
