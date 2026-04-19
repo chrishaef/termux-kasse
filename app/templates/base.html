@@ -56,10 +56,18 @@
       if (document.body.classList.contains("app-kiosk")) {
         const path = window.location.pathname;
         if (path === "/preisliste") {
-          const goHome = function () {
+          const goHome = function (event) {
+            const target = event.target;
+            const interactive =
+              target && typeof target.closest === "function"
+                ? target.closest(
+              "a[href], button, [role='button'], input, select, textarea, label"
+                  )
+                : null;
+            if (interactive) return;
             window.location.href = "/";
           };
-          document.addEventListener("pointerdown", goHome, { once: true });
+          document.addEventListener("pointerdown", goHome);
           document.addEventListener("keydown", goHome, { once: true });
         } else {
           const idleMs = 90000;

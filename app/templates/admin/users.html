@@ -35,7 +35,7 @@
             <button type="submit" class="secondary admin-btn-sm" title="In der Gruppe nach unten">↓</button>
           </form>
         </td>
-        <td class="num{% if u['open_balance_cents'] == 0 %} secondary{% endif %}">{{ u['open_balance_cents']|eur }}</td>
+        <td class="num{% if u['open_balance_cents'] == 0 %} secondary{% endif %}">{{ (-u['open_balance_cents'])|eur }}</td>
         <td class="num{% if u['open_entries_count'] == 0 %} secondary{% endif %}">{{ u['open_entries_count'] }}</td>
         <td class="num{% if u['settled_total_cents'] == 0 %} secondary{% endif %}">{{ u['settled_total_cents']|eur }}</td>
         <td class="num{% if u['settlements_count'] == 0 %} secondary{% endif %}">{{ u['settlements_count'] }}</td>
@@ -57,7 +57,7 @@
     <tfoot>
       <tr>
         <th scope="row" colspan="3">Summe</th>
-        <td class="num"><strong>{{ overview_totals['open_balance_cents']|eur }}</strong></td>
+        <td class="num"><strong>{{ (-overview_totals['open_balance_cents'])|eur }}</strong></td>
         <td class="num"><strong>{{ overview_totals['open_entries_count'] }}</strong></td>
         <td class="num"><strong>{{ overview_totals['settled_total_cents']|eur }}</strong></td>
         <td class="num"><strong>{{ overview_totals['settlements_count'] }}</strong></td>

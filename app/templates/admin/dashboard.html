@@ -4,11 +4,11 @@
   <div class="admin-dash-stats" aria-label="Finanzübersicht">
     <div class="admin-stat">
       <span class="admin-stat__label">Ausstände gesamt</span>
-      <span class="admin-stat__value">{{ finance['open_total_cents']|eur }}</span>
+      <span class="admin-stat__value">{{ (-finance['open_total_cents'])|eur }}</span>
     </div>
     <div class="admin-stat">
       <span class="admin-stat__label">Größter Ausstand</span>
-      <span class="admin-stat__value">{{ finance['max_user_open_cents']|eur }}</span>
+      <span class="admin-stat__value">{{ (-finance['max_user_open_cents'])|eur }}</span>
     </div>
     <div class="admin-stat">
       <span class="admin-stat__label">Bisher eingenommen</span>
