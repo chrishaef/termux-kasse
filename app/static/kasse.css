@@ -1038,13 +1038,60 @@ body.app-admin .k-panel .admin-received-confirm {
   align-items: flex-start;
   gap: 0.7rem;
   margin-top: 0.8rem;
+  position: relative;
+  cursor: pointer;
 }
 
 body.app-admin .k-panel .admin-received-confirm input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+body.app-admin .k-panel .admin-received-confirm__box {
   width: 1.45rem;
   height: 1.45rem;
   min-width: 1.45rem;
-  margin: 0.08rem 0 0;
+  margin-top: 0.08rem;
+  border-radius: 0.32rem;
+  border: 2px solid #8d8770;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+body.app-admin .k-panel .admin-received-confirm__box::after {
+  content: "";
+  width: 0.34rem;
+  height: 0.72rem;
+  border: solid transparent;
+  border-width: 0 0.18rem 0.18rem 0;
+  transform: rotate(45deg) scale(0.85);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+body.app-admin .k-panel .admin-received-confirm input[type="checkbox"]:focus-visible + .admin-received-confirm__box {
+  box-shadow: 0 0 0 3px rgba(212, 160, 18, 0.35);
+  border-color: var(--kas-accent);
+}
+
+body.app-admin .k-panel .admin-received-confirm input[type="checkbox"]:checked + .admin-received-confirm__box {
+  background: var(--kas-accent);
+  border-color: var(--kas-accent-hover);
+}
+
+body.app-admin .k-panel .admin-received-confirm input[type="checkbox"]:checked + .admin-received-confirm__box::after {
+  border-color: #111;
+  opacity: 1;
+}
+
+body.app-admin .k-panel .admin-received-confirm__text {
+  line-height: 1.4;
 }
 
 body.app-admin .k-panel select option {

@@ -48,7 +48,8 @@
     <input type="hidden" name="user_id" value="{{ user['id'] }}" />
     <label class="admin-received-confirm">
       <input type="checkbox" name="received_confirmed" value="1" required />
-      <span>Ich bestätige, den offenen Betrag von <strong>{{ open_cents|eur }}</strong> von diesem Nutzer erhalten zu haben.</span>
+      <span class="admin-received-confirm__box" aria-hidden="true"></span>
+      <span class="admin-received-confirm__text">Ich bestätige, den offenen Betrag von <strong>{{ open_cents|eur }}</strong> von diesem Nutzer erhalten zu haben.</span>
     </label>
     <button type="submit" style="margin-top:1rem">Abrechnung buchen &amp; PDF laden</button>
   </form>
