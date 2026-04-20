@@ -67,6 +67,21 @@ async def attach_kiosk_notice(request: Request, call_next):
 
 
 @app.middleware("http")
+async def auto_logout_admin_outside_panel(request: Request, call_next):
+    path = request.url.path
+    try:
+        is_admin_logged_in = bool(request.session.get("admin_user"))
+    except Exception:
+        is_admin_logged_in = False
+    if is_admin_logged_in:
+        accept = (request.headers.get("accept") or "").lower()
+        is_html_navigation = request.method == "GET" and "text/html" in accept
+        if is_html_navigation and not path.startswith("/admin"):
+            request.session.clear()
+    return await call_next(request)
+
+
+@app.middleware("http")
 async def attach_admin_debt_alerts(request: Request, call_next):
     request.state.admin_debt_alert_count = 0
     path = request.url.path

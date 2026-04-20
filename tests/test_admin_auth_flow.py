@@ -48,3 +48,16 @@ def test_admin_password_change_requires_old_password() -> None:
         assert relog_old.status_code == 401
         relog_new = client.post("/admin/login", data={"password": "neu1234"}, follow_redirects=False)
         assert relog_new.status_code == 303
+
+
+def test_admin_session_is_closed_when_leaving_admin_panel() -> None:
+    with TestClient(app) as client:
+        login = client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        assert login.status_code == 303
+
+        leave = client.get("/", headers={"accept": "text/html"}, follow_redirects=False)
+        assert leave.status_code == 200
+
+        admin_again = client.get("/admin", follow_redirects=False)
+        assert admin_again.status_code == 303
+        assert admin_again.headers["location"] == "/admin/login"
