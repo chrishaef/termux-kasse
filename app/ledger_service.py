@@ -464,3 +464,102 @@ def period_totals(
 def admin_exists(conn: sqlite3.Connection) -> bool:
     row = db.fetch_one(conn, "SELECT COUNT(*) AS c FROM admin_users", ())
     return bool(row and int(row["c"]) > 0)
+
+
+def year_end_snapshot(conn: sqlite3.Connection) -> dict[str, Any]:
+    """Liest alle Kennzahlen für den Jahresabschluss-Bericht (vor Datenbereinigung)."""
+    created_at = utc_now_iso()
+    row_all = db.fetch_one(
+        conn,
+        "SELECT COUNT(*) AS c, COALESCE(SUM(amount_cents), 0) AS s FROM ledger_entries",
+        (),
+    )
+    row_open = db.fetch_one(
+        conn,
+        """
+        SELECT COUNT(*) AS c, COALESCE(SUM(amount_cents), 0) AS s
+        FROM ledger_entries
+        WHERE settlement_id IS NULL
+        """,
+        (),
+    )
+    row_settled_lines = db.fetch_one(
+        conn,
+        """
+        SELECT COUNT(*) AS c, COALESCE(SUM(amount_cents), 0) AS s
+        FROM ledger_entries
+        WHERE settlement_id IS NOT NULL
+        """,
+        (),
+    )
+    row_settlements = db.fetch_one(
+        conn,
+        "SELECT COUNT(*) AS c, COALESCE(SUM(total_cents), 0) AS s FROM settlements",
+        (),
+    )
+    users = db.fetch_all(
+        conn,
+        """
+        SELECT u.id AS user_id, u.name AS user_name, g.name AS group_name,
+            COALESCE(o.open_cents, 0) AS open_balance_cents,
+            COALESCE(o.open_n, 0) AS open_entries_count,
+            COALESCE(st.n, 0) AS settlements_count,
+            COALESCE(st.sum_cents, 0) AS settlements_sum_cents,
+            COALESCE(ua.all_n, 0) AS ledger_all_count,
+            COALESCE(ua.all_sum, 0) AS ledger_all_sum_cents
+        FROM users u
+        JOIN user_groups g ON g.id = u.group_id
+        LEFT JOIN (
+            SELECT user_id,
+                SUM(amount_cents) AS open_cents,
+                COUNT(*) AS open_n
+            FROM ledger_entries
+            WHERE settlement_id IS NULL
+            GROUP BY user_id
+        ) o ON o.user_id = u.id
+        LEFT JOIN (
+            SELECT user_id,
+                COUNT(*) AS n,
+                SUM(total_cents) AS sum_cents
+            FROM settlements
+            GROUP BY user_id
+        ) st ON st.user_id = u.id
+        LEFT JOIN (
+            SELECT user_id,
+                COUNT(*) AS all_n,
+                SUM(amount_cents) AS all_sum
+            FROM ledger_entries
+            GROUP BY user_id
+        ) ua ON ua.user_id = u.id
+        ORDER BY g.sort_order, g.name COLLATE NOCASE, u.sort_order, u.name COLLATE NOCASE
+        """,
+        (),
+    )
+    user_rows = [dict(r) for r in users]
+    product_rows = period_product_stats(conn, None, None, None)
+    return {
+        "created_at_iso": created_at,
+        "totals": {
+            "ledger_entries_all": int(row_all["c"]) if row_all else 0,
+            "ledger_sum_all_cents": int(row_all["s"]) if row_all else 0,
+            "open_lines_count": int(row_open["c"]) if row_open else 0,
+            "open_balance_net_cents": int(row_open["s"]) if row_open else 0,
+            "settled_lines_count": int(row_settled_lines["c"]) if row_settled_lines else 0,
+            "settled_lines_sum_cents": int(row_settled_lines["s"]) if row_settled_lines else 0,
+            "settlements_count": int(row_settlements["c"]) if row_settlements else 0,
+            "settlements_sum_cents": int(row_settlements["s"]) if row_settlements else 0,
+            "users_count": len(user_rows),
+        },
+        "users": user_rows,
+        "product_rows": product_rows,
+    }
+
+
+def year_end_purge_closed_data(conn: sqlite3.Connection) -> None:
+    """Entfernt abgeschlossene Abrechnungen und zugehörige Buchungszeilen.
+
+    Offene Buchungen (settlement_id IS NULL) bleiben erhalten — die Kontostände
+    der Nutzer bleiben damit erhalten.
+    """
+    conn.execute("DELETE FROM ledger_entries WHERE settlement_id IS NOT NULL")
+    conn.execute("DELETE FROM settlements")

@@ -14,6 +14,13 @@ def db_path() -> Path:
     return data_dir() / "kasse.db"
 
 
+def year_end_exports_dir() -> Path:
+    """Ablage für Jahresabschluss-PDF/XLSX (neben kasse.db unter KASSE_DATA_DIR)."""
+    p = data_dir() / "jahresabschluss"
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+
 def get_secret_key() -> str:
     data_dir().mkdir(parents=True, exist_ok=True)
     if "KASSE_SECRET_KEY" in os.environ:

@@ -1,0 +1,42 @@
+{% extends "admin/shell.html" %}
+{% block admin_page %}
+<header class="page-head">
+  <p class="page-head__eyebrow">Buchhaltung</p>
+  <h1 class="page-head__title">Jahresabschluss / Datenbereinigung</h1>
+  <p class="page-head__lead">
+    Es wird ein Archivbericht erstellt (PDF, Excel und ZIP mit beiden Dateien), alles gespeichert unter <code>data/jahresabschluss/</code> (bzw. <code>KASSE_DATA_DIR/jahresabschluss/</code>). Der Browser lädt zusätzlich das ZIP herunter.
+    Anschließend werden alle <strong>abgeschlossenen</strong> Abrechnungen und die zugehörigen Buchungszeilen gelöscht.
+    <strong>Offene Buchungen und Kontostände bleiben erhalten.</strong> Der Vorgang ist nicht rückgängig zu machen.
+  </p>
+</header>
+<a href="/admin/settlements" class="admin-back">← Zurück zu Abrechnungen</a>
+
+{% if not master_configured %}
+<article class="contrast">
+  Es ist kein Master-Passwort konfiguriert (Datei fehlt oder leer). Der Jahresabschluss ist aus Sicherheitsgründen deaktiviert.
+  Legen Sie z. B. <code>.admin_master_password</code> an oder setzen Sie <code>KASSE_MASTER_PASSWORD_FILE</code>.
+</article>
+{% elif err == "master" %}
+<article class="contrast">Master-Passwort ungültig.</article>
+{% elif err == "noconfirm" %}
+<article class="contrast">Bitte bestätigen Sie die unwiderrufliche Bereinigung per Checkbox.</article>
+{% elif err == "nomaster" %}
+<article class="contrast">Master-Passwort nicht verfügbar.</article>
+{% endif %}
+
+{% if master_configured %}
+<form method="post" action="/admin/settlements/year-end" class="k-panel" style="max-width: 40rem;">
+  <label for="master_password">Master-Passwort</label>
+  <input type="password" id="master_password" name="master_password" required autocomplete="off" />
+
+  <label style="margin-top: 1rem;">
+    <input type="checkbox" name="confirm_irreversible" value="1" required />
+    Ich habe verstanden, dass nach dem Abschluss alle abgeschlossenen Abrechnungen und historischen Buchungszeilen (außer offene Posten) unwiderruflich entfernt werden.
+  </label>
+
+  <footer style="margin-top: 1.25rem;">
+    <button type="submit">Jahresabschluss ausführen und ZIP herunterladen</button>
+  </footer>
+</form>
+{% endif %}
+{% endblock %}

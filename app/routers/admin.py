@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import io
 import re
 import sqlite3
+import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
@@ -16,13 +18,15 @@ from app import debt_thresholds
 from app import kiosk_notice
 from app import ledger_service
 from app import sort_order_util
-from app.config import db_path
+from app.config import db_path, read_master_password, year_end_exports_dir
 from app.db import init_db
 from app.export_service import (
     build_pdf_bytes,
     build_statistics_pdf_bytes,
     build_statistics_xlsx_bytes,
     build_xlsx_bytes,
+    build_year_end_pdf_bytes,
+    build_year_end_xlsx_bytes,
 )
 from app.templates_env import TEMPLATES
 
@@ -63,6 +67,12 @@ def _settlement_filename_stem(header: sqlite3.Row) -> str:
     else:
         day = "unbekannt"
     return f"Abrechnung_{name}_{day}"
+
+
+def _year_end_export_stem(created_iso: str) -> str:
+    s = (created_iso or "")[:19].replace(":", "-")
+    s = _FN_UNSAFE.sub("_", s)
+    return f"Jahresabschluss_{s}" if s else "Jahresabschluss"
 
 
 def _attachment_disposition(stem: str, ext: str) -> str:
@@ -782,6 +792,64 @@ def admin_settlements_list(request: Request) -> Response:
         request,
         "admin/settlements.html",
         {"title": "Abrechnungen", "settlements": settlements},
+    )
+
+
+@router.get("/settlements/year-end", response_class=HTMLResponse)
+def admin_year_end_get(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    mp = read_master_password()
+    master_ok = bool(mp and str(mp).strip())
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/year_end.html",
+        {
+            "title": "Jahresabschluss",
+            "master_configured": master_ok,
+            "err": request.query_params.get("err"),
+        },
+    )
+
+
+@router.post("/settlements/year-end")
+def admin_year_end_post(
+    request: Request,
+    master_password: str = Form(""),
+    confirm_irreversible: str | None = Form(None),
+) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    if read_master_password() is None:
+        return RedirectResponse("/admin/settlements/year-end?err=nomaster", status_code=303)
+    if not admin_auth.is_master_password(master_password):
+        return RedirectResponse("/admin/settlements/year-end?err=master", status_code=303)
+    if confirm_irreversible not in ("1", "on", "yes", "true"):
+        return RedirectResponse("/admin/settlements/year-end?err=noconfirm", status_code=303)
+
+    with db.get_connection() as conn:
+        snapshot = ledger_service.year_end_snapshot(conn)
+    pdf_bytes = build_year_end_pdf_bytes(snapshot)
+    xlsx_bytes = build_year_end_xlsx_bytes(snapshot)
+    stem = _year_end_export_stem(str(snapshot["created_at_iso"]))
+    out_dir = year_end_exports_dir()
+    (out_dir / f"{stem}.pdf").write_bytes(pdf_bytes)
+    (out_dir / f"{stem}.xlsx").write_bytes(xlsx_bytes)
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr(f"{stem}.pdf", pdf_bytes)
+        zf.writestr(f"{stem}.xlsx", xlsx_bytes)
+    zip_bytes = buf.getvalue()
+    (out_dir / f"{stem}.zip").write_bytes(zip_bytes)
+
+    with db.get_connection() as conn:
+        ledger_service.year_end_purge_closed_data(conn)
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={"Content-Disposition": _attachment_disposition(stem, ".zip")},
     )
 
 

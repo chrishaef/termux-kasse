@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import io
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from fpdf import FPDF
 from openpyxl import Workbook
@@ -255,6 +255,171 @@ def build_statistics_xlsx_bytes(
         cell.font = bold
     for r in product_rows:
         ws.append(
+            [
+                int(r["quantity"]),
+                r["label"],
+                round(int(r["unit_cents"]) / 100, 2),
+                round(int(r["total_cents"]) / 100, 2),
+            ]
+        )
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+def build_year_end_pdf_bytes(snapshot: dict[str, Any]) -> bytes:
+    """Jahresabschluss: Kennzahlen, alle Nutzer, Artikelmix (Querformat)."""
+    totals = cast(dict[str, int], snapshot["totals"])
+    users = cast(list[dict[str, Any]], snapshot["users"])
+    product_rows = cast(list[dict[str, Any]], snapshot["product_rows"])
+    created = str(snapshot["created_at_iso"])
+
+    pdf = FPDF(orientation="L", unit="mm", format="A4")
+    pdf.set_margins(12, 12, 12)
+    pdf.set_auto_page_break(True, 12)
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.cell(0, 8, _pdf_cell_text("Jahresabschluss Shopkasse (Archiv)", 72), 0, 1)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.cell(0, 6, _pdf_cell_text(f"Erstellt (UTC): {created}", 100), 0, 1)
+    pdf.ln(2)
+
+    meta = [
+        ("Buchungszeilen gesamt", str(int(totals["ledger_entries_all"]))),
+        ("Summe aller Buchungen EUR", f'{int(totals["ledger_sum_all_cents"]) / 100:.2f}'),
+        ("Offene Buchungszeilen", str(int(totals["open_lines_count"]))),
+        ("Offene Salden netto EUR", f'{int(totals["open_balance_net_cents"]) / 100:.2f}'),
+        ("Abgeschlossene Buchungszeilen", str(int(totals["settled_lines_count"]))),
+        ("Summe abgeschlossene Buchungen EUR", f'{int(totals["settled_lines_sum_cents"]) / 100:.2f}'),
+        ("Anzahl Abrechnungen", str(int(totals["settlements_count"]))),
+        ("Summe Abrechnungen EUR", f'{int(totals["settlements_sum_cents"]) / 100:.2f}'),
+        ("Nutzer (alle)", str(int(totals["users_count"]))),
+    ]
+    label_w, val_w = 78, 185
+    for label, val in meta:
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.cell(label_w, 5.5, _pdf_cell_text(label, 50), 1, 0)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(val_w, 5.5, _pdf_cell_text(val, 80), 1, 1)
+
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(0, 6, _pdf_cell_text("Alle Nutzer (Stand vor Bereinigung)", 64), 0, 1)
+    w_u = (38, 42, 28, 22, 22, 30, 22, 32)
+    headers_u = ("Gruppe", "Nutzer", "Offener Saldo", "Offene Buch.", "# Abrechn.", "Summe Abbr.", "Buch. ges.", "Summe Buch.")
+    pdf.set_font("Helvetica", "B", 7)
+    for i, (txt, w) in enumerate(zip(headers_u, w_u)):
+        pdf.cell(w, 6, _pdf_cell_text(txt, 22), 1, 1 if i == len(w_u) - 1 else 0)
+    pdf.set_font("Helvetica", "", 7)
+    for u in users:
+        cells = [
+            str(u["group_name"]),
+            str(u["user_name"]),
+            f'{int(u["open_balance_cents"]) / 100:.2f}',
+            str(int(u["open_entries_count"])),
+            str(int(u["settlements_count"])),
+            f'{int(u["settlements_sum_cents"]) / 100:.2f}',
+            str(int(u["ledger_all_count"])),
+            f'{int(u["ledger_all_sum_cents"]) / 100:.2f}',
+        ]
+        maxl = (18, 20, 12, 6, 6, 12, 6, 12)
+        for i, (c, w, m) in enumerate(zip(cells, w_u, maxl)):
+            pdf.cell(w, 5.5, _pdf_cell_text(c, m), 1, 1 if i == len(w_u) - 1 else 0)
+
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(0, 6, _pdf_cell_text("Artikel (gesamter Zeitraum, aggregiert)", 56), 0, 1)
+    w_p = (18, 120, 32, 32)
+    headers_p = ("Anz.", "Bezeichnung", "Einzel", "Summe")
+    pdf.set_font("Helvetica", "B", 8)
+    for i, (txt, w) in enumerate(zip(headers_p, w_p)):
+        pdf.cell(w, 6, _pdf_cell_text(txt, 20), 1, 1 if i == len(w_p) - 1 else 0)
+    pdf.set_font("Helvetica", "", 8)
+    if not product_rows:
+        pdf.cell(sum(w_p), 6, _pdf_cell_text("Keine Buchungsdaten", 40), 1, 1)
+    for r in product_rows:
+        cells = [
+            str(int(r["quantity"])),
+            str(r["label"]),
+            f'{int(r["unit_cents"]) / 100:.2f}',
+            f'{int(r["total_cents"]) / 100:.2f}',
+        ]
+        maxl = (8, 70, 12, 12)
+        for i, (c, w, m) in enumerate(zip(cells, w_p, maxl)):
+            pdf.cell(w, 5.5, _pdf_cell_text(c, m), 1, 1 if i == len(w_p) - 1 else 0)
+
+    out = pdf.output(dest="S")
+    return out.encode("latin-1", errors="replace")
+
+
+def build_year_end_xlsx_bytes(snapshot: dict[str, Any]) -> bytes:
+    totals = cast(dict[str, int], snapshot["totals"])
+    users = cast(list[dict[str, Any]], snapshot["users"])
+    product_rows = cast(list[dict[str, Any]], snapshot["product_rows"])
+    created = str(snapshot["created_at_iso"])
+
+    wb = Workbook()
+    bold = Font(bold=True)
+
+    ws0 = wb.active
+    ws0.title = "Übersicht"
+    ws0.append(["Jahresabschluss Shopkasse"])
+    ws0["A1"].font = bold
+    ws0.append(["Erstellt (UTC)", created])
+    ws0.append([])
+    rows_meta = [
+        ("Buchungszeilen gesamt", int(totals["ledger_entries_all"])),
+        ("Summe aller Buchungen (EUR)", round(int(totals["ledger_sum_all_cents"]) / 100, 2)),
+        ("Offene Buchungszeilen", int(totals["open_lines_count"])),
+        ("Offene Salden netto (EUR)", round(int(totals["open_balance_net_cents"]) / 100, 2)),
+        ("Abgeschlossene Buchungszeilen", int(totals["settled_lines_count"])),
+        ("Summe abgeschlossene Buchungen (EUR)", round(int(totals["settled_lines_sum_cents"]) / 100, 2)),
+        ("Anzahl Abrechnungen", int(totals["settlements_count"])),
+        ("Summe Abrechnungen (EUR)", round(int(totals["settlements_sum_cents"]) / 100, 2)),
+        ("Nutzer (alle)", int(totals["users_count"])),
+    ]
+    ws0.append(["Kennzahl", "Wert"])
+    for cell in ws0[ws0.max_row]:
+        cell.font = bold
+    for k, v in rows_meta:
+        ws0.append([k, v])
+
+    ws1 = wb.create_sheet("Nutzer")
+    ws1.append(
+        [
+            "Gruppe",
+            "Nutzer",
+            "Offener Saldo (EUR)",
+            "Offene Buchungen",
+            "Anzahl Abrechnungen",
+            "Summe Abrechnungen (EUR)",
+            "Buchungen gesamt",
+            "Summe Buchungen (EUR)",
+        ]
+    )
+    for cell in ws1[1]:
+        cell.font = bold
+    for u in users:
+        ws1.append(
+            [
+                u["group_name"],
+                u["user_name"],
+                round(int(u["open_balance_cents"]) / 100, 2),
+                int(u["open_entries_count"]),
+                int(u["settlements_count"]),
+                round(int(u["settlements_sum_cents"]) / 100, 2),
+                int(u["ledger_all_count"]),
+                round(int(u["ledger_all_sum_cents"]) / 100, 2),
+            ]
+        )
+
+    ws2 = wb.create_sheet("Artikel")
+    ws2.append(["Anzahl", "Bezeichnung", "Einzel (EUR)", "Summe (EUR)"])
+    for cell in ws2[1]:
+        cell.font = bold
+    for r in product_rows:
+        ws2.append(
             [
                 int(r["quantity"]),
                 r["label"],
