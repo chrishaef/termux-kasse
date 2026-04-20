@@ -840,7 +840,7 @@ def admin_year_end_post(
     (out_dir / f"{stem}.zip").write_bytes(zip_bytes)
 
     with db.get_connection() as conn:
-        ledger_service.purge_ledger_and_settlements(conn)
+        ledger_service.purge_settled_ledger_and_settlements(conn)
 
     return Response(
         content=zip_bytes,

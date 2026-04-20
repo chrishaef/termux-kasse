@@ -555,10 +555,19 @@ def year_end_snapshot(conn: sqlite3.Connection) -> dict[str, Any]:
     }
 
 
-def purge_ledger_and_settlements(conn: sqlite3.Connection) -> None:
-    """Löscht alle Buchungen und Abrechnungen (Kontostände werden 0).
+def purge_settled_ledger_and_settlements(conn: sqlite3.Connection) -> None:
+    """Jahresabschluss: abgeschlossene Abrechnungen und zugehörige Buchungszeilen.
 
-    Stammdaten (Nutzer, Gruppen, Artikel) bleiben unverändert.
+    Offene Buchungen (settlement_id IS NULL) und Kontostände bleiben erhalten.
+    """
+    conn.execute("DELETE FROM ledger_entries WHERE settlement_id IS NOT NULL")
+    conn.execute("DELETE FROM settlements")
+
+
+def purge_ledger_and_settlements(conn: sqlite3.Connection) -> None:
+    """Vollständiger Reset: alle Buchungen und Abrechnungen (Kontostände werden 0).
+
+    Stammdaten (Nutzer, Gruppen, Artikel) bleiben unverändert. Nur für Backup-Daten-Reset.
     """
     conn.execute("DELETE FROM ledger_entries")
     conn.execute("DELETE FROM settlements")
