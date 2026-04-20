@@ -483,20 +483,22 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .k-user-head__metrics {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  justify-content: flex-start;
-  gap: 0.65rem 0.85rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 14.5rem;
+  align-items: start;
+  column-gap: 0.85rem;
+  row-gap: 0.65rem;
   width: 100%;
-  max-width: 32rem;
+  max-width: 100%;
 }
 
 .k-user-head__balance {
+  grid-column: 2;
+  justify-self: center;
   border-radius: var(--kas-radius);
   padding: 0.65rem 0.85rem 0.72rem;
   min-width: 9.5rem;
-  flex: 0 0 auto;
+  max-width: 100%;
   text-align: center;
   background: rgba(8, 10, 8, 0.45);
   border: 1px solid var(--kas-control-border);
@@ -537,11 +539,11 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .k-user-head__last {
-  flex: 0 1 auto;
-  width: min(100%, 14.5rem);
+  grid-column: 3;
+  justify-self: stretch;
+  width: auto;
   min-width: 0;
-  max-width: 14.5rem;
-  text-align: left;
+  text-align: right;
   background: linear-gradient(180deg, #fafaf6 0%, #f0ede4 100%);
   border: 1px solid #b8b2a4;
   border-top: 3px solid #9a7a28;
@@ -560,6 +562,7 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: #1a211c;
+  text-align: right;
 }
 
 .k-user-head__last-line {
