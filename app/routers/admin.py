@@ -42,6 +42,13 @@ def _parse_price_eur_to_cents(raw: str) -> int:
     return int(round(float(s) * 100))
 
 
+def _parse_signed_eur_to_cents(raw: str) -> int:
+    s = raw.strip().replace(",", ".")
+    if not re.fullmatch(r"-?\d+(\.\d{1,2})?", s):
+        raise ValueError("Betrag ungültig")
+    return int(round(float(s) * 100))
+
+
 _FN_UNSAFE = re.compile(r'[\s<>:"/\\|?*\x00-\x1f]+')
 
 
@@ -517,6 +524,16 @@ def admin_users_edit_form(request: Request, user_id: int) -> Response:
         )
         if not user:
             raise HTTPException(status_code=404)
+        open_balance_cents = ledger_service.user_balance_cents(conn, user_id)
+        settled_total_cents = ledger_service.total_previously_settled_cents(conn, user_id)
+        settlements_count = ledger_service.settlement_count_for_user(conn, user_id)
+        row_entries = db.fetch_one(
+            conn,
+            "SELECT COUNT(*) AS c FROM ledger_entries WHERE user_id = ?",
+            (user_id,),
+        )
+        entries_count = int(row_entries["c"]) if row_entries else 0
+        last_s = ledger_service.last_settlement(conn, user_id)
         groups = db.fetch_all(
             conn,
             "SELECT id, name FROM user_groups ORDER BY sort_order, name COLLATE NOCASE",
@@ -524,7 +541,20 @@ def admin_users_edit_form(request: Request, user_id: int) -> Response:
     return TEMPLATES.TemplateResponse(
         request,
         "admin/users_edit.html",
-        {"title": "Nutzer bearbeiten", "user": user, "groups": groups},
+        {
+            "title": "Nutzer bearbeiten",
+            "user": user,
+            "groups": groups,
+            "balance_display_cents": -open_balance_cents,
+            "balance_display_eur": _eur_field_from_cents(-open_balance_cents),
+            "stats": {
+                "open_balance_cents": open_balance_cents,
+                "settled_total_cents": settled_total_cents,
+                "settlements_count": settlements_count,
+                "entries_count": entries_count,
+                "last_settlement": last_s,
+            },
+        },
     )
 
 
@@ -534,20 +564,41 @@ def admin_users_edit_save(
     user_id: int,
     name: str = Form(...),
     group_id: int = Form(...),
+    balance_eur: str = Form(...),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
     name = name.strip()
     if not name:
         return RedirectResponse(f"/admin/users/{user_id}/edit", status_code=303)
+    try:
+        target_display_cents = _parse_signed_eur_to_cents(balance_eur)
+    except ValueError:
+        return RedirectResponse(f"/admin/users/{user_id}/edit", status_code=303)
     with db.get_connection() as conn:
         row = db.fetch_one(conn, "SELECT id FROM users WHERE id = ?", (user_id,))
         if not row:
             raise HTTPException(status_code=404)
+        current_open_cents = ledger_service.user_balance_cents(conn, user_id)
+        target_open_cents = -target_display_cents
+        correction_cents = target_open_cents - current_open_cents
         conn.execute(
             "UPDATE users SET name = ?, group_id = ? WHERE id = ?",
             (name, group_id, user_id),
         )
+        if correction_cents != 0:
+            conn.execute(
+                """
+                INSERT INTO ledger_entries (user_id, product_id, description, amount_cents, created_at)
+                VALUES (?, NULL, ?, ?, ?)
+                """,
+                (
+                    user_id,
+                    "Admin-Kontostandkorrektur",
+                    correction_cents,
+                    ledger_service.utc_now_iso(),
+                ),
+            )
     return RedirectResponse("/admin/users", status_code=303)
 
 

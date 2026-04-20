@@ -11,6 +11,9 @@
     <label>Name
       <input type="text" name="name" value="{{ user['name'] }}" required />
     </label>
+    <label>Kassenstand (Anzeige, z. B. -12.50 oder 5.00)
+      <input type="text" name="balance_eur" value="{{ balance_display_eur }}" required inputmode="decimal" />
+    </label>
     <label>Gruppe
       <select name="group_id" required>
         {% for g in groups %}
@@ -20,5 +23,19 @@
     </label>
     <button type="submit">Speichern</button>
   </form>
+</article>
+
+<article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">Statistik</h2>
+  <p><strong>Aktueller Kassenstand</strong> {{ balance_display_cents|eur }}</p>
+  <p><strong>Offene Buchungen</strong> {{ stats['open_balance_cents']|eur }}</p>
+  <p><strong>Anzahl Buchungen gesamt</strong> {{ stats['entries_count'] }}</p>
+  <p><strong>Abrechnungen gesamt</strong> {{ stats['settlements_count'] }}</p>
+  <p><strong>Bereits abgerechnet</strong> {{ stats['settled_total_cents']|eur }}</p>
+  {% if stats['last_settlement'] %}
+  <p><strong>Letzte Abrechnung</strong> {{ stats['last_settlement']['created_at']|date_de }}</p>
+  {% else %}
+  <p><strong>Letzte Abrechnung</strong> keine</p>
+  {% endif %}
 </article>
 {% endblock %}

@@ -77,12 +77,14 @@
           document.addEventListener("pointerdown", goHome);
           document.addEventListener("keydown", goHome, { once: true });
         } else {
-          const idleMs = 90000;
+          const isBookingPage = /^\/u\/\d+$/.test(path);
+          const idleMs = isBookingPage ? 30000 : 60000;
+          const idleTarget = isBookingPage ? "/" : "/preisliste";
           let timer = 0;
           const reset = function () {
             window.clearTimeout(timer);
             timer = window.setTimeout(function () {
-              window.location.href = "/preisliste";
+              window.location.href = idleTarget;
             }, idleMs);
           };
           ["pointerdown", "pointermove", "keydown", "touchstart", "scroll"].forEach(function (ev) {
