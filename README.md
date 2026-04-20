@@ -8,7 +8,7 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 
 ## Inhalt
 
-1. [Funktionen](#funktionen)  
+1. [Funktionen](#funktionen) — [Screenshots](#screenshots-demo) · [Shop/Kiosk](#shop-und-kiosk-im-detail) · [Abrechnung](#abrechnung-im-detail) · [Statistik](#statistik-im-detail) · [Jahresabschluss](#jahresabschluss-im-detail)  
 2. [Technik](#technik)  
 3. [Installation auf Android (Termux)](#installation-auf-android-termux)  
 4. [Erster Start und Betrieb](#erster-start-und-betrieb)  
@@ -34,6 +34,135 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 | **Jahresabschluss** | Admin unter Abrechnungen: Archiv **PDF**, **XLSX** und **ZIP** nach `data/jahresabschluss/`; löscht nur **beglichene** Abrechnungen inkl. zugehöriger Buchungszeilen (**offene Posten und Kontostände bleiben**). Erfordert **Master-Passwort** |
 | **Statistik** | Zeitraum- und Gruppenfilter, Toplisten/Auswertung, Export als **PDF** und **XLSX** |
 | **Backup** | Datenbank **exportieren/importieren**; zusätzlich **Daten-Reset** (Master-Passwort): alle Buchungen und Abrechnungen löschen, **Nutzer, Gruppen und Artikel** bleiben |
+
+### Screenshots (Demo)
+
+Die folgenden Bilder stammen aus einer **frischen Demo-Datenbank** (Vereinskasse, Demo-Warnschwellen) und wurden **automatisch** mit [Playwright](https://playwright.dev/python/) erzeugt — nicht manuell abfotografiert. Zum Nachstellen (nur auf dem Entwicklungsrechner, nicht auf dem Termux-Tablet nötig):
+
+```text
+pip install -r requirements.txt -r scripts/requirements-screenshots.txt
+python -m playwright install chromium
+python scripts/capture_readme_screenshots.py
+```
+
+Ausgabeordner: `docs/readme-screenshots/`.
+
+| Kiosk: Start (Gruppen) | Kiosk: Gruppe mit Mitgliedern |
+|:---:|:---:|
+| ![Kiosk-Start](docs/readme-screenshots/kiosk-start.png) | ![Kiosk-Gruppe](docs/readme-screenshots/kiosk-gruppe.png) |
+
+| Kiosk: Nutzer mit Kontostand und Warnbanner | Kiosk: Preisliste |
+|:---:|:---:|
+| ![Kiosk-Nutzer](docs/readme-screenshots/kiosk-nutzer.png) | ![Kiosk-Preisliste](docs/readme-screenshots/kiosk-preisliste.png) |
+
+| Kiosk: Top Ten | Admin: Übersicht nach Login |
+|:---:|:---:|
+| ![Kiosk Top Ten](docs/readme-screenshots/kiosk-top-ten.png) | ![Admin-Start](docs/readme-screenshots/admin-start.png) |
+
+| Admin: Statistik (ohne Zeitraumfilter = gesamte Historie) |
+|:---:|
+| ![Admin-Statistik](docs/readme-screenshots/admin-statistik.png) |
+
+### Shop und Kiosk im Detail
+
+Die **Shopkasse** ist eine **Vertrauenskasse auf Kontobasis**: Es gibt keine Warenkorb-Session und keinen Bezahlvorgang am Gerät — stattdessen bucht das Mitglied am Kiosk einen Artikel, und der Betrag wird als **Buchung** auf dem **persönlichen Konto** verbucht. Alles läuft in **SQLite**; im laufenden Betrieb werden keine externen Dienste angerufen.
+
+**Buchungen, offene Posten, Saldo**
+
+- Jeder Kauf legt eine Zeile im Kontobuch (`ledger_entries`) an (Artikel, Betrag, Zeitstempel).
+- Der **Kiosk-Kontostand** ist die Summe aller Buchungen, die noch **keiner Abrechnung zugeordnet** sind („offene Posten“). Eine **Abrechnung** im Admin fasst diese Posten zusammen, legt einen Abrechnungsdatensatz an und **schließt** die zugehörigen Buchungen ab — der offene Saldo sinkt entsprechend (siehe Spalte **Abrechnung** in der Tabelle oben).
+- In der Oberfläche werden **Schulden** und **Guthaben** farblich unterschieden; die **Warnstufen** beziehen sich auf den **internen** offenen Saldo (höhere Schulden → höhere Stufe).
+
+**Ablauf am Kiosk**
+
+1. **Startseite** (`/`): Nutzergruppen zur Auswahl (Reihenfolge wie im Admin unter Gruppen).
+2. **Gruppe** (`/g/<id>`): Mitglieder dieser Gruppe (Sortierung wie im Admin).
+3. **Nutzer** (`/u/<id>`): Kopfbereich mit **Kontostand**, Kurzinfo zur **letzten Abrechnung** (Datum, optional Notiz), ggf. **Warnbanner** nach den konfigurierten Schwellen. Darunter erscheinen nur **aktive** Artikel als große Buttons; inaktive Artikel sind im Kiosk unsichtbar.
+
+**Buchen und Feedback**
+
+- Ein Klick auf einen Artikel bucht **genau eine Einheit** und lädt die Nutzerseite per Formular-POST neu (klassisches Webverhalten, gut für Tablets).
+- **Klicksound** und kurzes **visuelles Aufleuchten** des Buttons bestätigen die Buchung.
+- **Warnsounds**: Steigt durch den **nächsten** Kauf die **Warnstufe** (weil der offene Saldo eine Schwelle überschreitet), wird **zuerst** der Sound dieser Stufe abgespielt, **danach** wird gebucht. So bleibt der Hinweis an der Schwelle hörbar, ohne jeden einzelnen Kauf mit Warnsound zu überladen.
+- Beim **Seitenaufruf** (z. B. Lesezeichen oder Zurück im Browser) kann eine Stufe **einmal** signalisiert werden, wenn sie seit dem letzten Besuch dieses Nutzers gestiegen ist (Merker im Browser-`localStorage` pro Nutzer).
+
+**Top Ten** (`/top-ten`)
+
+- Zeigt die **zehn Nutzer** mit den meisten **Buchungen über die gesamte Laufzeit** der Datenbank (alle Buchungen, auch bereits abgerechnete). Bei gleicher Trefferzahl entscheidet das **kumulierte Buchungsvolumen**, danach der Name.
+
+**Preisliste und automatischer Wechsel bei Untätigkeit**
+
+- **Preisliste** (`/preisliste`): Alle **aktiven** Artikel mit Preis; geeignet als Schaukasten am Kiosk.
+- **Ruhemodus**: Ohne Bedienung springt die Anzeige von einer **Buchungsseite** (`/u/…`) nach **30 Sekunden** zurück zur **Gruppenauswahl** (`/`). Von **allen anderen** Kiosk-Seiten (z. B. Gruppe, Top Ten) wechselt sie nach **60 Sekunden** auf die **Preisliste** — wirkt wie ein einfacher Bildschirmschoner mit Preisen.
+- Auf der Preisliste führt ein **Tipp auf den freien Bereich** (oder eine Taste) zurück zum **Kiosk-Start**.
+
+**Hinweise für Betreuer**
+
+- **Admin** ohne URL tippen: Im Header das **Logo** **fünfmal** innerhalb von etwa **2,2 Sekunden** antippen — dann öffnet sich `/admin` (siehe `app/templates/base.html`).
+- **Kiosk-Nachricht** (Admin): Erscheint oben auf den Kiosk-Seiten als Hinweis an die Gruppe (z. B. Öffnungszeiten, Sonderpreise).
+
+### Abrechnung im Detail
+
+Unter **`/admin/settlements`** (Menü **Abrechnungen**) läuft die Abwicklung **pro Nutzer** und **für den gesamten offenen Saldo** dieses Nutzers — es gibt keinen Teilbetrag und keinen Zeitraum-Filter in der Oberfläche: alle noch nicht abgerechneten Buchungszeilen werden in **einem** Schritt einer neuen Abrechnung zugeordnet.
+
+**Ablauf**
+
+1. **„Neue Abrechnung starten“** (`/admin/settlements/start`): Nutzergruppe und Mitglied wählen; der angezeigte Betrag entspricht der Summe aller **offenen** `ledger_entries` (gleiche Logik wie der Kiosk-Saldo).
+2. **Kontrolle & Quittung** (`/admin/settlements/confirm`):  
+   - Kasten **„Bisher abgerechnet“**: Summe und Anzahl aller **früheren** Abrechnungen dieses Nutzers.  
+   - Kasten **„Jetzt offen“**: Summe der **aktuell** beglichenen Posten.  
+   - Tabelle **„Offene Posten (zusammengefasst)“**: identische Artikel mit gleichem Einzelbetrag werden zu Zeilen **Anzahl × Bezeichnung, Einzelpreis, Summe** zusammengefasst (entspricht der späteren PDF-/XLSX-Logik).
+3. **Zahlungseingang**: Die Checkbox **„Betrag erhalten“** ist Pflicht — ohne Häkchen wird nichts gebucht (`received_confirmed` im Backend).
+4. Nach dem Speichern: Seite **„PDF wird geladen“** — ein eingebetteter Aufruf startet den **PDF-Download** automatisch; gibt es Probleme, reicht der Link **„PDF jetzt herunterladen“**. Nach etwa **1,4 Sekunden** erfolgt die **Weiterleitung** zurück zur **Abrechnungsübersicht**.
+
+**Liste und Export**
+
+- Die Übersicht listet die **letzten 100** Abrechnungen (neueste zuerst) mit Datum, Gruppe, Nutzer und Gesamtbetrag.
+- Zu jeder Abrechnung gibt es erneut **PDF** und **XLSX** (`/admin/settlements/<id>/pdf` bzw. `…/xlsx`); die Dateinamen folgen dem Muster `Abrechnung_<Nutzername>_<Datum>.pdf` / `.xlsx` (Sonderzeichen werden abgesichert).
+
+**Randfälle**
+
+- Hat ein Nutzer **keine** offenen Posten, verweigert die Bestätigungsseite die Anzeige und leitet mit Fehlerhinweis zum Start zurück.
+
+### Statistik im Detail
+
+Unter **`/admin/statistics`** wertet die App **Buchungen** (`ledger_entries`) nach **Zeit** und optional **Nutzergruppe** aus — **unabhängig davon**, ob eine Buchung schon zu einer Abrechnung gehört oder noch offen ist. Maßgeblich ist allein der **Zeitstempel** der Buchung (`created_at`).
+
+**Filter**
+
+- **Von** / **Bis** (optional): Datum im Format **YYYY-MM-DD**. Intern: Beginn am **Tagesanfang** des Von-Datums, Ende am **Tagesende** des Bis-Datums.
+- **Nutzergruppe** (optional): nur Mitglieder dieser Gruppe; ohne Auswahl **alle** Gruppen.
+
+**Inhalt der Auswertung**
+
+- **Gesamtkennzahlen** im gewählten Zeitraum: Anzahl Buchungen, Anzahl **unterschiedlicher** Nutzer mit mindestens einer Buchung, Summe der Beträge.
+- **Nutzer-Topliste**: pro Person Anzahl Buchungen, Summe in Euro/Cent sowie eine **Kurz-Zusammenfassung** der gekauften Positionen (z. B. `3× Cola, 2× Schokoriegel` — Häufigkeiten absteigend). Sortierung: **höchster Umsatz** zuerst, bei Gleichstand **mehr Buchungen**, dann Name.
+- **Artikelstatistik**: verkaufte Positionen **aggregiert** (gleiche Artikel und gleicher Einzelpreis zu Mengen und Summen — vergleichbar mit der Abrechnungstabelle).
+
+**Export**
+
+- **PDF** und **XLSX** nutzen dieselben Filter wie die Seite (Query-Parameter `start`, `end`, `group_id`); der Download-Dateiname ist fest **`Statistik_Zeitraum`**.pdf bzw. .xlsx (ohne Datumszusatz im Namen — der Inhalt entspricht aber den gewählten Filtern).
+
+### Jahresabschluss im Detail
+
+Unter **`/admin/settlements/year-end`** (von der Abrechnungsübersicht aus erreichbar) liegt ein **sicherheitskritischer** Vorgang: Es werden **nur** bereits **abgeschlossene** Abrechnungen samt ihrer Buchungszeilen aus der Datenbank entfernt; **offene** Buchungen und damit die **Kontostände am Kiosk** bleiben bestehen.
+
+**Voraussetzungen**
+
+- Anmeldung im Admin reicht nicht: Es wird das **Master-Passwort** verlangt (Konfiguration über **`.admin_master_password`** bzw. `KASSE_MASTER_PASSWORD_FILE` — siehe Abschnitt [Daten, Backup, Umgebungsvariablen](#daten-backup-umgebungsvariablen)).
+- Zusätzlich eine **explizite Bestätigung**, dass der Schritt **irreversibel** ist (Checkbox im Formular).
+
+**Was beim Auslösen passiert**
+
+1. **Snapshot** (`year_end_snapshot`): Kennzahlen **unmittelbar vor** der Löschung — globale Zähler und Summen für alle / offene / abgerechnete Buchungen und für Abrechnungen; **Nutzer-Tabelle** mit offenen Beträgen, Anzahl Abrechnungen, Summen und Lebenszeit-Buchungsstatistik; **Artikelübersicht** über die **gesamte** Historie (ohne Datumsfilter, für den Archivbericht).
+2. Daraus werden **PDF** und **XLSX** generiert.
+3. Beide Dateien werden im Ordner **`jahresabschluss/`** unter dem Datenverzeichnis abgelegt (`data/jahresabschluss/` oder `KASSE_DATA_DIR/jahresabschluss/`), Dateiname z. B. `Jahresabschluss_<ISO-Zeitstempel>.pdf` / `.xlsx`.
+4. Gleichzeitig wird ein **ZIP** (enthält dieselben PDF- und XLSX-Dateien) erzeugt: ein Exemplar landet **ebenfalls** im Archivordner, **und** dasselbe ZIP wird **als Browser-Download** ausgeliefert — so habt ihr das Archiv sowohl auf dem Server-Gerät als auch lokal beim ausführenden Bediener.
+5. Anschließend **`purge_settled_ledger_and_settlements`**: SQL löscht alle `ledger_entries` mit gesetzter `settlement_id` sowie **alle** Zeilen in **`settlements`**. Zeilen mit `settlement_id IS NULL` (offene Käufe) werden **nicht** angerührt.
+
+**Abgrenzung**
+
+- **Jahresabschluss** ≠ **Daten-Reset** (`/admin/backup`): Der Reset (ebenfalls Master-Passwort) entfernt **alle** Buchungen und Abrechnungen inklusive **offener** Posten — Kontostände werden null, Stammdaten bleiben. Der Jahresabschluss **kürzt nur die Historie beglichener** Vorgänge.
 
 ---
 
@@ -267,6 +396,8 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 Für Tests kann `KASSE_DATA_DIR` auf ein temporäres Verzeichnis zeigen (siehe `tests/conftest.py`).
+
+**README-Screenshots neu erzeugen:** siehe Abschnitt [Screenshots (Demo)](#screenshots-demo) und Skript `scripts/capture_readme_screenshots.py`.
 
 ---
 

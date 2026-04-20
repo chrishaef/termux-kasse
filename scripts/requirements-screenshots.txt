@@ -1,0 +1,5 @@
+# Nur für lokale README-/Doku-Screenshots (nicht auf dem Termux-Tablet nötig).
+# Installation: pip install -r scripts/requirements-screenshots.txt
+# Danach einmal: python -m playwright install chromium
+playwright>=1.49.0,<2
+httpx>=0.24.0,<0.28.0
