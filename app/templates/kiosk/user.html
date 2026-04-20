@@ -42,7 +42,7 @@
   {% for p in products %}
   <form method="post" action="/u/{{ user['id'] }}/add">
     <input type="hidden" name="product_id" value="{{ p['id'] }}" />
-    <button type="submit" class="k-product-btn">
+    <button type="submit" class="k-product-btn" data-price-cents="{{ p['price_cents'] }}">
       <span class="k-product-btn__name">{{ p['name'] }}</span>
       <span class="k-product-btn__price">{{ p['price_cents']|eur }}</span>
     </button>
@@ -53,56 +53,76 @@
 <p class="k-empty">Keine aktiven Artikel. Bitte im Admin unter „Artikel“ anlegen.</p>
 {% endif %}
 <audio id="payment-sound" preload="auto" src="/static/click.mp3"></audio>
-{% if debt_reminder_level == 1 %}
-<audio id="warn-level-sound" preload="auto" src="/static/warn1.mp3"></audio>
-{% elif debt_reminder_level == 2 %}
-<audio id="warn-level-sound" preload="auto" src="/static/warn2.mp3"></audio>
-{% elif debt_reminder_level == 3 %}
-<audio id="warn-level-sound" preload="auto" src="/static/warn3.mp3"></audio>
-{% endif %}
+<audio id="warn-sound-1" preload="auto" src="/static/warn1.mp3"></audio>
+<audio id="warn-sound-2" preload="auto" src="/static/warn2.mp3"></audio>
+<audio id="warn-sound-3" preload="auto" src="/static/warn3.mp3"></audio>
 <script>
   (function () {
     const forms = document.querySelectorAll(".k-product-grid form");
     const paymentSound = document.getElementById("payment-sound");
-    const warnLevelSound = document.getElementById("warn-level-sound");
+    const warnSounds = {
+      1: document.getElementById("warn-sound-1"),
+      2: document.getElementById("warn-sound-2"),
+      3: document.getElementById("warn-sound-3"),
+    };
     const currentWarnLevel = {{ debt_reminder_level }};
+    const currentBalance = {{ balance_cents }};
+    const thresholds = [{{ debt_threshold_1 }}, {{ debt_threshold_2 }}, {{ debt_threshold_3 }}];
     const warnStateKey = "kasse_warn_level_user_{{ user['id'] }}";
-    if (warnLevelSound && typeof warnLevelSound.play === "function") {
-      let playedWarn1 = false;
-      let playingWarn1 = false;
-      const detachWarnListeners = function () {
-        document.removeEventListener("pointerdown", onFirstInteraction);
-        document.removeEventListener("keydown", onFirstInteraction);
-      };
-      const tryPlayWarn1 = function () {
-        if (playedWarn1 || playingWarn1) return;
-        playingWarn1 = true;
-        warnLevelSound.currentTime = 0;
-        warnLevelSound.play().then(function () {
-          playedWarn1 = true;
-          playingWarn1 = false;
-          detachWarnListeners();
-        }).catch(function () {
-          playingWarn1 = false;
-        });
-      };
-      const onFirstInteraction = function () {
-        tryPlayWarn1();
-      };
-      let lastWarnLevel = 0;
-      try {
-        lastWarnLevel = parseInt(window.localStorage.getItem(warnStateKey) || "0", 10) || 0;
-      } catch (_e) {}
 
-      if (currentWarnLevel > 0 && currentWarnLevel > lastWarnLevel) {
-        tryPlayWarn1();
-        document.addEventListener("pointerdown", onFirstInteraction, { once: true });
-        document.addEventListener("keydown", onFirstInteraction, { once: true });
-      }
-      try {
-        window.localStorage.setItem(warnStateKey, String(currentWarnLevel));
-      } catch (_e) {}
+    function computeLevel(owed) {
+      const o = Math.max(0, owed | 0);
+      if (o < thresholds[0]) return 0;
+      if (o < thresholds[1]) return 1;
+      if (o < thresholds[2]) return 2;
+      return 3;
     }
+
+    function playThen(sound, cb) {
+      if (!sound || typeof sound.play !== "function") { cb(); return; }
+      let done = false;
+      const finish = function () {
+        if (done) return;
+        done = true;
+        sound.removeEventListener("ended", onEnded);
+        cb();
+      };
+      const onEnded = function () { finish(); };
+      try { sound.currentTime = 0; } catch (_e) {}
+      sound.addEventListener("ended", onEnded);
+      const p = sound.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(function () { finish(); });
+      }
+      window.setTimeout(finish, 4000);
+    }
+
+    // Fallback: play warn sound on load if this page was reached without
+    // the click handler (e.g. direct URL, back/forward navigation).
+    let lastWarnLevel = 0;
+    try {
+      lastWarnLevel = parseInt(window.localStorage.getItem(warnStateKey) || "0", 10) || 0;
+    } catch (_e) {}
+    if (currentWarnLevel > 0 && currentWarnLevel > lastWarnLevel) {
+      const onLoadSound = warnSounds[currentWarnLevel];
+      if (onLoadSound && typeof onLoadSound.play === "function") {
+        try { onLoadSound.currentTime = 0; } catch (_e) {}
+        const playPromise = onLoadSound.play();
+        if (playPromise && typeof playPromise.catch === "function") {
+          playPromise.catch(function () {
+            const retry = function () {
+              try { onLoadSound.currentTime = 0; } catch (_e) {}
+              const p2 = onLoadSound.play();
+              if (p2 && typeof p2.catch === "function") p2.catch(function () {});
+            };
+            document.addEventListener("pointerdown", retry, { once: true });
+            document.addEventListener("keydown", retry, { once: true });
+          });
+        }
+      }
+    }
+    try { window.localStorage.setItem(warnStateKey, String(currentWarnLevel)); } catch (_e) {}
+
     forms.forEach(function (form) {
       form.addEventListener("submit", function (event) {
         const button = form.querySelector(".k-product-btn");
@@ -110,28 +130,22 @@
         event.preventDefault();
         button.dataset.submitting = "1";
         button.classList.add("k-product-btn--flash");
+
+        const price = parseInt(button.dataset.priceCents || "0", 10) || 0;
+        const newLevel = computeLevel(currentBalance + price);
+
         const submitNow = function () {
           if (button.dataset.submitted === "1") return;
           button.dataset.submitted = "1";
           form.submit();
         };
-        if (paymentSound && typeof paymentSound.play === "function") {
-          paymentSound.currentTime = 0;
-          const onEnded = function () {
-            paymentSound.removeEventListener("ended", onEnded);
-            submitNow();
-          };
-          paymentSound.addEventListener("ended", onEnded);
-          paymentSound.play().catch(function () {
-            paymentSound.removeEventListener("ended", onEnded);
-            window.setTimeout(submitNow, 280);
-          });
-          window.setTimeout(function () {
-            paymentSound.removeEventListener("ended", onEnded);
-            submitNow();
-          }, 3000);
+
+        if (newLevel > currentWarnLevel && warnSounds[newLevel]) {
+          // Persist new level now so the target page won't replay the sound.
+          try { window.localStorage.setItem(warnStateKey, String(newLevel)); } catch (_e) {}
+          playThen(warnSounds[newLevel], submitNow);
         } else {
-          window.setTimeout(submitNow, 280);
+          playThen(paymentSound, submitNow);
         }
       });
     });
