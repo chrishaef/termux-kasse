@@ -29,9 +29,10 @@
   <label for="master_password">Master-Passwort</label>
   <input type="password" id="master_password" name="master_password" required autocomplete="off" />
 
-  <label style="margin-top: 1rem;">
+  <label class="admin-received-confirm" style="margin-top: 1rem;">
     <input type="checkbox" name="confirm_irreversible" value="1" required />
-    Ich habe verstanden, dass nach dem Abschluss alle abgeschlossenen Abrechnungen und historischen Buchungszeilen (außer offene Posten) unwiderruflich entfernt werden.
+    <span class="admin-received-confirm__box" aria-hidden="true"></span>
+    <span class="admin-received-confirm__text">Ich habe verstanden, dass nach dem Abschluss alle abgeschlossenen Abrechnungen und historischen Buchungszeilen (außer offene Posten) unwiderruflich entfernt werden.</span>
   </label>
 
   <footer style="margin-top: 1.25rem;">
