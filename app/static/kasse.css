@@ -243,13 +243,10 @@ body {
   font-weight: 600;
 }
 
-.site-footer-note__right a {
+.site-footer-note__repo {
   color: rgba(236, 240, 232, 0.88);
-  text-decoration: underline;
-}
-
-.site-footer-note__right a:hover {
-  color: #fff;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .site-main a:not([role="button"]):not(.k-tile):not(.admin-card) {
