@@ -50,6 +50,8 @@ def test_admin_user_edit_can_adjust_balance_and_show_stats() -> None:
         assert edit_get.status_code == 200
         assert "Statistik" in edit_get.text
         assert "Aktueller Kassenstand" in edit_get.text
+        assert "Nutzer löschen" in edit_get.text
+        assert f"/admin/users/{uid}/delete" in edit_get.text
 
         edit_post = client.post(
             f"/admin/users/{uid}/edit",
