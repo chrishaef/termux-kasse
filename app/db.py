@@ -27,6 +27,8 @@ def get_connection() -> Generator[sqlite3.Connection, None, None]:
 
 
 def init_db() -> None:
+    from app.admin_auth import ensure_default_password
+
     with get_connection() as conn:
         conn.executescript(
             """
@@ -90,6 +92,7 @@ def init_db() -> None:
             """
         )
         _migrate_schema(conn)
+        ensure_default_password(conn)
 
 
 def _migrate_products_remove_categories(conn: sqlite3.Connection) -> None:

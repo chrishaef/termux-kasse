@@ -8,11 +8,7 @@ from app.main import app
 
 def test_admin_group_edit_flow() -> None:
     with TestClient(app) as client:
-        client.post(
-            "/admin/setup",
-            data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
-            follow_redirects=False,
-        )
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         client.post("/admin/groups", data={"name": "Alpha"})
         with db.get_connection() as conn:
             gid = int(conn.execute("SELECT id FROM user_groups WHERE name='Alpha'").fetchone()[0])

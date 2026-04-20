@@ -11,13 +11,9 @@
 {% endif %}
 <article class="k-panel">
   <form method="post" action="/admin/login">
-    <label>Benutzername <input type="text" name="username" required autocomplete="username" /></label>
-    <label>Passwort <input type="password" name="password" required autocomplete="current-password" /></label>
+    <label>Passwort <input type="password" name="password" required autocomplete="current-password" autofocus /></label>
     <button type="submit">Anmelden</button>
   </form>
 </article>
-{% if setup_needed %}
-<p><a href="/admin/setup">Ersteinrichtung: ersten Admin anlegen</a></p>
-{% endif %}
 <p><a href="/" class="admin-back">← Zum Kiosk</a></p>
 {% endblock %}

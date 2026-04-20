@@ -8,11 +8,7 @@ from app.main import app
 
 
 def _seed_stats_data(client: TestClient) -> None:
-    client.post(
-        "/admin/setup",
-        data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
-        follow_redirects=False,
-    )
+    client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
     client.post("/admin/groups", data={"name": "G1"})
     client.post("/admin/groups", data={"name": "G2"})
     with db.get_connection() as conn:

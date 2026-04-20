@@ -29,11 +29,7 @@ def test_count_users_open_balance_gte() -> None:
 
 def test_admin_shows_global_alert_when_balance_reaches_t3() -> None:
     with TestClient(app) as client:
-        client.post(
-            "/admin/setup",
-            data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
-            follow_redirects=False,
-        )
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         client.post("/admin/debt-thresholds", data={"threshold_a_eur": "1", "threshold_b_eur": "2", "threshold_c_eur": "3"})
         client.post("/admin/groups", data={"name": "G1"})
         with db.get_connection() as conn:
@@ -61,11 +57,7 @@ def test_admin_shows_global_alert_when_balance_reaches_t3() -> None:
 
 def test_admin_can_store_custom_threshold_messages() -> None:
     with TestClient(app) as client:
-        client.post(
-            "/admin/setup",
-            data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
-            follow_redirects=False,
-        )
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         client.post(
             "/admin/debt-thresholds",
             data={

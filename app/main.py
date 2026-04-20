@@ -70,7 +70,7 @@ async def attach_kiosk_notice(request: Request, call_next):
 async def attach_admin_debt_alerts(request: Request, call_next):
     request.state.admin_debt_alert_count = 0
     path = request.url.path
-    if path.startswith("/admin") and path not in ("/admin/login", "/admin/setup"):
+    if path.startswith("/admin") and path != "/admin/login":
         try:
             if request.session.get("admin_user"):
                 try:

@@ -10,11 +10,7 @@ from app.main import app
 
 
 def _seed_open_balance(client: TestClient) -> int:
-    client.post(
-        "/admin/setup",
-        data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
-        follow_redirects=False,
-    )
+    client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
     client.post("/admin/groups", data={"name": "G1"})
     with db.get_connection() as conn:
         gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
@@ -71,11 +67,7 @@ def test_settlement_confirm_pdf_and_clears_balance() -> None:
 
 def test_settlement_confirm_no_open_redirects() -> None:
     with TestClient(app) as client:
-        client.post(
-            "/admin/setup",
-            data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
-            follow_redirects=False,
-        )
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         client.post("/admin/groups", data={"name": "G1"})
         with db.get_connection() as conn:
             gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
@@ -89,11 +81,7 @@ def test_settlement_confirm_no_open_redirects() -> None:
 
 def test_settlement_start_filters_users_by_group() -> None:
     with TestClient(app) as client:
-        client.post(
-            "/admin/setup",
-            data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
-            follow_redirects=False,
-        )
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         client.post("/admin/groups", data={"name": "G1"})
         client.post("/admin/groups", data={"name": "G2"})
         with db.get_connection() as conn:

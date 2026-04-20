@@ -17,11 +17,7 @@ def test_kiosk_home() -> None:
 
 def test_kiosk_top_ten_shows_active_users() -> None:
     with TestClient(app) as c:
-        c.post(
-            "/admin/setup",
-            data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
-            follow_redirects=False,
-        )
+        c.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         c.post("/admin/groups", data={"name": "G1"})
         with db.get_connection() as conn:
             gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
@@ -45,11 +41,7 @@ def test_kiosk_top_ten_shows_active_users() -> None:
 
 def test_kiosk_preisliste_shows_products() -> None:
     with TestClient(app) as c:
-        c.post(
-            "/admin/setup",
-            data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
-            follow_redirects=False,
-        )
+        c.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         c.post("/admin/products", data={"name": "Wasser", "price_eur": "1.20"})
         r = c.get("/preisliste")
         assert r.status_code == 200

@@ -155,12 +155,14 @@ bash start.sh --sync    # einmalig: venv + pip
 bash start.sh           # Server im Vordergrund, Strg+C beendet
 ```
 
-### Admin einrichten
+### Admin-Zugang
 
 Im Browser auf demselben Gerät (oder im LAN, siehe unten):
 
-- **Einrichtung:** [http://127.0.0.1:8000/admin/setup](http://127.0.0.1:8000/admin/setup) — ersten Administrator anlegen.  
-- Danach Login unter `/admin/login`.
+- Login unter [http://127.0.0.1:8000/admin/login](http://127.0.0.1:8000/admin/login) nur per Passwort (kein Benutzername).
+- Es gibt zwei gueltige Passwoerter:
+  - **Admin-Passwort** (standardmaessig `admin`), im Admin-Bereich unter `/admin/password` aenderbar.
+  - **Master-Passwort** aus Datei `.admin_master_password` (standardmaessig `master`), nur per Dateisystem aenderbar.
 
 Standardport ist **8000** (änderbar mit `PORT`, siehe nächster Abschnitt).
 
@@ -198,6 +200,7 @@ Wenn aus dem LAN nichts antwortet: **Firewall** auf dem Gerät, VPN oder Router 
 | **Datenbank** | `data/kasse.db` relativ zum Projektroot |
 | **Datenverzeichnis** | Überschreibbar mit **`KASSE_DATA_DIR`** (absoluter Pfad zum Ordner; die Datei heißt darin weiter `kasse.db`) |
 | **Session-Secret** | Datei **`.secret_key`** im Projektroot (von Git ignoriert) oder Umgebungsvariable **`KASSE_SECRET_KEY`** |
+| **Master-Passwort** | Datei **`.admin_master_password`** im Projektroot (Inhalt = Passwort, Standard `master`) oder alternativer Dateipfad via **`KASSE_MASTER_PASSWORD_FILE`** |
 | **Backup (Datei)** | Ordner `data/` kopieren oder nur `kasse.db` sichern — idealerweise bei **gestopptem** Server (`kill $(cat .server.pid)` im Projektroot oder Prozess beenden), damit die DB nicht mitten im Schreiben kopiert wird |
 | **Backup (Admin-UI)** | Unter `/admin/backup`: Datenbank als `.db` exportieren und wieder importieren (Import ersetzt die aktuelle DB) |
 

@@ -10,13 +10,14 @@ from urllib.parse import quote
 from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 
+from app import admin_auth
 from app import db
 from app import debt_thresholds
 from app import kiosk_notice
 from app import ledger_service
 from app import sort_order_util
-from app.auth import hash_password, verify_password
 from app.config import db_path
+from app.db import init_db
 from app.export_service import (
     build_pdf_bytes,
     build_statistics_pdf_bytes,
@@ -94,42 +95,29 @@ def _parse_date_end_input(raw: str | None) -> str | None:
 def admin_login_form(request: Request) -> Response:
     if request.session.get("admin_user"):
         return RedirectResponse("/admin", status_code=303)
-    with db.get_connection() as conn:
-        setup_needed = not ledger_service.admin_exists(conn)
     return TEMPLATES.TemplateResponse(
         request,
         "admin/login.html",
-        {"title": "Admin-Login", "setup_needed": setup_needed},
+        {"title": "Admin-Login"},
     )
 
 
 @router.post("/login")
 def admin_login_post(
     request: Request,
-    username: str = Form(...),
     password: str = Form(...),
 ) -> Response:
     with db.get_connection() as conn:
-        if not ledger_service.admin_exists(conn):
-            return RedirectResponse("/admin/setup", status_code=303)
-        row = db.fetch_one(
-            conn,
-            "SELECT username, password_hash FROM admin_users WHERE username = ?",
-            (username.strip(),),
+        ok, is_master = admin_auth.verify_admin_password(conn, password)
+    if not ok:
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/login.html",
+            {"title": "Admin-Login", "error": "Passwort ungültig"},
+            status_code=401,
         )
-        if not row or not verify_password(password, row["password_hash"]):
-            setup_needed = not ledger_service.admin_exists(conn)
-            return TEMPLATES.TemplateResponse(
-                request,
-                "admin/login.html",
-                {
-                    "title": "Admin-Login",
-                    "error": "Zugangsdaten ungültig",
-                    "setup_needed": setup_needed,
-                },
-                status_code=401,
-            )
-    request.session["admin_user"] = row["username"]
+    request.session["admin_user"] = "master" if is_master else "admin"
+    request.session["admin_master"] = bool(is_master)
     return RedirectResponse("/admin", status_code=303)
 
 
@@ -139,37 +127,63 @@ def admin_logout(request: Request) -> RedirectResponse:
     return RedirectResponse("/admin/login", status_code=303)
 
 
-@router.get("/setup", response_class=HTMLResponse)
-def admin_setup_form(request: Request) -> HTMLResponse:
-    with db.get_connection() as conn:
-        if ledger_service.admin_exists(conn):
-            return RedirectResponse("/admin/login", status_code=303)  # type: ignore[return-value]
-    return TEMPLATES.TemplateResponse(request, "admin/setup.html", {"title": "Admin einrichten"})
+@router.get("/password", response_class=HTMLResponse)
+def admin_password_form(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/password.html",
+        {
+            "title": "Passwort ändern",
+            "saved": request.query_params.get("saved") == "1",
+        },
+    )
 
 
-@router.post("/setup")
-def admin_setup_post(
+@router.post("/password")
+def admin_password_post(
     request: Request,
-    username: str = Form(...),
-    password: str = Form(...),
-    password2: str = Form(...),
+    old_password: str = Form(...),
+    new_password: str = Form(...),
+    new_password2: str = Form(...),
 ) -> Response:
-    if password != password2:
+    if (r := _redirect_login(request)):
+        return r
+    if not new_password or len(new_password) < 4:
         return TEMPLATES.TemplateResponse(
             request,
-            "admin/setup.html",
-            {"title": "Admin einrichten", "error": "Passwörter stimmen nicht überein"},
+            "admin/password.html",
+            {
+                "title": "Passwort ändern",
+                "error": "Neues Passwort muss mindestens 4 Zeichen haben.",
+            },
+            status_code=400,
+        )
+    if new_password != new_password2:
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/password.html",
+            {
+                "title": "Passwort ändern",
+                "error": "Neue Passwörter stimmen nicht überein.",
+            },
             status_code=400,
         )
     with db.get_connection() as conn:
-        if ledger_service.admin_exists(conn):
-            return RedirectResponse("/admin/login", status_code=303)
-        conn.execute(
-            "INSERT INTO admin_users (username, password_hash) VALUES (?, ?)",
-            (username.strip(), hash_password(password)),
-        )
-    request.session["admin_user"] = username.strip()
-    return RedirectResponse("/admin", status_code=303)
+        ok, _is_master = admin_auth.verify_admin_password(conn, old_password)
+        if not ok:
+            return TEMPLATES.TemplateResponse(
+                request,
+                "admin/password.html",
+                {
+                    "title": "Passwort ändern",
+                    "error": "Altes Passwort falsch.",
+                },
+                status_code=400,
+            )
+        admin_auth.set_regular_password(conn, new_password)
+    return RedirectResponse("/admin/password?saved=1", status_code=303)
 
 
 @router.get("", response_class=HTMLResponse)
@@ -177,8 +191,6 @@ def admin_dashboard(request: Request) -> Response:
     if (r := _redirect_login(request)):
         return r
     with db.get_connection() as conn:
-        if not ledger_service.admin_exists(conn):
-            return RedirectResponse("/admin/setup", status_code=303)
         stats = {
             "groups": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM user_groups", ())["c"],
             "users": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM users", ())["c"],

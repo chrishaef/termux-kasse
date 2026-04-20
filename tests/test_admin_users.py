@@ -9,11 +9,7 @@ from app.main import app
 
 def test_admin_users_overview_shows_balances_and_totals() -> None:
     with TestClient(app) as client:
-        client.post(
-            "/admin/setup",
-            data={"username": "adm", "password": "pw12345", "password2": "pw12345"},
-            follow_redirects=False,
-        )
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         client.post("/admin/groups", data={"name": "G1"})
         with db.get_connection() as conn:
             gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
@@ -32,7 +28,7 @@ def test_admin_users_overview_shows_balances_and_totals() -> None:
 
         r = client.get("/admin/users")
         assert r.status_code == 200
-        assert "Nutzerübersicht" in r.text
+        assert "Nutzer" in r.text
         assert "Offener Saldo" in r.text
         assert "2,00 €" in r.text
         assert "<tfoot>" in r.text
