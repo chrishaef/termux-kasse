@@ -886,6 +886,10 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   line-height: 1.15;
 }
 
+.admin-stat__value--debt {
+  color: var(--kas-danger);
+}
+
 .admin-cards--tight {
   margin-top: 0.5rem;
 }

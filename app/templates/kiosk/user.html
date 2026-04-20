@@ -21,7 +21,6 @@
           <h2 class="k-user-head__last-title">Letzte Abrechnung</h2>
           {% if last_settlement %}
           <p class="k-user-head__last-line"><strong>Datum</strong> {{ last_settlement['created_at']|date_de }}</p>
-          <p class="k-user-head__last-line"><strong>Summe</strong> {{ last_settlement['total_cents']|eur }}</p>
           {% if last_settlement['note'] %}<p class="k-user-head__last-line"><strong>Notiz</strong> {{ last_settlement['note'] }}</p>{% endif %}
           {% else %}
           <p class="k-user-head__last-line k-user-head__last-line--muted">Noch keine Abrechnung erfasst.</p>
