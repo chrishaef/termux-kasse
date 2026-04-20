@@ -69,3 +69,10 @@ def test_kiosk_user_shows_credit_with_plus_and_green_class() -> None:
         assert r.status_code == 200
         assert "+5,00 €" in r.text
         assert "k-user-head__balance-value--credit" in r.text
+
+
+def test_kiosk_flappy_easter_egg_route() -> None:
+    with TestClient(app) as c:
+        r = c.get("/egg/flappy")
+        assert r.status_code == 200
+        assert "flappy-canvas" in r.text

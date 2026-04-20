@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block site_header_center %}
+<a href="/" class="site-header__midlink">← Zurück</a>
+{% endblock %}
+{% block content %}
+<div class="flappy-egg" id="flappy-root">
+  <p class="flappy-egg__hint">Leertaste, Klick oder Tippen zum Flattern · Rohre meiden</p>
+  <canvas id="flappy-canvas" width="360" height="520" aria-label="Flappy Easter Egg"></canvas>
+  <p class="flappy-egg__score" id="flappy-score">Punkte: 0</p>
+  <p class="flappy-egg__over" id="flappy-over" hidden>Game over — nochmal?</p>
+</div>
+<style>
+  .flappy-egg { text-align: center; padding: 0.5rem 0 2rem; max-width: 28rem; margin: 0 auto; }
+  .flappy-egg__hint { font-size: 0.85rem; color: #b4c0ac; margin: 0 0 0.5rem; }
+  .flappy-egg canvas {
+    display: block; margin: 0 auto; width: 100%; max-width: 360px; height: auto;
+    border-radius: var(--kas-radius, 12px); border: 2px solid rgba(212, 160, 18, 0.45);
+    background: linear-gradient(180deg, #5a7a9a 0%, #7a9aba 40%, #9ab8c8 100%);
+    touch-action: manipulation;
+  }
+  .flappy-egg__score { font-weight: 800; color: var(--kas-accent-bright, #e8bc2e); margin: 0.5rem 0 0; }
+  .flappy-egg__over { color: #ffb4a8; font-weight: 700; margin: 0.35rem 0 0; }
+</style>
+<script>
+(function () {
+  var canvas = document.getElementById("flappy-canvas");
+  var scoreEl = document.getElementById("flappy-score");
+  var overEl = document.getElementById("flappy-over");
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext("2d");
+  var W = 360, H = 520;
+  var birdX = 72, birdR = 14;
+  var birdY = H / 2, birdVy = 0;
+  var g = 0.45, flapV = -8.2;
+  var pipeW = 46, gapH = 128, pipeSpeed = 3.1;
+  var pipes = [];
+  var frame = 0, nextPipe = 40;
+  var score = 0, best = 0;
+  var playing = true, passedIds = {};
+
+  function randGapY() {
+    return 100 + Math.random() * (H - 200 - gapH);
+  }
+
+  function resetGame() {
+    birdY = H / 2; birdVy = 0; pipes = []; frame = 0; nextPipe = 40;
+    score = 0; passedIds = {}; playing = true;
+    overEl.hidden = true;
+    scoreEl.textContent = "Punkte: 0";
+  }
+
+  function flap() {
+    if (!playing) { resetGame(); return; }
+    birdVy = flapV;
+  }
+
+  function hitPipe(px, gapTop, gapBot) {
+    var cx = birdX, cy = birdY, r = birdR - 2;
+    if (cx + r < px || cx - r > px + pipeW) return false;
+    return cy - r < gapTop || cy + r > gapBot;
+  }
+
+  function loop() {
+    frame++;
+    ctx.clearRect(0, 0, W, H);
+    var grd = ctx.createLinearGradient(0, 0, 0, H);
+    grd.addColorStop(0, "#4a6a88");
+    grd.addColorStop(1, "#8ab0c8");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, H);
+
+    if (playing) {
+      birdVy += g;
+      birdY += birdVy;
+      if (birdY < birdR) { birdY = birdR; birdVy = 0; }
+      if (birdY > H - birdR) { playing = false; best = Math.max(best, score); }
+
+      if (frame >= nextPipe) {
+        pipes.push({ id: frame, x: W, gapY: randGapY() });
+        nextPipe = frame + 95;
+      }
+
+      for (var i = 0; i < pipes.length; i++) {
+        var p = pipes[i];
+        p.x -= pipeSpeed;
+        var gt = p.gapY, gb = p.gapY + gapH;
+        if (hitPipe(p.x, gt, gb)) playing = false;
+        if (!passedIds[p.id] && p.x + pipeW < birdX) {
+          passedIds[p.id] = true;
+          score++;
+          scoreEl.textContent = "Punkte: " + score;
+        }
+      }
+      pipes = pipes.filter(function (p) { return p.x > -pipeW; });
+    }
+    for (var j = 0; j < pipes.length; j++) {
+      var q = pipes[j];
+      var gtop = q.gapY, gbot = q.gapY + gapH;
+      ctx.fillStyle = "#2d5a2d";
+      ctx.fillRect(q.x, 0, pipeW, gtop);
+      ctx.fillRect(q.x, gbot, pipeW, H - gbot);
+      ctx.fillStyle = "#4a8a4a";
+      ctx.fillRect(q.x - 2, gtop - 18, pipeW + 4, 18);
+      ctx.fillRect(q.x - 2, gbot, pipeW + 4, 18);
+    }
+
+    ctx.fillStyle = "#e8bc2e";
+    ctx.beginPath();
+    ctx.arc(birdX, birdY, birdR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#1a1a12";
+    ctx.beginPath();
+    ctx.arc(birdX + 5, birdY - 3, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (!playing) {
+      overEl.hidden = false;
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 22px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Game over", W / 2, H / 2 - 10);
+      ctx.font = "14px sans-serif";
+      ctx.fillText("Tippe / Leertaste für neues Spiel", W / 2, H / 2 + 18);
+      ctx.textAlign = "left";
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  canvas.addEventListener("click", flap);
+  canvas.addEventListener("touchstart", function (e) { e.preventDefault(); flap(); }, { passive: false });
+  document.addEventListener("keydown", function (e) {
+    if (e.code === "Space" || e.code === "ArrowUp") {
+      if (e.target === document.body || e.target === canvas || (e.target && e.target.closest && e.target.closest("#flappy-root"))) {
+        e.preventDefault();
+        flap();
+      }
+    }
+  });
+  resetGame();
+  requestAnimationFrame(loop);
+})();
+</script>
+{% endblock %}

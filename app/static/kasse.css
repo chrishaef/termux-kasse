@@ -233,6 +233,16 @@ body {
   font-weight: 800;
 }
 
+/* Easter-Egg: größere Touch-Fläche, kein Text-Markieren */
+#footer-flappy-egg {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  padding: 0.35rem 0.75rem;
+  margin: -0.35rem -0.75rem;
+  border-radius: 8px;
+}
+
 .site-footer-note__right {
   position: fixed;
   right: 1rem;

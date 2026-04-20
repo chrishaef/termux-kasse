@@ -156,3 +156,13 @@ def kiosk_add(
         desc = f'{p["name"]} (x1)'
         add_purchase(conn, user_id, int(p["id"]), desc, int(p["price_cents"]))
     return RedirectResponse(url=f"/u/{user_id}", status_code=303)
+
+
+@router.get("/egg/flappy", response_class=HTMLResponse)
+def kiosk_flappy_easter_egg(request: Request) -> HTMLResponse:
+    """Easter Egg: nicht verlinkt; am Kiosk-Footer „powered by OF Häfner“ Tipp-Muster lang–kurz–kurz–lang."""
+    return TEMPLATES.TemplateResponse(
+        request,
+        "kiosk/flappy.html",
+        {"title": "Flappy"},
+    )
