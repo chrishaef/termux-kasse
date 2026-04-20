@@ -2,6 +2,8 @@
 
 Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — die App spricht im Betrieb keine externen Dienste an; Styles und Skripte kommen aus dem Projekt (`/static`), Internet ist nur für Installation und Updates nötig.
 
+**Aktuelle Version:** [v1.0.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.0.0) (Git-Tag `v1.0.0`).
+
 ---
 
 ## Inhalt
@@ -15,7 +17,8 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 7. [Updates (`update.sh`)](#updates-updatesh)  
 8. [Admin-Bereich](#admin-bereich)  
 9. [Entwicklung (Windows / Linux / macOS)](#entwicklung-windows--linux--macos)  
-10. [Repository bei GitHub](#repository-bei-github)
+10. [Repository und Releases bei GitHub](#repository-und-releases-bei-github)  
+11. [Lizenz / Hinweise](#lizenz--hinweise)
 
 ---
 
@@ -28,8 +31,9 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 | **Warnstufen** | 3 konfigurierbare Schwellen mit individuellen Texten und Sounds pro Stufe (einmalig beim Erreichen der nächsten Stufe) |
 | **Admin** | Login, Gruppen, Nutzer, Artikel inkl. Sortierung und Bearbeiten, Kiosk-Nachricht |
 | **Abrechnung** | Geführter Ablauf: Gruppe/Nutzer wählen → offene Posten prüfen → Zahlungseingang bestätigen → Konten begleichen, **PDF** und **XLSX** exportieren |
+| **Jahresabschluss** | Admin unter Abrechnungen: Archiv **PDF**, **XLSX** und **ZIP** nach `data/jahresabschluss/`; löscht nur **beglichene** Abrechnungen inkl. zugehöriger Buchungszeilen (**offene Posten und Kontostände bleiben**). Erfordert **Master-Passwort** |
 | **Statistik** | Zeitraum- und Gruppenfilter, Toplisten/Auswertung, Export als **PDF** und **XLSX** |
-| **Backup** | Kompletter Datenbank-Export und -Import direkt im Adminbereich |
+| **Backup** | Datenbank **exportieren/importieren**; zusätzlich **Daten-Reset** (Master-Passwort): alle Buchungen und Abrechnungen löschen, **Nutzer, Gruppen und Artikel** bleiben |
 
 ---
 
@@ -203,6 +207,7 @@ Wenn aus dem LAN nichts antwortet: **Firewall** auf dem Gerät, VPN oder Router 
 | **Master-Passwort** | Datei **`.admin_master_password`** im Projektroot (Inhalt = Passwort, Standard `master`) oder alternativer Dateipfad via **`KASSE_MASTER_PASSWORD_FILE`** |
 | **Backup (Datei)** | Ordner `data/` kopieren oder nur `kasse.db` sichern — idealerweise bei **gestopptem** Server (`kill $(cat .server.pid)` im Projektroot oder Prozess beenden), damit die DB nicht mitten im Schreiben kopiert wird |
 | **Backup (Admin-UI)** | Unter `/admin/backup`: Datenbank als `.db` exportieren und wieder importieren (Import ersetzt die aktuelle DB) |
+| **Jahresabschluss-Archive** | Ordner **`jahresabschluss/`** unter `KASSE_DATA_DIR` (neben `kasse.db`): gespeicherte PDF-, XLSX- und ZIP-Dateien pro Abschluss |
 
 ---
 
@@ -238,11 +243,13 @@ Läuft die Kasse nur mit `bash start.sh` im Vordergrund, gibt es keine `.server.
 Nach dem Login (`/admin`):
 
 - **Gruppen, Nutzer, Artikel** pflegen (inkl. manueller Reihenfolge via Pfeile und Bearbeiten-Ansichten)  
-- **Abrechnungen** (`/admin/settlements`): Liste vergangener Abrechnungen mit XLS/PDF; neue Abrechnung über **„Neue Abrechnung starten“** (Gruppe/Nutzer wählen → Beträge prüfen → Zahlungseingang bestätigen → PDF)  
+- **Abrechnungen** (`/admin/settlements`): Liste vergangener Abrechnungen mit XLS/PDF; neue Abrechnung über **„Neue Abrechnung starten“** (Gruppe/Nutzer wählen → Beträge prüfen → Zahlungseingang bestätigen → PDF); **Jahresabschluss** mit Archivdownload (Master-Passwort)  
 - **Statistik** (`/admin/statistics`): Zeitraum + Nutzergruppe filtern, Toplisten sehen, PDF/XLSX herunterladen  
 - **Warnstufen** (`/admin/debt-thresholds`): Schwellen und Meldungstexte für Kiosk-Warnungen pflegen  
 - **Kiosk-Nachricht** (`/admin/news`): Text oben auf allen Kiosk-Seiten; leer speichern stellt den Standardhinweis wieder her  
-- **Backup** (`/admin/backup`): komplette Datenbank exportieren/importieren
+- **Backup** (`/admin/backup`): Datenbank exportieren/importieren; optional **Daten-Reset** (alle Buchungen und Abrechnungen löschen, Stammdaten bleiben; Master-Passwort)
+
+Hinweis: **Kontostände** ergeben sich nur aus Buchungen; eine manuelle Saldo-Korrektur im Nutzer-Edit gibt es nicht (dazu Daten-Reset oder Jahresabschluss-Archiv nutzen).
 
 ---
 
@@ -263,7 +270,9 @@ Für Tests kann `KASSE_DATA_DIR` auf ein temporäres Verzeichnis zeigen (siehe `
 
 ---
 
-## Repository bei GitHub
+## Repository und Releases bei GitHub
+
+Öffentliches Projekt: [github.com/chrishaef/termux-kasse](https://github.com/chrishaef/termux-kasse).
 
 **Neues privates Repo und lokaler Ordner:**
 
@@ -280,6 +289,15 @@ git push -u origin main
 ```
 
 Branchname ggf. an euren Standard anpassen (`main` / `master`).
+
+### Versionierung und Releases
+
+- Empfohlene Release-Version: **v1.0.0** (siehe Git-Tag).  
+- Nach einem Tag-Push kann unter **[Releases](https://github.com/chrishaef/termux-kasse/releases)** ein Eintrag aus dem Tag erstellt werden (*Draft a new release* → Tag `v1.0.0` wählen).  
+- Mit **GitHub CLI** (nach `winget install GitHub.cli` bzw. Paketmanager):  
+  `gh release create v1.0.0 --title "Termux-Shopkasse 1.0.0" --notes-file RELEASE_NOTES.md`
+
+**v1.0.0** (Kurzüberblick): Jahresabschluss mit Archiv (PDF/XLSX/ZIP), Backup-Daten-Reset, Kiosk-/Admin-Verbesserungen (Passwort-Login, Schwellen, Footer, Nutzerkopf-Layout), Finanzübersicht netto, ohne manuelle Kontostand-Korrektur im Nutzer-Edit.
 
 ---
 
