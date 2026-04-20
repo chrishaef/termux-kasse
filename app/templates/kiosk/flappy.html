@@ -4,7 +4,7 @@
 {% endblock %}
 {% block content %}
 <div class="flappy-egg" id="flappy-root">
-  <p class="flappy-egg__hint">Leertaste, Klick oder Tippen zum Flattern · Rohre meiden</p>
+  <p class="flappy-egg__hint">Leertaste, Klick oder Tippen zum Flattern · weite Lücken zwischen den Rohren</p>
   <canvas id="flappy-canvas" width="360" height="520" aria-label="Flappy Easter Egg"></canvas>
   <p class="flappy-egg__score" id="flappy-score">Punkte: 0</p>
   <p class="flappy-egg__over" id="flappy-over" hidden>Game over — nochmal?</p>
@@ -29,17 +29,22 @@
   if (!canvas || !canvas.getContext) return;
   var ctx = canvas.getContext("2d");
   var W = 360, H = 520;
-  var birdX = 72, birdR = 14;
+  var birdX = 78, birdR = 15;
   var birdY = H / 2, birdVy = 0;
-  var g = 0.45, flapV = -8.2;
-  var pipeW = 46, gapH = 128, pipeSpeed = 3.1;
+  /* Einfacherer Modus: weniger Schwerkraft, kräftigerer Flap, weitere Lücke, langsamere Rohre */
+  var g = 0.26;
+  var flapV = -7.4;
+  var maxFallVy = 9.5;
+  var pipeW = 38, gapH = 168, pipeSpeed = 1.85;
   var pipes = [];
-  var frame = 0, nextPipe = 40;
+  var frame = 0, nextPipe = 35;
   var score = 0, best = 0;
   var playing = true, passedIds = {};
+  var pipeSpawnFrames = 118;
 
   function randGapY() {
-    return 100 + Math.random() * (H - 200 - gapH);
+    var margin = 96;
+    return margin + Math.random() * Math.max(40, H - gapH - 2 * margin);
   }
 
   function resetGame() {
@@ -55,7 +60,7 @@
   }
 
   function hitPipe(px, gapTop, gapBot) {
-    var cx = birdX, cy = birdY, r = birdR - 2;
+    var cx = birdX, cy = birdY, r = birdR - 5;
     if (cx + r < px || cx - r > px + pipeW) return false;
     return cy - r < gapTop || cy + r > gapBot;
   }
@@ -68,16 +73,23 @@
     grd.addColorStop(1, "#8ab0c8");
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "rgba(255,255,255,0.12)";
+    ctx.beginPath();
+    ctx.ellipse(60, 90, 52, 22, 0, 0, Math.PI * 2);
+    ctx.ellipse(220, 140, 68, 26, 0, 0, Math.PI * 2);
+    ctx.ellipse(300, 70, 40, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     if (playing) {
       birdVy += g;
+      if (birdVy > maxFallVy) birdVy = maxFallVy;
       birdY += birdVy;
       if (birdY < birdR) { birdY = birdR; birdVy = 0; }
       if (birdY > H - birdR) { playing = false; best = Math.max(best, score); }
 
       if (frame >= nextPipe) {
         pipes.push({ id: frame, x: W, gapY: randGapY() });
-        nextPipe = frame + 95;
+        nextPipe = frame + pipeSpawnFrames;
       }
 
       for (var i = 0; i < pipes.length; i++) {
