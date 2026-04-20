@@ -2,7 +2,7 @@
 
 Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — die App spricht im Betrieb keine externen Dienste an; Styles und Skripte kommen aus dem Projekt (`/static`), Internet ist nur für Installation und Updates nötig.
 
-**Aktuelle Version:** [v1.0.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.0.0) (Git-Tag `v1.0.0`).
+**Aktuelle Version:** **1.0.0** (Git-Tag [`v1.0.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.0.0)) — GitHub-Release: [anlegen](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.0.0) (einmal `gh auth login` oder im Browser veröffentlichen).
 
 ---
 
