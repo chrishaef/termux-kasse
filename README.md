@@ -292,10 +292,10 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ### Versionierung und Releases
 
-- Empfohlene Release-Version: **v1.0.0** (siehe Git-Tag).  
-- Nach einem Tag-Push kann unter **[Releases](https://github.com/chrishaef/termux-kasse/releases)** ein Eintrag aus dem Tag erstellt werden (*Draft a new release* → Tag `v1.0.0` wählen).  
-- Mit **GitHub CLI** (nach `winget install GitHub.cli` bzw. Paketmanager):  
-  `gh release create v1.0.0 --title "Termux-Shopkasse 1.0.0" --notes-file RELEASE_NOTES.md`
+- Aktueller Git-Tag: **v1.0.0** — Übersicht: [Tag v1.0.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.0.0).  
+- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.0.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.0.0) öffnen, Titel z. B. `Termux-Shopkasse 1.0.0`, Beschreibung einfügen, *Publish release*.  
+- **GitHub CLI** (einmalig `gh auth login`):  
+  `gh release create v1.0.0 --title "Termux-Shopkasse 1.0.0" --generate-notes`
 
 **v1.0.0** (Kurzüberblick): Jahresabschluss mit Archiv (PDF/XLSX/ZIP), Backup-Daten-Reset, Kiosk-/Admin-Verbesserungen (Passwort-Login, Schwellen, Footer, Nutzerkopf-Layout), Finanzübersicht netto, ohne manuelle Kontostand-Korrektur im Nutzer-Edit.
 
