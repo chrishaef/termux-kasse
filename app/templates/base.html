@@ -35,9 +35,13 @@
     {% block trust %}{% endblock %}
     {% block content %}{% endblock %}
   </main>
-  <div class="powered-by-note">
-    this system is powered by OF Häfner · update {{ request.state.last_sync_label }} · repo: github.com/chrishaef/termux-kasse
-  </div>
+  <footer class="site-footer-note" aria-label="Systemhinweis">
+    <div class="site-footer-note__center"><strong>powered by OF Häfner</strong></div>
+    <div class="site-footer-note__right">
+      <span>Version: {{ request.state.last_sync_label }}</span>
+      <a href="https://github.com/chrishaef/termux-kasse" target="_blank" rel="noopener noreferrer">Repo</a>
+    </div>
+  </footer>
   <script>
     (function () {
       const trigger = document.getElementById("secret-admin-trigger");

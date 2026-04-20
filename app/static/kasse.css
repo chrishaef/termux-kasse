@@ -212,18 +212,44 @@ body {
   padding-bottom: 2.5rem;
 }
 
-.powered-by-note {
+.site-footer-note {
   position: fixed;
-  right: 0.7rem;
+  left: 0;
+  right: 0;
   bottom: 0.45rem;
   z-index: 70;
   font-size: 0.72rem;
-  font-weight: 600;
   letter-spacing: 0.01em;
   color: rgba(236, 240, 232, 0.72);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.48);
-  pointer-events: none;
-  user-select: none;
+}
+
+.site-footer-note__center {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0.45rem;
+  text-align: center;
+  font-weight: 800;
+}
+
+.site-footer-note__right {
+  position: fixed;
+  right: 1rem;
+  bottom: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+}
+
+.site-footer-note__right a {
+  color: rgba(236, 240, 232, 0.88);
+  text-decoration: underline;
+}
+
+.site-footer-note__right a:hover {
+  color: #fff;
 }
 
 .site-main a:not([role="button"]):not(.k-tile):not(.admin-card) {

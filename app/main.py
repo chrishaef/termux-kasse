@@ -27,7 +27,7 @@ def _last_sync_label() -> str:
             if txt:
                 try:
                     ts = datetime.strptime(txt, "%Y-%m-%d %H:%M:%S")
-                    return ts.strftime("%d.%m.%Y %H:%M")
+                    return ts.strftime("%d.%m.%Y")
                 except ValueError:
                     pass
         candidates = [
@@ -41,7 +41,7 @@ def _last_sync_label() -> str:
         if existing:
             newest = max(existing, key=lambda p: p.stat().st_mtime)
             ts = datetime.fromtimestamp(newest.stat().st_mtime)
-            return ts.strftime("%d.%m.%Y %H:%M")
+            return ts.strftime("%d.%m.%Y")
     except Exception:
         pass
     return "unbekannt"
