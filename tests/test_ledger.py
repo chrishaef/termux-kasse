@@ -108,6 +108,36 @@ def test_finance_overview() -> None:
         assert fo2["settled_total_cents"] == 300
 
 
+def test_finance_overview_ignores_user_credit_balances() -> None:
+    init_db()
+    with db.get_connection() as conn:
+        conn.execute("INSERT INTO user_groups (name) VALUES ('G1')")
+        gid = conn.execute("SELECT id FROM user_groups").fetchone()[0]
+        conn.execute("INSERT INTO users (group_id, name) VALUES (?, 'A')", (gid,))
+        conn.execute("INSERT INTO users (group_id, name) VALUES (?, 'B')", (gid,))
+        uid_a = conn.execute("SELECT id FROM users WHERE name='A'").fetchone()[0]
+        uid_b = conn.execute("SELECT id FROM users WHERE name='B'").fetchone()[0]
+
+        conn.execute(
+            """
+            INSERT INTO ledger_entries (user_id, product_id, description, amount_cents, created_at)
+            VALUES (?, NULL, ?, ?, ?)
+            """,
+            (uid_a, "Debt", 500, "2026-01-01T10:00:00"),
+        )
+        conn.execute(
+            """
+            INSERT INTO ledger_entries (user_id, product_id, description, amount_cents, created_at)
+            VALUES (?, NULL, ?, ?, ?)
+            """,
+            (uid_b, "Credit", -700, "2026-01-01T10:00:00"),
+        )
+
+        fo = finance_overview(conn)
+        assert fo["open_total_cents"] == -200
+        assert fo["max_user_open_cents"] == 500
+
+
 def test_aggregate_ledger_lines_merges_same_product_and_amount() -> None:
     lines = [
         {

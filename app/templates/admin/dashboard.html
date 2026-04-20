@@ -4,7 +4,9 @@
   <div class="admin-dash-stats" aria-label="Finanzübersicht">
     <div class="admin-stat">
       <span class="admin-stat__label">Ausstände gesamt</span>
-      <span class="admin-stat__value admin-stat__value--debt">{{ (-(finance['open_total_cents']|abs))|eur }}</span>
+      <span class="admin-stat__value{% if finance['open_total_cents'] > 0 %} admin-stat__value--debt{% elif finance['open_total_cents'] < 0 %} admin-stat__value--credit{% endif %}">
+        {% if finance['open_total_cents'] < 0 %}+{% endif %}{{ (-finance['open_total_cents'])|eur }}
+      </span>
     </div>
     <div class="admin-stat">
       <span class="admin-stat__label">Größter Ausstand</span>

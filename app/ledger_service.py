@@ -81,27 +81,21 @@ def finance_overview(conn: sqlite3.Connection) -> dict[str, int]:
     row_open = db.fetch_one(
         conn,
         """
-        SELECT COALESCE(SUM(amount_cents), 0) AS s
-        FROM ledger_entries
-        WHERE settlement_id IS NULL
-        """,
-        (),
-    )
-    open_total = int(row_open["s"]) if row_open else 0
-    row_max = db.fetch_one(
-        conn,
-        """
-        SELECT COALESCE(MAX(per_user), 0) AS m
-        FROM (
-            SELECT COALESCE(SUM(amount_cents), 0) AS per_user
+        WITH per_user AS (
+            SELECT user_id, COALESCE(SUM(amount_cents), 0) AS bal
             FROM ledger_entries
             WHERE settlement_id IS NULL
             GROUP BY user_id
-        ) AS t
+        )
+        SELECT
+            COALESCE(SUM(bal), 0) AS open_total,
+            COALESCE(MAX(CASE WHEN bal > 0 THEN bal ELSE 0 END), 0) AS max_open
+        FROM per_user
         """,
         (),
     )
-    max_user_open = int(row_max["m"]) if row_max else 0
+    open_total = int(row_open["open_total"]) if row_open else 0
+    max_user_open = int(row_open["max_open"]) if row_open else 0
     row_settled = db.fetch_one(
         conn,
         "SELECT COALESCE(SUM(total_cents), 0) AS s FROM settlements",

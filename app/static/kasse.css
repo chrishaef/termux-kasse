@@ -531,6 +531,11 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
 }
 
+.k-user-head__balance-value--credit {
+  color: #8ce88c;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+
 .k-user-head__last {
   flex: 0 1 auto;
   width: min(100%, 14.5rem);
@@ -911,6 +916,10 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .admin-stat__value--debt {
   color: var(--kas-danger);
+}
+
+.admin-stat__value--credit {
+  color: #6dc56d;
 }
 
 .admin-cards--tight {

@@ -15,7 +15,7 @@
       <div class="k-user-head__metrics">
         <div class="k-user-head__balance">
           <p class="k-user-head__balance-label">Kontostand</p>
-          <p class="k-user-head__balance-value{% if display_balance_cents < 0 %} k-user-head__balance-value--debt{% endif %}">{{ display_balance_cents|eur }}</p>
+          <p class="k-user-head__balance-value{% if display_balance_cents < 0 %} k-user-head__balance-value--debt{% elif display_balance_cents > 0 %} k-user-head__balance-value--credit{% endif %}">{% if display_balance_cents > 0 %}+{% endif %}{{ display_balance_cents|eur }}</p>
         </div>
         <div class="k-user-head__last">
           <h2 class="k-user-head__last-title">Letzte Abrechnung</h2>
