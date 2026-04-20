@@ -46,13 +46,6 @@ def _parse_price_eur_to_cents(raw: str) -> int:
     return int(round(float(s) * 100))
 
 
-def _parse_signed_eur_to_cents(raw: str) -> int:
-    s = raw.strip().replace(",", ".")
-    if not re.fullmatch(r"-?\d+(\.\d{1,2})?", s):
-        raise ValueError("Betrag ungültig")
-    return int(round(float(s) * 100))
-
-
 _FN_UNSAFE = re.compile(r'[\s<>:"/\\|?*\x00-\x1f]+')
 
 
@@ -235,6 +228,8 @@ def admin_backup_get(request: Request) -> Response:
     if (r := _redirect_login(request)):
         return r
     db_file = db_path()
+    mp = read_master_password()
+    master_ok = bool(mp and str(mp).strip())
     return TEMPLATES.TemplateResponse(
         request,
         "admin/backup.html",
@@ -243,6 +238,9 @@ def admin_backup_get(request: Request) -> Response:
             "db_exists": db_file.exists(),
             "saved": request.query_params.get("saved") == "1",
             "error": request.query_params.get("err") == "invalid",
+            "reset_ok": request.query_params.get("reset") == "1",
+            "master_configured": master_ok,
+            "reset_err": request.query_params.get("reset_err"),
         },
     )
 
@@ -293,6 +291,26 @@ def admin_backup_import(request: Request, backup_file: UploadFile = File(...)) -
         if tmp_file.exists():
             tmp_file.unlink(missing_ok=True)
     return RedirectResponse("/admin/backup?saved=1", status_code=303)
+
+
+@router.post("/backup/reset-transactional")
+def admin_backup_reset_transactional(
+    request: Request,
+    master_password: str = Form(""),
+    confirm_reset: str | None = Form(None),
+) -> RedirectResponse:
+    """Alle Buchungen und Abrechnungen löschen; Nutzer, Gruppen, Artikel bleiben."""
+    if (r := _redirect_login(request)):
+        return r
+    if read_master_password() is None:
+        return RedirectResponse("/admin/backup?reset_err=nomaster", status_code=303)
+    if not admin_auth.is_master_password(master_password):
+        return RedirectResponse("/admin/backup?reset_err=master", status_code=303)
+    if confirm_reset not in ("1", "on", "yes", "true"):
+        return RedirectResponse("/admin/backup?reset_err=noconfirm", status_code=303)
+    with db.get_connection() as conn:
+        ledger_service.purge_ledger_and_settlements(conn)
+    return RedirectResponse("/admin/backup?reset=1", status_code=303)
 
 
 @router.get("/news", response_class=HTMLResponse)
@@ -556,7 +574,6 @@ def admin_users_edit_form(request: Request, user_id: int) -> Response:
             "user": user,
             "groups": groups,
             "balance_display_cents": -open_balance_cents,
-            "balance_display_eur": _eur_field_from_cents(-open_balance_cents),
             "stats": {
                 "open_balance_cents": open_balance_cents,
                 "settled_total_cents": settled_total_cents,
@@ -574,41 +591,20 @@ def admin_users_edit_save(
     user_id: int,
     name: str = Form(...),
     group_id: int = Form(...),
-    balance_eur: str = Form(...),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
     name = name.strip()
     if not name:
         return RedirectResponse(f"/admin/users/{user_id}/edit", status_code=303)
-    try:
-        target_display_cents = _parse_signed_eur_to_cents(balance_eur)
-    except ValueError:
-        return RedirectResponse(f"/admin/users/{user_id}/edit", status_code=303)
     with db.get_connection() as conn:
         row = db.fetch_one(conn, "SELECT id FROM users WHERE id = ?", (user_id,))
         if not row:
             raise HTTPException(status_code=404)
-        current_open_cents = ledger_service.user_balance_cents(conn, user_id)
-        target_open_cents = -target_display_cents
-        correction_cents = target_open_cents - current_open_cents
         conn.execute(
             "UPDATE users SET name = ?, group_id = ? WHERE id = ?",
             (name, group_id, user_id),
         )
-        if correction_cents != 0:
-            conn.execute(
-                """
-                INSERT INTO ledger_entries (user_id, product_id, description, amount_cents, created_at)
-                VALUES (?, NULL, ?, ?, ?)
-                """,
-                (
-                    user_id,
-                    "Admin-Kontostandkorrektur",
-                    correction_cents,
-                    ledger_service.utc_now_iso(),
-                ),
-            )
     return RedirectResponse("/admin/users", status_code=303)
 
 
@@ -844,7 +840,7 @@ def admin_year_end_post(
     (out_dir / f"{stem}.zip").write_bytes(zip_bytes)
 
     with db.get_connection() as conn:
-        ledger_service.year_end_purge_closed_data(conn)
+        ledger_service.purge_ledger_and_settlements(conn)
 
     return Response(
         content=zip_bytes,

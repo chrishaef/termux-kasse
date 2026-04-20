@@ -8,6 +8,16 @@
 {% if error %}
 <article class="contrast" style="border-color:#b33"><strong>Import fehlgeschlagen.</strong> Bitte eine gültige SQLite-Backup-Datei auswählen.</article>
 {% endif %}
+{% if reset_ok %}
+<article class="contrast"><strong>Daten-Reset ausgeführt.</strong> Alle Buchungen und Abrechnungen wurden gelöscht. Nutzer, Gruppen und Artikel sind unverändert.</article>
+{% endif %}
+{% if reset_err == "master" %}
+<article class="contrast">Master-Passwort ungültig.</article>
+{% elif reset_err == "noconfirm" %}
+<article class="contrast">Bitte die Bestätigung per Checkbox setzen.</article>
+{% elif reset_err == "nomaster" %}
+<article class="contrast">Master-Passwort nicht konfiguriert.</article>
+{% endif %}
 
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.1rem">Backup exportieren</h2>
@@ -27,5 +37,29 @@
     <p class="secondary" style="margin-top:0.3rem">Achtung: Beim Import wird die aktuelle Datenbank ersetzt.</p>
     <button type="submit">Backup importieren</button>
   </form>
+</article>
+
+<article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">Daten-Reset (Buchhaltung)</h2>
+  <p class="secondary">
+    Löscht <strong>alle</strong> Einträge in <code>ledger_entries</code> und <code>settlements</code>.
+    <strong>Nutzer, Gruppen und Artikel</strong> bleiben erhalten. Kontostände und Statistik sind danach leer. Nicht rückgängig machbar.
+  </p>
+  {% if not master_configured %}
+  <p class="secondary">Master-Passwort nicht gesetzt — Reset deaktiviert.</p>
+  {% else %}
+  <form method="post" action="/admin/backup/reset-transactional" style="margin-top:0.75rem">
+    <label for="reset_master_password">Master-Passwort</label>
+    <input type="password" id="reset_master_password" name="master_password" required autocomplete="off" />
+    <label class="admin-received-confirm" style="margin-top:1rem;">
+      <input type="checkbox" name="confirm_reset" value="1" required />
+      <span class="admin-received-confirm__box" aria-hidden="true"></span>
+      <span class="admin-received-confirm__text">Ich will alle Buchungen und Abrechnungen unwiderruflich löschen.</span>
+    </label>
+    <footer style="margin-top:1rem;">
+      <button type="submit" class="secondary">Daten-Reset ausführen</button>
+    </footer>
+  </form>
+  {% endif %}
 </article>
 {% endblock %}

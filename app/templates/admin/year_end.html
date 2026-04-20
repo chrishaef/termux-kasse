@@ -5,8 +5,8 @@
   <h1 class="page-head__title">Jahresabschluss / Datenbereinigung</h1>
   <p class="page-head__lead">
     Es wird ein Archivbericht erstellt (PDF, Excel und ZIP mit beiden Dateien), alles gespeichert unter <code>data/jahresabschluss/</code> (bzw. <code>KASSE_DATA_DIR/jahresabschluss/</code>). Der Browser lädt zusätzlich das ZIP herunter.
-    Anschließend werden alle <strong>abgeschlossenen</strong> Abrechnungen und die zugehörigen Buchungszeilen gelöscht.
-    <strong>Offene Buchungen und Kontostände bleiben erhalten.</strong> Der Vorgang ist nicht rückgängig zu machen.
+    Anschließend werden <strong>alle Buchungen und alle Abrechnungen</strong> aus der Datenbank entfernt — die Statistik ist danach leer, alle Kontostände sind 0.
+    <strong>Nutzer, Gruppen und Artikel bleiben erhalten.</strong> Der Vorgang ist nicht rückgängig zu machen.
   </p>
 </header>
 <a href="/admin/settlements" class="admin-back">← Zurück zu Abrechnungen</a>
@@ -32,7 +32,7 @@
   <label class="admin-received-confirm" style="margin-top: 1rem;">
     <input type="checkbox" name="confirm_irreversible" value="1" required />
     <span class="admin-received-confirm__box" aria-hidden="true"></span>
-    <span class="admin-received-confirm__text">Ich habe verstanden, dass nach dem Abschluss alle abgeschlossenen Abrechnungen und historischen Buchungszeilen (außer offene Posten) unwiderruflich entfernt werden.</span>
+    <span class="admin-received-confirm__text">Ich habe verstanden, dass nach dem Abschluss alle Buchungen und Abrechnungen unwiderruflich gelöscht werden und alle Kontostände 0 sind.</span>
   </label>
 
   <footer style="margin-top: 1.25rem;">

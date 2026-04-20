@@ -11,9 +11,6 @@
     <label>Name
       <input type="text" name="name" value="{{ user['name'] }}" required />
     </label>
-    <label>Kassenstand (Anzeige, z. B. -12.50 oder 5.00)
-      <input type="text" name="balance_eur" value="{{ balance_display_eur }}" data-original-balance="{{ balance_display_eur }}" required inputmode="decimal" />
-    </label>
     <label>Gruppe
       <select name="group_id" required>
         {% for g in groups %}
@@ -40,22 +37,6 @@
   {% else %}
   <p><strong>Letzte Abrechnung</strong> keine</p>
   {% endif %}
+  <p class="secondary" style="margin-top:0.75rem">Kontostände lassen sich nicht manuell setzen — bei Bedarf <strong>Sicherung → Daten-Reset</strong> (alle Buchungen löschen) oder Jahresabschluss mit Archiv.</p>
 </article>
-<script>
-  (function () {
-    var form = document.getElementById("user-edit-form");
-    if (!form) return;
-    var balanceInput = form.querySelector("input[name='balance_eur']");
-    if (!balanceInput) return;
-    form.addEventListener("submit", function (event) {
-      var before = String(balanceInput.getAttribute("data-original-balance") || "").trim().replace(",", ".");
-      var after = String(balanceInput.value || "").trim().replace(",", ".");
-      if (before === after) return;
-      var ok = window.confirm("Kassenstand wirklich ändern?");
-      if (!ok) {
-        event.preventDefault();
-      }
-    });
-  })();
-</script>
 {% endblock %}
