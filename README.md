@@ -8,7 +8,7 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 
 ## Inhalt
 
-1. [Funktionen](#funktionen) — [Screenshots](#screenshots-demo) · [Shop/Kiosk](#shop-und-kiosk-im-detail) · [Abrechnung](#abrechnung-im-detail) · [Statistik](#statistik-im-detail) · [Jahresabschluss](#jahresabschluss-im-detail)  
+1. [Funktionen](#funktionen) — [Shop/Kiosk](#shop-und-kiosk-im-detail) · [Abrechnung](#abrechnung-im-detail) · [Statistik](#statistik-im-detail) · [Jahresabschluss](#jahresabschluss-im-detail)  
 2. [Technik](#technik)  
 3. [Installation auf Android (Termux)](#installation-auf-android-termux)  
 4. [Erster Start und Betrieb](#erster-start-und-betrieb)  
@@ -34,34 +34,6 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 | **Jahresabschluss** | Admin unter Abrechnungen: Archiv **PDF**, **XLSX** und **ZIP** nach `data/jahresabschluss/`; löscht nur **beglichene** Abrechnungen inkl. zugehöriger Buchungszeilen (**offene Posten und Kontostände bleiben**). Erfordert **Master-Passwort** |
 | **Statistik** | Zeitraum- und Gruppenfilter, Toplisten/Auswertung, Export als **PDF** und **XLSX** |
 | **Backup** | Datenbank **exportieren/importieren**; zusätzlich **Daten-Reset** (Master-Passwort): alle Buchungen und Abrechnungen löschen, **Nutzer, Gruppen und Artikel** bleiben |
-
-### Screenshots (Demo)
-
-Die folgenden Bilder stammen aus einer **frischen Demo-Datenbank** (Vereinskasse, Demo-Warnschwellen) und wurden **automatisch** mit [Playwright](https://playwright.dev/python/) erzeugt — nicht manuell abfotografiert. Zum Nachstellen (nur auf dem Entwicklungsrechner, nicht auf dem Termux-Tablet nötig):
-
-```text
-pip install -r requirements.txt -r scripts/requirements-screenshots.txt
-python -m playwright install chromium
-python scripts/capture_readme_screenshots.py
-```
-
-Ausgabeordner: `docs/readme-screenshots/`.
-
-| Kiosk: Start (Gruppen) | Kiosk: Gruppe mit Mitgliedern |
-|:---:|:---:|
-| ![Kiosk-Start](docs/readme-screenshots/kiosk-start.png) | ![Kiosk-Gruppe](docs/readme-screenshots/kiosk-gruppe.png) |
-
-| Kiosk: Nutzer mit Kontostand und Warnbanner | Kiosk: Preisliste |
-|:---:|:---:|
-| ![Kiosk-Nutzer](docs/readme-screenshots/kiosk-nutzer.png) | ![Kiosk-Preisliste](docs/readme-screenshots/kiosk-preisliste.png) |
-
-| Kiosk: Top Ten | Admin: Übersicht nach Login |
-|:---:|:---:|
-| ![Kiosk Top Ten](docs/readme-screenshots/kiosk-top-ten.png) | ![Admin-Start](docs/readme-screenshots/admin-start.png) |
-
-| Admin: Statistik (ohne Zeitraumfilter = gesamte Historie) |
-|:---:|
-| ![Admin-Statistik](docs/readme-screenshots/admin-statistik.png) |
 
 ### Shop und Kiosk im Detail
 
@@ -396,8 +368,6 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 Für Tests kann `KASSE_DATA_DIR` auf ein temporäres Verzeichnis zeigen (siehe `tests/conftest.py`).
-
-**README-Screenshots neu erzeugen:** siehe Abschnitt [Screenshots (Demo)](#screenshots-demo) und Skript `scripts/capture_readme_screenshots.py`.
 
 ---
 
