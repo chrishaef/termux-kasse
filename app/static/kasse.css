@@ -495,10 +495,11 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 .k-user-head__balance {
   grid-column: 2;
   justify-self: center;
+  width: max-content;
+  max-width: none;
   border-radius: var(--kas-radius);
   padding: 0.65rem 0.85rem 0.72rem;
   min-width: 9.5rem;
-  max-width: 100%;
   text-align: center;
   background: rgba(8, 10, 8, 0.45);
   border: 1px solid var(--kas-control-border);
@@ -526,6 +527,8 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  /* „12,34 €“ enthält ein Leerzeichen vor € — sonst bricht der Browser dort um */
+  white-space: nowrap;
 }
 
 .k-user-head__balance-value--debt {
