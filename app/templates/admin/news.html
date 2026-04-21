@@ -12,10 +12,9 @@
 <article class="k-panel">
   <form method="post" action="/admin/news">
     <label for="msg">Nachricht</label>
-    <textarea id="msg" name="message" rows="5" placeholder="Leer lassen für Standard-Hinweis …">{{ stored_notice }}</textarea>
+    <textarea id="msg" name="message" rows="5" placeholder="Leer lassen zum Ausblenden der Meldung …">{{ stored_notice }}</textarea>
     <p class="secondary" style="margin-top:0.5rem;font-size:0.9rem">
-      <strong>Leer speichern:</strong> Es wird wieder der Standardtext angezeigt:<br />
-      <em>{{ default_notice }}</em>
+      <strong>Leer speichern:</strong> Die Meldung wird komplett ausgeblendet.
     </p>
     <button type="submit">Speichern</button>
   </form>

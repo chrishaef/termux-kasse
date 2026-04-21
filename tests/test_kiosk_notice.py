@@ -4,12 +4,12 @@ from app import kiosk_notice
 from app.main import app
 
 
-def test_kiosk_home_shows_default_notice() -> None:
+def test_kiosk_home_hides_notice_when_empty() -> None:
     with TestClient(app) as c:
         kiosk_notice.set_custom_message("")
         r = c.get("/")
         assert r.status_code == 200
-        assert "Vertrauensbasis" in r.text
+        assert "trust-banner" not in r.text
 
 
 def test_kiosk_home_shows_custom_notice() -> None:

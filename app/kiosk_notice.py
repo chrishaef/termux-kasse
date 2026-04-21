@@ -1,4 +1,4 @@
-"""Kiosk-Hinweiszeile: Standardtext oder von Admin gesetzte Nachricht."""
+"""Kiosk-Hinweiszeile: nur vom Admin gesetzte Nachricht."""
 
 from __future__ import annotations
 
@@ -6,10 +6,7 @@ from app import db
 
 KEY = "kiosk_notice"
 
-DEFAULT_KIOSK_NOTICE = (
-    "Vertrauensbasis: Buchungen am Kiosk sind nicht passwortgeschützt. "
-    "Nur der Admin-Bereich ist geschützt."
-)
+DEFAULT_KIOSK_NOTICE = ""
 
 
 def get_stored_custom() -> str:
@@ -24,7 +21,7 @@ def get_display_text() -> str:
     custom = get_stored_custom().strip()
     if custom:
         return custom
-    return DEFAULT_KIOSK_NOTICE
+    return ""
 
 
 def set_custom_message(text: str) -> None:
