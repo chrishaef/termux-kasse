@@ -718,16 +718,17 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .k-undo-banner__row {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
 }
 
 .k-undo-banner__text {
   margin: 0;
   font-size: 0.92rem;
   font-weight: 650;
+  text-align: center;
 }
 
 .k-undo-banner__count {
@@ -736,6 +737,9 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .k-undo-banner__form {
   margin: 0;
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .k-undo-banner__btn {
