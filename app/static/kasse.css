@@ -130,6 +130,7 @@ body {
   color: var(--kas-page-fg);
   text-decoration: none;
   margin-left: 0.25rem;
+  transform: translateY(-0.18rem);
 }
 
 .site-brand:hover {
@@ -141,6 +142,13 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
+}
+
+.site-brand-text {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
 }
 
 .site-nav {
@@ -164,11 +172,22 @@ body {
 
 .secret-admin-logo {
   display: block;
-  width: clamp(2.6rem, 4.2vw, 3.6rem);
-  height: clamp(2.6rem, 4.2vw, 3.6rem);
+  width: clamp(3rem, 5.1vw, 4.2rem);
+  height: clamp(3rem, 5.1vw, 4.2rem);
   object-fit: contain;
   cursor: pointer;
   user-select: none;
+}
+
+.site-brand-subtitle {
+  margin-left: 0.25rem;
+  margin-top: -0.1rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+  color: rgba(236, 240, 232, 0.78);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
 .secret-admin-logo:hover {

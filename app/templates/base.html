@@ -19,7 +19,10 @@
           class="secret-admin-logo"
           aria-label="Geheimer Adminzugang"
         />
-        <a href="/" class="site-brand">Shopkasse</a>
+        <div class="site-brand-text">
+          <a href="/" class="site-brand">Shopkasse</a>
+          <div class="site-brand-subtitle" id="footer-flappy-egg"><strong>powered by OF Häfner</strong></div>
+        </div>
       </div>
       <div class="site-header__center">{% block site_header_center %}{% endblock %}</div>
       <nav class="site-nav" aria-label="Hauptnavigation">
@@ -36,7 +39,6 @@
     {% block content %}{% endblock %}
   </main>
   <footer class="site-footer-note" aria-label="Systemhinweis">
-    <div class="site-footer-note__center" id="footer-flappy-egg"><strong>powered by OF Häfner</strong></div>
     <div class="site-footer-note__right">
       <span>Version: {{ request.state.last_sync_label }}</span>
       <span class="site-footer-note__repo">Repo: github.com/chrishaef/termux-kasse</span>

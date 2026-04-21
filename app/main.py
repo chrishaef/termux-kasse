@@ -3,6 +3,8 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
+import re
+import subprocess
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
@@ -17,17 +19,36 @@ from app.db import init_db
 from app.routers import admin, kiosk
 
 
+def _git_version_label(root: Path) -> str:
+    try:
+        out = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=1.5,
+        )
+        tag = (out.stdout or "").strip()
+        if not tag:
+            return "unbekannt"
+        return re.sub(r"^[vV]", "", tag)
+    except Exception:
+        return "unbekannt"
+
+
 def _last_sync_label() -> str:
     root = Path(__file__).resolve().parent.parent
     sync_file = root / ".last_sync"
     git_dir = root / ".git"
+    version = _git_version_label(root)
     try:
         if sync_file.exists():
             txt = sync_file.read_text(encoding="utf-8").strip()
             if txt:
                 try:
                     ts = datetime.strptime(txt, "%Y-%m-%d %H:%M:%S")
-                    return ts.strftime("%d.%m.%Y")
+                    return f"{version} - {ts.strftime('%d%m%y')}"
                 except ValueError:
                     pass
         candidates = [
@@ -41,10 +62,10 @@ def _last_sync_label() -> str:
         if existing:
             newest = max(existing, key=lambda p: p.stat().st_mtime)
             ts = datetime.fromtimestamp(newest.stat().st_mtime)
-            return ts.strftime("%d.%m.%Y")
+            return f"{version} - {ts.strftime('%d%m%y')}"
     except Exception:
         pass
-    return "unbekannt"
+    return f"{version} - unbekannt"
 
 
 @asynccontextmanager
