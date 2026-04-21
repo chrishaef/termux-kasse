@@ -2,9 +2,7 @@
 {% block admin_page %}
 <a href="/admin" class="admin-back">← Admin-Übersicht</a>
 <header class="page-head">
-  <p class="page-head__eyebrow">Warnungen</p>
-  <h1 class="page-head__title">Nutzer über Warnschwelle 3</h1>
-  <p class="page-head__lead">Grenzwert: {{ threshold_3_cents|eur }} offener Ausstand.</p>
+  <h1 class="page-head__title">Nutzer über Warnstufe 3 ({{ threshold_3_cents|eur }})</h1>
 </header>
 
 <div class="table-wrap">
@@ -31,7 +29,7 @@
       </tr>
       {% else %}
       <tr>
-        <td colspan="6" class="secondary">Aktuell keine Nutzer über Warnschwelle 3.</td>
+        <td colspan="6" class="secondary">Aktuell keine Nutzer über Warnstufe 3.</td>
       </tr>
       {% endfor %}
     </tbody>

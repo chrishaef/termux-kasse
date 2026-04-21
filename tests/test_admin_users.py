@@ -29,7 +29,7 @@ def test_admin_users_overview_shows_balances_and_totals() -> None:
         r = client.get("/admin/users")
         assert r.status_code == 200
         assert "Nutzer" in r.text
-        assert "Offener Saldo" in r.text
+        assert "Saldo" in r.text
         assert "2,00 €" in r.text
         assert "<tfoot>" in r.text
         assert "Summe" in r.text
@@ -113,7 +113,7 @@ def test_over_limit_users_page_lists_affected_users() -> None:
 
         r = client.get("/admin/users/over-limit")
         assert r.status_code == 200
-        assert "Nutzer über Warnschwelle 3" in r.text
+        assert "Nutzer über Warnstufe 3" in r.text
         assert "Anna" in r.text
         assert "4,00 €" in r.text
         assert "21.04.2026" in r.text

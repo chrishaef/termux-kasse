@@ -46,7 +46,7 @@ def test_admin_shows_global_alert_when_balance_reaches_t3() -> None:
 
         r = client.get("/admin")
         assert r.status_code == 200
-        assert "Schwelle 3:" in r.text
+        assert "Warnung 1 Nutzer über dem Limit" in r.text
         assert "admin-debt-global-alert" in r.text
 
         ru = client.get(f"/u/{uid}")

@@ -2,7 +2,7 @@
 {% block admin_page %}
 <a href="/admin" class="admin-back">← Admin-Übersicht</a>
 {% if saved %}
-<article class="contrast"><strong>Gespeichert.</strong> Die Schwellen gelten sofort für Kiosk und Admin-Hinweis.</article>
+<article class="contrast"><strong>Gespeichert.</strong> Die Warnstufen gelten sofort für Kiosk und Admin-Hinweis.</article>
 {% endif %}
 {% if error %}
 <article class="contrast" style="border-color:#b33"><strong>Eingabe ungültig.</strong> Bitte drei gültige Beträge (z. B. 5 oder 5,50) verwenden.</article>
@@ -16,9 +16,9 @@
     <li><strong>&gt;= S3:</strong> Hinweis 3 + Admin-Alarm</li>
   </ul>
   <form method="post" action="/admin/debt-thresholds">
-    <label>Schwelle 1 (Euro) <input type="text" name="threshold_a_eur" value="{{ t1_eur }}" required inputmode="decimal" autocomplete="off" /></label>
-    <label>Schwelle 2 (Euro) <input type="text" name="threshold_b_eur" value="{{ t2_eur }}" required inputmode="decimal" autocomplete="off" /></label>
-    <label>Schwelle 3 (Euro) <input type="text" name="threshold_c_eur" value="{{ t3_eur }}" required inputmode="decimal" autocomplete="off" /></label>
+    <label>Warnstufe 1 (Euro) <input type="text" name="threshold_a_eur" value="{{ t1_eur }}" required inputmode="decimal" autocomplete="off" /></label>
+    <label>Warnstufe 2 (Euro) <input type="text" name="threshold_b_eur" value="{{ t2_eur }}" required inputmode="decimal" autocomplete="off" /></label>
+    <label>Warnstufe 3 (Euro) <input type="text" name="threshold_c_eur" value="{{ t3_eur }}" required inputmode="decimal" autocomplete="off" /></label>
     <label>Nachricht Stufe 1
       <input type="text" name="message_1" value="{{ m1 }}" maxlength="220" />
     </label>

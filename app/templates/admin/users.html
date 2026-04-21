@@ -1,4 +1,5 @@
 {% extends "admin/shell.html" %}
+{% block body_class %}app-admin app-admin--wide{% endblock %}
 {% block admin_page %}
 <div class="k-toolbar" style="align-items:center">
   <a href="/admin" class="admin-back" style="margin:0">← Admin-Übersicht</a>
@@ -11,9 +12,9 @@
         <th scope="col">Name</th>
         <th scope="col">Gruppe</th>
         <th scope="col" class="th-sort">Sort.</th>
-        <th scope="col" class="num">Offener Saldo</th>
-        <th scope="col" class="num">Offene Buchungen</th>
-        <th scope="col" class="num">Abgerechnet (Summe)</th>
+        <th scope="col" class="num">Saldo</th>
+        <th scope="col" class="num">Buchungen</th>
+        <th scope="col" class="num">Abgerechnet</th>
         <th scope="col" class="num">Abrechnungen</th>
         <th scope="col" class="th-actions">Aktion</th>
       </tr>

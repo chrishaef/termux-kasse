@@ -719,7 +719,7 @@ def admin_users_over_limit(request: Request) -> Response:
         request,
         "admin/users_over_limit.html",
         {
-            "title": "Nutzer über Warnschwelle 3",
+            "title": "Nutzer über Warnstufe 3",
             "threshold_3_cents": t3,
             "rows": rows,
         },

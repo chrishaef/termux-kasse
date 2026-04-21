@@ -256,6 +256,10 @@ body {
   padding-bottom: 2.5rem;
 }
 
+.app-admin--wide .site-main {
+  max-width: 1380px;
+}
+
 .site-footer-note {
   position: fixed;
   left: 0;
@@ -923,12 +927,12 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .admin-debt-global-alert a {
   font-weight: 800;
-  color: #6b1a0a;
+  color: #0b57d0;
   text-decoration: underline;
 }
 
 .admin-debt-global-alert a:hover {
-  color: #220805;
+  color: #0842a0;
 }
 
 .admin-dash-header {
