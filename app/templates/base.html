@@ -131,8 +131,8 @@
 
           const renderWarning = function (secondsLeft) {
             warningEl.hidden = false;
-            warningEl.classList.toggle("admin-idle-warning--critical", secondsLeft <= 3);
-            warningEl.textContent = "Auto-Logout in " + secondsLeft + "s ohne Aktivitaet.";
+            warningEl.classList.toggle("admin-idle-warning--critical", secondsLeft <= 10);
+            warningEl.textContent = "Auto-Logout in " + secondsLeft + "s";
           };
 
           const triggerLogout = function () {

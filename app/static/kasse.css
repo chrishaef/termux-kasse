@@ -209,7 +209,7 @@ body {
 
 .admin-idle-warning {
   position: fixed;
-  top: 4.2rem;
+  top: 6.2rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 120;
