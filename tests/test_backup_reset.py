@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import io
+import json
 from pathlib import Path
+import zipfile
 
 from fastapi.testclient import TestClient
 
 from app import db
+from app.config import db_path
 from app.ledger_service import add_purchase, user_balance_cents
 from app.main import app
 
@@ -70,3 +74,106 @@ def test_backup_reset_clears_ledger_keeps_stammdaten(tmp_path, monkeypatch) -> N
             assert int(conn.execute("SELECT COUNT(*) FROM ledger_entries").fetchone()[0]) == 0
             assert int(conn.execute("SELECT COUNT(*) FROM settlements").fetchone()[0]) == 0
             assert user_balance_cents(conn, uid) == 0
+
+
+def test_system_backup_export_contains_db_and_year_end_files(tmp_path, monkeypatch) -> None:
+    _master_env(tmp_path, monkeypatch)
+    export_dir = tmp_path / "data" / "jahresabschluss"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    (export_dir / "Jahresabschluss_20260101.pdf").write_bytes(b"pdf-demo")
+    (export_dir / "Jahresabschluss_20260101.xlsx").write_bytes(b"xlsx-demo")
+    (export_dir / "Jahresabschluss_20260101.zip").write_bytes(b"zip-demo")
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.get("/admin/backup/export")
+        assert r.status_code == 200
+        assert "application/zip" in r.headers.get("content-type", "")
+        with zipfile.ZipFile(io.BytesIO(r.content), "r") as zf:
+            names = set(zf.namelist())
+            assert "manifest.json" in names
+            assert "kasse.db" in names
+            assert "jahresabschluss/Jahresabschluss_20260101.pdf" in names
+            assert "jahresabschluss/Jahresabschluss_20260101.xlsx" in names
+            assert "jahresabschluss/Jahresabschluss_20260101.zip" in names
+            manifest = json.loads(zf.read("manifest.json").decode("utf-8"))
+            assert manifest["format"] == "kasse-system-backup"
+            assert manifest["version"] == 1
+            assert manifest["files"]["db"]["path"] == "kasse.db"
+
+
+def test_system_backup_import_rejects_invalid_manifest(tmp_path, monkeypatch) -> None:
+    _master_env(tmp_path, monkeypatch)
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        backup_buf = io.BytesIO()
+        with zipfile.ZipFile(backup_buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("manifest.json", '{"format":"wrong"}')
+            zf.writestr("kasse.db", db_path().read_bytes())
+        files = {"backup_file": ("kasse-system-backup.zip", backup_buf.getvalue(), "application/zip")}
+        r = client.post("/admin/backup/import", files=files, follow_redirects=False)
+        assert r.status_code == 303
+        assert r.headers["location"].endswith("/admin/backup?err=invalid")
+
+
+def test_system_backup_preview_returns_manifest_details(tmp_path, monkeypatch) -> None:
+    _master_env(tmp_path, monkeypatch)
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        backup_buf = io.BytesIO()
+        with zipfile.ZipFile(backup_buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr(
+                "manifest.json",
+                json.dumps(
+                    {
+                        "format": "kasse-system-backup",
+                        "version": 1,
+                        "created_at": "2026-04-21T12:00:00",
+                        "files": {"db": {"path": "kasse.db", "bytes": 1}, "year_end_exports": []},
+                    }
+                ),
+            )
+            zf.writestr("kasse.db", db_path().read_bytes())
+            zf.writestr("jahresabschluss/a.pdf", b"a")
+        files = {"backup_file": ("kasse-system-backup.zip", backup_buf.getvalue(), "application/zip")}
+        r = client.post("/admin/backup/preview", files=files)
+        assert r.status_code == 200
+        out = r.json()
+        assert out["ok"] is True
+        assert out["preview"]["kind"] == "system_zip"
+        assert out["preview"]["has_manifest"] is True
+        assert out["preview"]["manifest_created_at"] == "2026-04-21T12:00:00"
+        assert "jahresabschluss/a.pdf" in out["preview"]["year_end_files"]
+
+
+def test_system_backup_import_replaces_db_and_year_end_files(tmp_path, monkeypatch) -> None:
+    _master_env(tmp_path, monkeypatch)
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "ALT"})
+        old_export_dir = tmp_path / "data" / "jahresabschluss"
+        old_export_dir.mkdir(parents=True, exist_ok=True)
+        (old_export_dir / "old.pdf").write_bytes(b"old")
+
+        source_db = tmp_path / "source.db"
+        with db.connect() as conn:
+            conn.execute("INSERT INTO user_groups (name, sort_order) VALUES (?, ?)", ("NEU", 10))
+            conn.commit()
+        source_db.write_bytes(db_path().read_bytes())
+
+        backup_buf = io.BytesIO()
+        with zipfile.ZipFile(backup_buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("kasse.db", source_db.read_bytes())
+            zf.writestr("jahresabschluss/new.pdf", b"new-pdf")
+            zf.writestr("jahresabschluss/new.xlsx", b"new-xlsx")
+            zf.writestr("jahresabschluss/new.zip", b"new-zip")
+
+        files = {"backup_file": ("kasse-system-backup.zip", backup_buf.getvalue(), "application/zip")}
+        r = client.post("/admin/backup/import", files=files, follow_redirects=False)
+        assert r.status_code == 303
+        assert r.headers["location"].endswith("/admin/backup?saved=1")
+
+        with db.get_connection() as conn:
+            names = [str(row[0]) for row in conn.execute("SELECT name FROM user_groups").fetchall()]
+            assert "NEU" in names
+        files_after = sorted(p.name for p in old_export_dir.glob("*") if p.is_file())
+        assert files_after == ["new.pdf", "new.xlsx", "new.zip"]

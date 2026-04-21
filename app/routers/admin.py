@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import io
+import json
 import re
 import sqlite3
+import time
 import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -18,7 +20,7 @@ from app import debt_thresholds
 from app import kiosk_notice
 from app import ledger_service
 from app import sort_order_util
-from app.config import db_path, read_master_password, year_end_exports_dir
+from app.config import data_dir, db_path, read_master_password, year_end_exports_dir
 from app.db import init_db
 from app.export_service import (
     build_pdf_bytes,
@@ -223,6 +225,100 @@ def _is_valid_sqlite_file(path: Path) -> bool:
         return False
 
 
+def _safe_unlink(path: Path) -> None:
+    try:
+        path.unlink(missing_ok=True)
+    except PermissionError:
+        pass
+
+
+def _replace_with_retry(src: Path, dst: Path, retries: int = 8, delay_s: float = 0.05) -> None:
+    last_err: Exception | None = None
+    for _ in range(retries):
+        try:
+            src.replace(dst)
+            return
+        except PermissionError as ex:
+            last_err = ex
+            time.sleep(delay_s)
+    if last_err:
+        raise last_err
+
+
+def _sqlite_copy_into(src_path: Path, dst_path: Path) -> None:
+    with sqlite3.connect(str(src_path)) as src_conn:
+        with sqlite3.connect(str(dst_path)) as dst_conn:
+            src_conn.backup(dst_conn)
+
+
+def _build_backup_manifest(db_file: Path, exports_dir: Path, created_at: str) -> dict:
+    export_files = [p.name for p in sorted(exports_dir.glob("*")) if p.is_file()]
+    return {
+        "format": "kasse-system-backup",
+        "version": 1,
+        "created_at": created_at,
+        "files": {
+            "db": {"path": "kasse.db", "bytes": int(db_file.stat().st_size)},
+            "year_end_exports": [
+                {"path": f"jahresabschluss/{name}", "bytes": int((exports_dir / name).stat().st_size)}
+                for name in export_files
+            ],
+        },
+    }
+
+
+def _validate_backup_manifest(raw: bytes, zip_names: set[str]) -> bool:
+    try:
+        data = json.loads(raw.decode("utf-8"))
+    except Exception:
+        return False
+    if not isinstance(data, dict):
+        return False
+    if data.get("format") != "kasse-system-backup":
+        return False
+    files = data.get("files")
+    if not isinstance(files, dict):
+        return False
+    db_info = files.get("db")
+    if not isinstance(db_info, dict):
+        return False
+    if db_info.get("path") != "kasse.db":
+        return False
+    return "kasse.db" in zip_names
+
+
+def _parse_preview_payload(data: bytes) -> dict:
+    if not data:
+        raise ValueError("empty")
+    if data.startswith(b"SQLite format 3\x00"):
+        return {"kind": "legacy_db", "message": "Legacy-Backup (.db) erkannt."}
+    try:
+        with zipfile.ZipFile(io.BytesIO(data), "r") as zf:
+            names = set(zf.namelist())
+            if "kasse.db" not in names:
+                raise ValueError("invalid")
+            manifest = None
+            if "manifest.json" in names:
+                raw = zf.read("manifest.json")
+                if not _validate_backup_manifest(raw, names):
+                    raise ValueError("invalid_manifest")
+                manifest = json.loads(raw.decode("utf-8"))
+            year_end_files = sorted(
+                name
+                for name in names
+                if name.startswith("jahresabschluss/") and not name.endswith("/")
+            )
+            return {
+                "kind": "system_zip",
+                "has_manifest": bool(manifest),
+                "manifest_created_at": (manifest or {}).get("created_at"),
+                "db_path": ((manifest or {}).get("files") or {}).get("db", {}).get("path", "kasse.db"),
+                "year_end_files": year_end_files,
+            }
+    except zipfile.BadZipFile as ex:
+        raise ValueError("invalid_zip") from ex
+
+
 @router.get("/backup", response_class=HTMLResponse)
 def admin_backup_get(request: Request) -> Response:
     if (r := _redirect_login(request)):
@@ -253,8 +349,34 @@ def admin_backup_export(request: Request) -> Response:
     if not db_file.exists():
         raise HTTPException(status_code=404, detail="Datenbank nicht gefunden")
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"kasse-backup-{stamp}.db"
-    return FileResponse(path=db_file, media_type="application/octet-stream", filename=filename)
+    filename = f"kasse-system-backup-{stamp}.zip"
+    exports_dir = year_end_exports_dir()
+    created_iso = datetime.now().isoformat(timespec="seconds")
+    manifest = _build_backup_manifest(db_file, exports_dir, created_iso)
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("manifest.json", json.dumps(manifest, ensure_ascii=True, indent=2))
+        zf.writestr("kasse.db", db_file.read_bytes())
+        for p in sorted(exports_dir.glob("*")):
+            if p.is_file():
+                zf.write(p, arcname=f"jahresabschluss/{p.name}")
+    return Response(
+        content=buf.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": _attachment_disposition(f"kasse-system-backup-{stamp}", ".zip")},
+    )
+
+
+@router.post("/backup/preview")
+def admin_backup_preview(request: Request, backup_file: UploadFile = File(...)) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    try:
+        payload = _parse_preview_payload(backup_file.file.read())
+    except ValueError:
+        return Response(content='{"ok":false,"error":"invalid"}', media_type="application/json", status_code=400)
+    body = json.dumps({"ok": True, "preview": payload}, ensure_ascii=True)
+    return Response(content=body, media_type="application/json")
 
 
 @router.post("/backup/import")
@@ -262,34 +384,101 @@ def admin_backup_import(request: Request, backup_file: UploadFile = File(...)) -
     if (r := _redirect_login(request)):
         return r
     data = backup_file.file.read()
-    if not data or not data.startswith(b"SQLite format 3\x00"):
+    if not data:
         return RedirectResponse("/admin/backup?err=invalid", status_code=303)
 
     db_file = db_path()
+    exports_dir = year_end_exports_dir()
+    data_root = data_dir()
+    data_root.mkdir(parents=True, exist_ok=True)
     db_file.parent.mkdir(parents=True, exist_ok=True)
     tmp_file = db_file.with_name(f"{db_file.name}.importing")
     old_file = db_file.with_name(f"{db_file.name}.before-import")
-    try:
-        tmp_file.write_bytes(data)
-        if not _is_valid_sqlite_file(tmp_file):
-            tmp_file.unlink(missing_ok=True)
+    backup_exports_dir = data_root / "jahresabschluss.before-import"
+
+    db_bytes = data
+    imported_exports: list[tuple[str, bytes]] = []
+    if data.startswith(b"SQLite format 3\x00"):
+        # Legacy fallback: allow importing plain .db backups.
+        db_bytes = data
+    else:
+        try:
+            with zipfile.ZipFile(io.BytesIO(data), "r") as zf:
+                names = set(zf.namelist())
+                if "kasse.db" not in names:
+                    return RedirectResponse("/admin/backup?err=invalid", status_code=303)
+                if "manifest.json" in names:
+                    if not _validate_backup_manifest(zf.read("manifest.json"), names):
+                        return RedirectResponse("/admin/backup?err=invalid", status_code=303)
+                db_bytes = zf.read("kasse.db")
+                for name in sorted(names):
+                    if not name.startswith("jahresabschluss/") or name.endswith("/"):
+                        continue
+                    rel = name[len("jahresabschluss/") :].strip()
+                    rel = Path(rel).name
+                    if not rel:
+                        continue
+                    imported_exports.append((rel, zf.read(name)))
+        except zipfile.BadZipFile:
             return RedirectResponse("/admin/backup?err=invalid", status_code=303)
+
+    try:
+        tmp_file.write_bytes(db_bytes)
+        if not _is_valid_sqlite_file(tmp_file):
+            _safe_unlink(tmp_file)
+            return RedirectResponse("/admin/backup?err=invalid", status_code=303)
+        if backup_exports_dir.exists():
+            for p in backup_exports_dir.glob("*"):
+                if p.is_file():
+                    _safe_unlink(p)
+            backup_exports_dir.rmdir()
+        backup_exports_dir.mkdir(parents=True, exist_ok=True)
+        if exports_dir.exists():
+            for p in exports_dir.glob("*"):
+                if p.is_file():
+                    (backup_exports_dir / p.name).write_bytes(p.read_bytes())
+        used_inplace_copy = False
         if old_file.exists():
-            old_file.unlink()
+            _safe_unlink(old_file)
         if db_file.exists():
-            db_file.replace(old_file)
-        tmp_file.replace(db_file)
+            try:
+                _replace_with_retry(db_file, old_file)
+                _replace_with_retry(tmp_file, db_file)
+            except PermissionError:
+                used_inplace_copy = True
+                if old_file.exists():
+                    _safe_unlink(old_file)
+                _sqlite_copy_into(tmp_file, db_file)
+        else:
+            _replace_with_retry(tmp_file, db_file)
+        for p in exports_dir.glob("*"):
+            if p.is_file():
+                p.unlink(missing_ok=True)
+        for fname, fbytes in imported_exports:
+            (exports_dir / fname).write_bytes(fbytes)
         try:
             init_db()
         except Exception:
             if db_file.exists():
-                db_file.unlink()
-            if old_file.exists():
-                old_file.replace(db_file)
+                _safe_unlink(db_file)
+            if old_file.exists() and not used_inplace_copy:
+                _replace_with_retry(old_file, db_file)
+            for p in exports_dir.glob("*"):
+                if p.is_file():
+                    _safe_unlink(p)
+            if backup_exports_dir.exists():
+                for p in backup_exports_dir.glob("*"):
+                    if p.is_file():
+                        (exports_dir / p.name).write_bytes(p.read_bytes())
             raise
     finally:
         if tmp_file.exists():
-            tmp_file.unlink(missing_ok=True)
+            _safe_unlink(tmp_file)
+        if backup_exports_dir.exists():
+            for p in backup_exports_dir.glob("*"):
+                if p.is_file():
+                    _safe_unlink(p)
+            backup_exports_dir.rmdir()
     return RedirectResponse("/admin/backup?saved=1", status_code=303)
 
 

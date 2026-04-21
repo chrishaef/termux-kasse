@@ -3,10 +3,10 @@
 <a href="/admin" class="admin-back">← Admin-Übersicht</a>
 
 {% if saved %}
-<article class="contrast"><strong>Import erfolgreich.</strong> Die Datenbank wurde ersetzt.</article>
+<article class="contrast"><strong>Import erfolgreich.</strong> Systemdaten wurden wiederhergestellt.</article>
 {% endif %}
 {% if error %}
-<article class="contrast" style="border-color:#b33"><strong>Import fehlgeschlagen.</strong> Bitte eine gültige SQLite-Backup-Datei auswählen.</article>
+<article class="contrast" style="border-color:#b33"><strong>Import fehlgeschlagen.</strong> Bitte ein gültiges System-Backup (.zip) oder Legacy-Backup (.db) auswählen.</article>
 {% endif %}
 {% if reset_ok %}
 <article class="contrast"><strong>Daten-Reset ausgeführt.</strong> Alle Buchungen und Abrechnungen wurden gelöscht. Nutzer, Gruppen und Artikel sind unverändert.</article>
@@ -22,7 +22,8 @@
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.1rem">Backup exportieren</h2>
   {% if db_exists %}
-  <p><a href="/admin/backup/export" role="button">Datenbank herunterladen (.db)</a></p>
+  <p><a href="/admin/backup/export" role="button">System-Backup herunterladen (.zip)</a></p>
+  <p class="secondary" style="margin-top:0.3rem">Enthält Datenbank und gespeicherte Jahresabschluss-Dateien.</p>
   {% else %}
   <p class="secondary">Aktuell keine Datenbank vorhanden.</p>
   {% endif %}
@@ -31,10 +32,11 @@
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.1rem">Backup importieren</h2>
   <form method="post" action="/admin/backup/import" enctype="multipart/form-data">
-    <label>SQLite-Datei (.db)
-      <input type="file" name="backup_file" accept=".db,application/octet-stream,application/x-sqlite3,application/vnd.sqlite3" required />
+    <label>System-Backup (.zip) oder Legacy-SQLite (.db)
+      <input type="file" id="backup_file" name="backup_file" accept=".zip,.db,application/zip,application/octet-stream,application/x-sqlite3,application/vnd.sqlite3" required />
     </label>
-    <p class="secondary" style="margin-top:0.3rem">Achtung: Beim Import wird die aktuelle Datenbank ersetzt.</p>
+    <p class="secondary" style="margin-top:0.3rem">Achtung: Beim Import werden Datenbank und Jahresabschluss-Dateien ersetzt.</p>
+    <article id="backup_manifest_preview" class="contrast" style="display:none; margin-top:0.5rem;"></article>
     <button type="submit">Backup importieren</button>
   </form>
 </article>
@@ -42,8 +44,8 @@
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.1rem">Daten-Reset (Buchhaltung)</h2>
   <p class="secondary">
-    Löscht <strong>alle</strong> Einträge in <code>ledger_entries</code> und <code>settlements</code>.
-    <strong>Nutzer, Gruppen und Artikel</strong> bleiben erhalten. Kontostände und Statistik sind danach leer. Nicht rückgängig machbar.
+    Löscht <strong>alle Daten und Zahlen</strong> außer <strong>Nutzer, Gruppen und Artikel</strong> bleiben erhalten.
+    Kontostände und Statistik sind danach leer. Nicht rückgängig machbar.
   </p>
   {% if not master_configured %}
   <p class="secondary">Master-Passwort nicht gesetzt — Reset deaktiviert.</p>
@@ -62,4 +64,85 @@
   </form>
   {% endif %}
 </article>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  (function () {
+    const input = document.getElementById("backup_file");
+    const preview = document.getElementById("backup_manifest_preview");
+    if (!input || !preview) return;
+
+    const show = function (html, bad) {
+      preview.style.display = "block";
+      preview.style.borderColor = bad ? "#b33" : "";
+      preview.innerHTML = html;
+    };
+    const hide = function () {
+      preview.style.display = "none";
+      preview.textContent = "";
+      preview.style.borderColor = "";
+    };
+    const esc = function (s) {
+      return String(s ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    };
+
+    input.addEventListener("change", async function () {
+      const file = input.files && input.files[0];
+      if (!file) {
+        hide();
+        return;
+      }
+      try {
+        const fd = new FormData();
+        fd.append("backup_file", file);
+        const res = await fetch("/admin/backup/preview", { method: "POST", body: fd });
+        if (!res.ok) {
+          show("<strong>Datei ungültig.</strong><br/>Vorschau konnte nicht erstellt werden.", true);
+          return;
+        }
+        const out = await res.json();
+        const p = out && out.preview ? out.preview : null;
+        if (!p || !p.kind) {
+          show("<strong>Vorschau nicht verfügbar.</strong>", true);
+          return;
+        }
+        if (p.kind === "legacy_db") {
+          show("<strong>Legacy-Backup erkannt (.db)</strong><br/>Keine Manifest-Vorschau verfügbar.", false);
+          return;
+        }
+        const created = esc(p.manifest_created_at || "unbekannt");
+        const dbPath = esc(p.db_path || "kasse.db");
+        const yearEnd = Array.isArray(p.year_end_files) ? p.year_end_files : [];
+        const items = yearEnd
+          ? yearEnd
+              .map(function (e) {
+                return "<li><code>" + esc(e || "?") + "</code></li>";
+              })
+              .join("")
+          : "";
+        const manifestLabel = p.has_manifest ? "ja" : "nein (älteres ZIP)";
+        show(
+          "<strong>Backup-Vorschau</strong><br/>Erstellt: <code>" +
+            created +
+            "</code><br/>Datenbank: <code>" +
+            dbPath +
+            "</code><br/>Manifest: <strong>" +
+            esc(manifestLabel) +
+            "</strong><br/>Jahresabschluss-Dateien: <strong>" +
+            yearEnd.length +
+            "</strong>" +
+            (items ? "<ul style='margin:0.4rem 0 0 1rem'>" + items + "</ul>" : ""),
+          false
+        );
+      } catch (_err) {
+        show("<strong>Vorschau fehlgeschlagen.</strong><br/>Bitte Backup-Datei prüfen.", true);
+      }
+    });
+  })();
+</script>
 {% endblock %}
