@@ -34,7 +34,6 @@
 {% if undo_active %}
 <div class="k-undo-banner" id="k-undo-banner" role="status" data-remaining-ms="{{ undo_active['remaining_ms'] }}" data-entry-id="{{ undo_active['entry_id'] }}">
   <div class="k-undo-banner__row">
-    <p class="k-undo-banner__text"><strong>Buchung gespeichert.</strong> Undo in <span class="k-undo-banner__count" id="k-undo-count">3</span>s</p>
     <form method="post" action="/u/{{ user['id'] }}/undo" class="k-undo-banner__form">
       <input type="hidden" name="entry_id" value="{{ undo_active['entry_id'] }}" />
       <button type="submit" class="k-undo-banner__btn">Rückgänging</button>
@@ -166,21 +165,11 @@
 <script>
   (function () {
     const banner = document.getElementById("k-undo-banner");
-    const count = document.getElementById("k-undo-count");
-    if (!banner || !count) return;
+    if (!banner) return;
     const remaining = parseInt(banner.dataset.remainingMs || "0", 10) || 0;
-    const start = Date.now();
-    const tick = function () {
-      const left = Math.max(0, remaining - (Date.now() - start));
-      const s = Math.ceil(left / 1000);
-      count.textContent = String(Math.max(0, s));
-      if (left <= 0) {
-        banner.remove();
-        return;
-      }
-      window.setTimeout(tick, 100);
-    };
-    tick();
+    window.setTimeout(function () {
+      banner.remove();
+    }, Math.max(0, remaining));
   })();
 </script>
 {% endif %}
