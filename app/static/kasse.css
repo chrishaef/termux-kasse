@@ -1027,6 +1027,7 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   text-decoration: none;
   color: var(--kas-text);
   transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+  text-align: center;
 }
 
 .admin-card:hover {
@@ -1042,13 +1043,34 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   color: #7a5f0c;
   font-variant-numeric: tabular-nums;
   margin-bottom: 0.25rem;
-  white-space: nowrap;
 }
 
 .admin-card span {
   font-size: 0.95rem;
   color: var(--kas-label-muted-surface);
   font-weight: 600;
+}
+
+.admin-card--metric {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  align-items: start;
+}
+
+.admin-card--metric .admin-card__title {
+  display: block;
+  margin: 0 0 0.55rem;
+  font-size: 1.06rem;
+  font-weight: 800;
+  color: var(--kas-label-on-surface);
+}
+
+.admin-card--metric strong {
+  margin: 0;
+  align-self: center;
+  justify-self: center;
+  font-size: clamp(1.9rem, 4.3vw, 2.65rem);
+  line-height: 1.05;
 }
 
 .table-wrap {
