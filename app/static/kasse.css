@@ -1052,25 +1052,27 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .admin-card--metric {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
 }
 
 .admin-card--metric .admin-card__title {
   display: block;
-  margin: 0 0 0.55rem;
+  margin: 0;
   font-size: 1.06rem;
   font-weight: 800;
   color: var(--kas-label-on-surface);
+  text-align: center;
 }
 
 .admin-card--metric strong {
   margin: 0;
-  align-self: center;
-  justify-self: center;
-  font-size: clamp(1.9rem, 4.3vw, 2.65rem);
+  font-size: 1.06rem;
   line-height: 1.05;
+  text-align: center;
 }
 
 .table-wrap {
