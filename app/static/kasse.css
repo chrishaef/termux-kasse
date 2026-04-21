@@ -1017,11 +1017,10 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .admin-card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 2.3rem 2.2rem;
   align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
+  justify-items: center;
   height: 100%;
   padding: 1.15rem 1.25rem;
   background: var(--kas-surface);
@@ -1055,6 +1054,13 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   color: var(--kas-label-muted-surface);
   font-weight: 600;
   text-align: center;
+}
+
+.admin-card__value {
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+  color: #7a5f0c !important;
+  line-height: 1.1;
 }
 
 .table-wrap {
