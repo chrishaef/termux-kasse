@@ -124,7 +124,7 @@ body {
 .site-brand {
   justify-self: start;
   font-weight: 800;
-  font-size: 1.12rem;
+  font-size: 1.2rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--kas-page-fg);
@@ -173,8 +173,8 @@ body {
 
 .secret-admin-logo {
   display: block;
-  width: clamp(3rem, 5.1vw, 4.2rem);
-  height: clamp(3rem, 5.1vw, 4.2rem);
+  width: clamp(3.3rem, 5.6vw, 4.7rem);
+  height: clamp(3.3rem, 5.6vw, 4.7rem);
   object-fit: contain;
   cursor: pointer;
   user-select: none;
@@ -189,6 +189,23 @@ body {
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
+}
+
+.site-brand-subtitle__line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  line-height: 1.15;
+}
+
+.site-brand-subtitle__prefix {
+  width: 5.5em;
+  flex: 0 0 5.5em;
+  text-align: left;
+}
+
+.site-brand-subtitle__name {
+  white-space: nowrap;
 }
 
 .secret-admin-logo:hover {
