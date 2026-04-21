@@ -369,6 +369,7 @@ def admin_backup_get(request: Request) -> Response:
             "title": "Sicherung",
             "db_exists": db_file.exists(),
             "saved": request.query_params.get("saved") == "1",
+            "created": request.query_params.get("created") == "1",
             "error": request.query_params.get("err") == "invalid",
             "reset_ok": request.query_params.get("reset") == "1",
             "master_configured": master_ok,
@@ -404,11 +405,7 @@ def admin_backup_export(request: Request) -> Response:
         _backup_archive_prune()
     except Exception:
         pass
-    return Response(
-        content=buf.getvalue(),
-        media_type="application/zip",
-        headers={"Content-Disposition": _attachment_disposition(f"kasse-system-backup-{stamp}", ".zip")},
-    )
+    return RedirectResponse("/admin/backup?created=1", status_code=303)
 
 
 @router.get("/backup/archive/{filename}")

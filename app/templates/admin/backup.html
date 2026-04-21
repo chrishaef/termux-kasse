@@ -5,6 +5,9 @@
 {% if saved %}
 <article class="contrast"><strong>Import erfolgreich.</strong> Systemdaten wurden wiederhergestellt.</article>
 {% endif %}
+{% if created %}
+<article class="contrast"><strong>Backup erstellt.</strong> Das Backup wurde im Archiv gespeichert.</article>
+{% endif %}
 {% if error %}
 <article class="contrast" style="border-color:#b33"><strong>Import fehlgeschlagen.</strong> Bitte ein gültiges System-Backup (.zip) oder Legacy-Backup (.db) auswählen.</article>
 {% endif %}
@@ -22,49 +25,51 @@
 <article class="contrast">Master-Passwort nicht konfiguriert.</article>
 {% endif %}
 
-<article class="k-panel">
-  <h2 style="margin-top:0;font-size:1.1rem">Backup exportieren</h2>
-  {% if db_exists %}
-  <p><a href="/admin/backup/export" role="button">System-Backup herunterladen (.zip)</a></p>
-  <p class="secondary" style="margin-top:0.3rem">Enthält Datenbank und gespeicherte Jahresabschluss-Dateien.</p>
-  {% else %}
-  <p class="secondary">Aktuell keine Datenbank vorhanden.</p>
-  {% endif %}
-</article>
+<div class="backup-grid">
+  <article class="k-panel">
+    <h2 style="margin-top:0;font-size:1.1rem">Backup erstellen</h2>
+    {% if db_exists %}
+    <p><a href="/admin/backup/export" role="button">System-Backup erstellen (.zip)</a></p>
+    <p class="secondary" style="margin-top:0.3rem">Erstellt ein Backup und speichert es im Archiv.</p>
+    {% else %}
+    <p class="secondary">Aktuell keine Datenbank vorhanden.</p>
+    {% endif %}
+  </article>
 
-<article class="k-panel">
-  <h2 style="margin-top:0;font-size:1.1rem">Backup importieren</h2>
-  <form method="post" action="/admin/backup/import" enctype="multipart/form-data">
-    <label>System-Backup (.zip) oder Legacy-SQLite (.db)
-      <input type="file" id="backup_file" name="backup_file" accept=".zip,.db,application/zip,application/octet-stream,application/x-sqlite3,application/vnd.sqlite3" required />
-    </label>
-    <p class="secondary" style="margin-top:0.3rem">Achtung: Beim Import werden Datenbank und Jahresabschluss-Dateien ersetzt.</p>
-    <article id="backup_manifest_preview" class="contrast" style="display:none; margin-top:0.5rem;"></article>
-    <button type="submit">Backup importieren</button>
-  </form>
-</article>
+  <article class="k-panel">
+    <h2 style="margin-top:0;font-size:1.1rem">Backup importieren</h2>
+    <form method="post" action="/admin/backup/import" enctype="multipart/form-data">
+      <label>System-Backup (.zip) oder Legacy-SQLite (.db)
+        <input type="file" id="backup_file" name="backup_file" accept=".zip,.db,application/zip,application/octet-stream,application/x-sqlite3,application/vnd.sqlite3" required />
+      </label>
+      <p class="secondary" style="margin-top:0.3rem">Achtung: Beim Import werden Datenbank und Jahresabschluss-Dateien ersetzt.</p>
+      <article id="backup_manifest_preview" class="contrast" style="display:none; margin-top:0.5rem;"></article>
+      <button type="submit">Backup importieren</button>
+    </form>
+  </article>
+</div>
 
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.1rem">Backup-Archiv</h2>
   {% if archive and archive|length > 0 %}
-  <div class="table-wrap" style="margin-top:0.75rem">
-    <table>
+  <div class="table-wrap backup-archive-wrap" style="margin-top:0.75rem">
+    <table class="backup-archive-table">
       <thead>
         <tr>
           <th>Datei</th>
           <th class="num">Größe</th>
-          <th class="num">Aktion</th>
+          <th>Aktion</th>
         </tr>
       </thead>
       <tbody>
         {% for a in archive %}
         <tr>
-          <td><code>{{ a['name'] }}</code></td>
+          <td class="backup-archive__filename"><code>{{ a['name'] }}</code></td>
           <td class="num">{{ (a['bytes'] // 1024) }} KB</td>
-          <td class="num">
-            <a href="/admin/backup/archive/{{ a['name'] }}" role="button">Download</a>
-            <form method="post" action="/admin/backup/archive/{{ a['name'] }}/delete" class="inline" style="display:inline;">
-              <button type="submit" class="secondary">Löschen</button>
+          <td class="backup-archive__actions">
+            <a href="/admin/backup/archive/{{ a['name'] }}" role="button" class="admin-btn-sm secondary">Download</a>
+            <form method="post" action="/admin/backup/archive/{{ a['name'] }}/delete" class="inline backup-archive__delete-form" onsubmit="return window.confirm('Backup wirklich löschen?');">
+              <button type="submit" class="admin-btn-sm admin-btn-danger">Löschen</button>
             </form>
           </td>
         </tr>

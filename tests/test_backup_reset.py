@@ -85,10 +85,15 @@ def test_system_backup_export_contains_db_and_year_end_files(tmp_path, monkeypat
     (export_dir / "Jahresabschluss_20260101.zip").write_bytes(b"zip-demo")
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
-        r = client.get("/admin/backup/export")
-        assert r.status_code == 200
-        assert "application/zip" in r.headers.get("content-type", "")
-        with zipfile.ZipFile(io.BytesIO(r.content), "r") as zf:
+        r = client.get("/admin/backup/export", follow_redirects=False)
+        assert r.status_code == 303
+        assert r.headers["location"].endswith("/admin/backup?created=1")
+
+        archive_dir = tmp_path / "data" / "system_backups"
+        stored_files = sorted(archive_dir.glob("kasse-system-backup-*.zip"))
+        assert len(stored_files) >= 1
+
+        with zipfile.ZipFile(io.BytesIO(stored_files[-1].read_bytes()), "r") as zf:
             names = set(zf.namelist())
             assert "manifest.json" in names
             assert "kasse.db" in names
@@ -99,12 +104,6 @@ def test_system_backup_export_contains_db_and_year_end_files(tmp_path, monkeypat
             assert manifest["format"] == "kasse-system-backup"
             assert manifest["version"] == 1
             assert manifest["files"]["db"]["path"] == "kasse.db"
-        # Export should also be stored in archive on disk.
-        archive_dir = tmp_path / "data" / "system_backups"
-        assert archive_dir.exists()
-        stored = sorted(p.name for p in archive_dir.glob("*.zip") if p.is_file())
-        assert len(stored) >= 1
-        assert any("kasse-system-backup-" in n for n in stored)
 
 
 def test_system_backup_import_rejects_invalid_manifest(tmp_path, monkeypatch) -> None:

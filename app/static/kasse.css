@@ -1328,6 +1328,18 @@ body.app-admin .k-panel button[type="submit"]:hover {
   color: #0a0a06;
 }
 
+.backup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 860px) {
+  .backup-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 body.app-admin .k-panel button.secondary,
 body.app-admin .table-wrap button.secondary {
   border-radius: var(--kas-radius-button);
@@ -1508,6 +1520,50 @@ body.app-admin .table-wrap a[role="button"]:hover {
   color: #050805;
   border-color: var(--kas-accent);
   background: #fff8e6;
+}
+
+body.app-admin .backup-archive-wrap {
+  overflow-x: visible;
+}
+
+body.app-admin .backup-archive-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+body.app-admin .backup-archive-table th:nth-child(1),
+body.app-admin .backup-archive-table td:nth-child(1) {
+  width: 58%;
+}
+
+body.app-admin .backup-archive-table th:nth-child(2),
+body.app-admin .backup-archive-table td:nth-child(2) {
+  width: 16%;
+}
+
+body.app-admin .backup-archive-table th:nth-child(3),
+body.app-admin .backup-archive-table td:nth-child(3) {
+  width: 26%;
+}
+
+body.app-admin .backup-archive__filename code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+body.app-admin .backup-archive__actions {
+  white-space: nowrap;
+}
+
+body.app-admin .backup-archive__actions .admin-btn-sm {
+  margin: 0;
+  padding: 0.2rem 0.45rem;
+}
+
+body.app-admin .backup-archive__delete-form {
+  display: inline-flex;
+  margin: 0 0 0 0.35rem;
 }
 
 /* Admin: eventuell vom Theme gesetzte Dreieck-/Chevron-Icons an Buttons ausblenden */
