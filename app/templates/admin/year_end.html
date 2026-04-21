@@ -6,7 +6,7 @@
 </header>
 <a href="/admin/settlements" class="admin-back">← Zurück zu Abrechnungen</a>
 
-<article class="k-panel" style="max-width: 52rem;">
+<article class="k-panel" style="max-width: 52rem; margin-left: auto; margin-right: auto;">
   <h3 style="margin-top:0;">Was passiert beim Jahresabschluss?</h3>
   <ul style="margin-bottom:0.75rem;">
     <li>Archiv wird erstellt: <strong>PDF + XLSX + ZIP</strong>.</li>
@@ -36,7 +36,7 @@
 {% endif %}
 
 {% if master_configured %}
-<form method="post" action="/admin/settlements/year-end" class="k-panel" style="max-width: 40rem;">
+<form method="post" action="/admin/settlements/year-end" class="k-panel" style="max-width: 52rem; margin-left: auto; margin-right: auto;">
   <label for="master_password">Master-Passwort</label>
   <input type="password" id="master_password" name="master_password" required autocomplete="off" />
 
