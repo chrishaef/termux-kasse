@@ -1208,6 +1208,28 @@ body.app-admin .k-panel .admin-received-confirm__text {
   line-height: 1.4;
 }
 
+body.app-admin .k-panel form.debt-thresholds-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 0.9rem;
+}
+
+body.app-admin .k-panel form.debt-thresholds-grid label {
+  margin: 0;
+}
+
+body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-grid__full,
+body.app-admin .k-panel form.debt-thresholds-grid p,
+body.app-admin .k-panel form.debt-thresholds-grid button[type="submit"] {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+  body.app-admin .k-panel form.debt-thresholds-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 body.app-admin .k-panel select option {
   color: #141a16;
   background: #fff;

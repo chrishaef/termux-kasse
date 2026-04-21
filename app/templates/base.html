@@ -21,7 +21,10 @@
         />
         <div class="site-brand-text">
           <a href="/" class="site-brand">Shopkasse</a>
-          <div class="site-brand-subtitle" id="footer-flappy-egg"><strong>powered by OF Häfner</strong></div>
+          <div class="site-brand-subtitle" id="footer-flappy-egg">
+            <strong>powered by OF Hünger</strong><br />
+            <strong>coded by OF Häfner</strong>
+          </div>
         </div>
       </div>
       <div class="site-header__center">{% block site_header_center %}{% endblock %}</div>
@@ -186,50 +189,32 @@
         (function () {
           const el = document.getElementById("footer-flappy-egg");
           if (!el) return;
-          const pattern = ["long", "short", "short", "long"];
-          const LONG_MIN_MS = 600;
-          const SHORT_MAX_MS = 400;
-          const GAP_RESET_MS = 5000;
-          let step = 0;
+          const HOLD_MS = 5000;
           let downAt = 0;
-          let idleTimer = 0;
-          function resetSequence() {
-            step = 0;
+          let holdTimer = 0;
+
+          function clearHoldTimer() {
+            window.clearTimeout(holdTimer);
+            holdTimer = 0;
             downAt = 0;
-            window.clearTimeout(idleTimer);
           }
-          function armIdle() {
-            window.clearTimeout(idleTimer);
-            idleTimer = window.setTimeout(resetSequence, GAP_RESET_MS);
-          }
+
           el.addEventListener("pointerdown", function (ev) {
             if (ev.pointerType === "mouse" && ev.buttons !== 1) return;
             try {
               el.setPointerCapture(ev.pointerId);
             } catch (_e) {}
             downAt = Date.now();
-            armIdle();
-          });
-          el.addEventListener("pointerup", function () {
-            if (!downAt) return;
-            const held = Date.now() - downAt;
-            downAt = 0;
-            const want = pattern[step];
-            let ok = false;
-            if (want === "long") ok = held >= LONG_MIN_MS;
-            else ok = held < SHORT_MAX_MS;
-            if (!ok) {
-              resetSequence();
-              return;
-            }
-            step += 1;
-            armIdle();
-            if (step >= pattern.length) {
-              resetSequence();
+            holdTimer = window.setTimeout(function () {
               window.location.href = "/egg/flappy";
-            }
+            }, HOLD_MS);
           });
-          el.addEventListener("pointercancel", resetSequence);
+
+          el.addEventListener("pointerup", function () {
+            clearHoldTimer();
+          });
+          el.addEventListener("pointercancel", clearHoldTimer);
+          el.addEventListener("pointerleave", clearHoldTimer);
         })();
 
         const path = window.location.pathname;

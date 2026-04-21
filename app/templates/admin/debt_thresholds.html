@@ -9,30 +9,24 @@
 {% endif %}
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.05rem">Stufen</h2>
-  <ul style="margin:0 0 1rem 1.1rem;padding:0">
-    <li><strong>&lt; S1:</strong> keine Meldung</li>
-    <li><strong>S1-S2:</strong> Hinweis 1</li>
-    <li><strong>S2-S3:</strong> Hinweis 2</li>
-    <li><strong>&gt;= S3:</strong> Hinweis 3 + Admin-Alarm</li>
-  </ul>
   <p class="secondary" style="margin:0 0 0.75rem;font-size:0.9rem">
     Smart aktiv: Die Warnstufe wird aus <strong>Betrag</strong> und <strong>Alter offener Buchungen (Tage)</strong> bestimmt.
     Es gilt jeweils die höhere Stufe.
   </p>
-  <form method="post" action="/admin/debt-thresholds">
+  <form method="post" action="/admin/debt-thresholds" class="debt-thresholds-grid">
     <label>Warnstufe 1 (Euro) <input type="text" name="threshold_a_eur" value="{{ t1_eur }}" required inputmode="decimal" autocomplete="off" /></label>
-    <label>Warnstufe 2 (Euro) <input type="text" name="threshold_b_eur" value="{{ t2_eur }}" required inputmode="decimal" autocomplete="off" /></label>
-    <label>Warnstufe 3 (Euro) <input type="text" name="threshold_c_eur" value="{{ t3_eur }}" required inputmode="decimal" autocomplete="off" /></label>
     <label>Warnstufe 1 (Tage offen) <input type="number" min="1" step="1" name="age_threshold_a_days" value="{{ d1_days }}" required inputmode="numeric" /></label>
+    <label>Warnstufe 2 (Euro) <input type="text" name="threshold_b_eur" value="{{ t2_eur }}" required inputmode="decimal" autocomplete="off" /></label>
     <label>Warnstufe 2 (Tage offen) <input type="number" min="1" step="1" name="age_threshold_b_days" value="{{ d2_days }}" required inputmode="numeric" /></label>
+    <label>Warnstufe 3 (Euro) <input type="text" name="threshold_c_eur" value="{{ t3_eur }}" required inputmode="decimal" autocomplete="off" /></label>
     <label>Warnstufe 3 (Tage offen) <input type="number" min="1" step="1" name="age_threshold_c_days" value="{{ d3_days }}" required inputmode="numeric" /></label>
-    <label>Nachricht Stufe 1
+    <label class="debt-thresholds-grid__full">Nachricht Stufe 1
       <input type="text" name="message_1" value="{{ m1 }}" maxlength="220" />
     </label>
-    <label>Nachricht Stufe 2
+    <label class="debt-thresholds-grid__full">Nachricht Stufe 2
       <input type="text" name="message_2" value="{{ m2 }}" maxlength="220" />
     </label>
-    <label>Nachricht Stufe 3
+    <label class="debt-thresholds-grid__full">Nachricht Stufe 3
       <input type="text" name="message_3" value="{{ m3 }}" maxlength="220" />
     </label>
     <p class="secondary" style="margin:0.5rem 0 0.75rem;font-size:0.9rem">
