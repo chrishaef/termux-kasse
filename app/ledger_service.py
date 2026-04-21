@@ -129,6 +129,57 @@ def count_users_open_balance_gte(conn: sqlite3.Connection, min_cents: int) -> in
     return int(row["c"]) if row else 0
 
 
+def users_open_balance_gte_details(
+    conn: sqlite3.Connection,
+    min_cents: int,
+) -> list[dict[str, Any]]:
+    """Nutzer mit offenem Saldo >= min_cents inkl. Summen und letzter Abrechnung."""
+    if min_cents <= 0:
+        return []
+    rows = db.fetch_all(
+        conn,
+        """
+        SELECT
+            g.name AS group_name,
+            u.name AS user_name,
+            COALESCE(o.open_balance_cents, 0) AS open_balance_cents,
+            COALESCE(allb.all_bookings_cents, 0) AS all_bookings_cents,
+            ls.last_settlement_at AS last_settlement_at
+        FROM users u
+        JOIN user_groups g ON g.id = u.group_id
+        JOIN (
+            SELECT user_id, SUM(amount_cents) AS open_balance_cents
+            FROM ledger_entries
+            WHERE settlement_id IS NULL
+            GROUP BY user_id
+            HAVING SUM(amount_cents) >= ?
+        ) o ON o.user_id = u.id
+        LEFT JOIN (
+            SELECT user_id, SUM(amount_cents) AS all_bookings_cents
+            FROM ledger_entries
+            GROUP BY user_id
+        ) allb ON allb.user_id = u.id
+        LEFT JOIN (
+            SELECT user_id, MAX(created_at) AS last_settlement_at
+            FROM settlements
+            GROUP BY user_id
+        ) ls ON ls.user_id = u.id
+        ORDER BY o.open_balance_cents DESC, u.name COLLATE NOCASE
+        """,
+        (min_cents,),
+    )
+    return [
+        {
+            "group_name": str(r["group_name"]),
+            "user_name": str(r["user_name"]),
+            "all_bookings_cents": int(r["all_bookings_cents"]),
+            "open_balance_cents": int(r["open_balance_cents"]),
+            "last_settlement_at": str(r["last_settlement_at"] or ""),
+        }
+        for r in rows
+    ]
+
+
 def user_balance_cents(conn: sqlite3.Connection, user_id: int) -> int:
     row = db.fetch_one(
         conn,

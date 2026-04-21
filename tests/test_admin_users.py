@@ -72,3 +72,48 @@ def test_admin_user_edit_name_and_group_keeps_ledger() -> None:
                 (uid,),
             ).fetchone()[0]
             assert int(bal) == 100
+
+
+def test_over_limit_users_page_lists_affected_users() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "G1"})
+        with db.get_connection() as conn:
+            gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
+            conn.execute(
+                """
+                INSERT INTO app_settings (key, value) VALUES ('debt_threshold_3_cents', '300')
+                ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                """
+            )
+            conn.execute(
+                """
+                INSERT INTO app_settings (key, value) VALUES ('debt_threshold_1_cents', '100')
+                ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                """
+            )
+            conn.execute(
+                """
+                INSERT INTO app_settings (key, value) VALUES ('debt_threshold_2_cents', '200')
+                ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                """
+            )
+        client.post("/admin/users", data={"name": "Anna", "group_id": str(gid)})
+        with db.get_connection() as conn:
+            uid = int(conn.execute("SELECT id FROM users WHERE name='Anna'").fetchone()[0])
+        client.post("/admin/products", data={"name": "Cola", "price_eur": "2.00"})
+        with db.get_connection() as conn:
+            pid = int(conn.execute("SELECT id FROM products LIMIT 1").fetchone()[0])
+            add_purchase(conn, uid, pid, "Cola", 200)
+            add_purchase(conn, uid, pid, "Cola", 200)
+            conn.execute(
+                "INSERT INTO settlements (user_id, total_cents, created_at, note, period_start, period_end, received_confirmed) VALUES (?, ?, ?, ?, ?, ?, 1)",
+                (uid, 400, "2026-04-21T10:00:00", None, None, None),
+            )
+
+        r = client.get("/admin/users/over-limit")
+        assert r.status_code == 200
+        assert "Nutzer über Warnschwelle 3" in r.text
+        assert "Anna" in r.text
+        assert "4,00 €" in r.text
+        assert "21.04.2026" in r.text

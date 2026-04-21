@@ -1262,6 +1262,7 @@ body.app-admin .table-wrap th.num,
 body.app-admin .table-wrap td.num {
   text-align: right;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 body.app-admin .table-wrap tfoot th,

@@ -708,6 +708,24 @@ def admin_users(request: Request) -> Response:
     )
 
 
+@router.get("/users/over-limit", response_class=HTMLResponse)
+def admin_users_over_limit(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    with db.get_connection() as conn:
+        _t1, _t2, t3 = debt_thresholds.get_thresholds(conn)
+        rows = ledger_service.users_open_balance_gte_details(conn, t3)
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/users_over_limit.html",
+        {
+            "title": "Nutzer über Warnschwelle 3",
+            "threshold_3_cents": t3,
+            "rows": rows,
+        },
+    )
+
+
 @router.post("/users")
 def admin_users_create(
     request: Request,

@@ -9,10 +9,8 @@
 {% block content %}
 {% if request.state.admin_debt_alert_count > 0 and request.url.path == "/admin" %}
 <div class="admin-debt-global-alert" role="status">
-  <strong>Schwelle 3:</strong> {{ request.state.admin_debt_alert_count }}× über Limit.
-  <span class="admin-debt-global-alert__links">
-    <a href="/admin/debt-thresholds">Schwellen</a> · <a href="/admin/users">Nutzer</a>
-  </span>
+  <strong>Warnung {{ request.state.admin_debt_alert_count }} Nutzer über dem Limit</strong> -
+  <a href="/admin/users/over-limit" role="button" class="secondary">Nutzerliste</a>
 </div>
 {% endif %}
 {% block admin_page %}{% endblock %}

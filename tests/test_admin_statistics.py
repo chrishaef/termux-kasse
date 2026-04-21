@@ -54,7 +54,7 @@ def test_admin_statistics_page_pdf_and_xlsx() -> None:
         assert r.status_code == 200
         assert "Statistik (Zeitraum)" in r.text
         assert "Topliste Nutzer (nach Summe)" in r.text
-        assert "Topliste Nutzer mit offenen Ausständen" in r.text
+        assert "Topliste Nutzer (Ausstände)" in r.text
         assert "Artikel-Auswertung" in r.text
         assert "Aktiver Gruppenfilter: <strong>G1</strong>" in r.text
         assert "Cara" not in r.text
