@@ -74,9 +74,8 @@ def test_year_end_archive_purge_keeps_open_ledger(tmp_path, monkeypatch) -> None
             data={"master_password": "year-end-master-xyz", "confirm_irreversible": "1"},
             follow_redirects=False,
         )
-        assert r.status_code == 200
-        assert r.headers.get("content-type", "").startswith("application/zip")
-        assert r.content[:2] == b"PK"
+        assert r.status_code == 303
+        assert r.headers.get("location", "").startswith("/admin?year_end=1")
 
         with db.get_connection() as conn:
             assert int(conn.execute("SELECT COUNT(*) FROM settlements").fetchone()[0]) == 0
@@ -91,6 +90,7 @@ def test_year_end_archive_purge_keeps_open_ledger(tmp_path, monkeypatch) -> None
         assert r_list.status_code == 200
         assert "Jahresabschluss" in r_list.text
         assert "/admin/settlements/year-end/" in r_list.text
+        assert "/zip" in r_list.text
 
         export_dir = Path(os.environ["KASSE_DATA_DIR"]) / "jahresabschluss"
         assert export_dir.is_dir()

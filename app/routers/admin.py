@@ -884,11 +884,7 @@ def admin_year_end_post(
         )
         ledger_service.purge_settled_ledger_and_settlements(conn)
 
-    return Response(
-        content=zip_bytes,
-        media_type="application/zip",
-        headers={"Content-Disposition": _attachment_disposition(stem, ".zip")},
-    )
+    return RedirectResponse("/admin?year_end=1", status_code=303)
 
 
 def _year_end_file_response(request: Request, run_id: int, ext: str) -> Response:
@@ -1062,7 +1058,7 @@ def admin_settlement_confirm_post(
         )
     if sid is None:
         return RedirectResponse("/admin/settlements/start?err=no_open", status_code=303)
-    return RedirectResponse(f"/admin/settlements/{sid}/done", status_code=303)
+    return RedirectResponse("/admin?settlement_done=1", status_code=303)
 
 
 @router.get("/settlements/{settlement_id}/xlsx")

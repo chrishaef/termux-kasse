@@ -536,6 +536,50 @@ def year_end_snapshot(conn: sqlite3.Connection) -> dict[str, Any]:
         (),
     )
     user_rows = [dict(r) for r in users]
+    user_product_rows = db.fetch_all(
+        conn,
+        """
+        SELECT
+            u.id AS user_id,
+            u.name AS user_name,
+            g.name AS group_name,
+            le.product_id,
+            p.name AS product_name,
+            le.description,
+            COUNT(*) AS quantity
+        FROM ledger_entries le
+        JOIN users u ON u.id = le.user_id
+        JOIN user_groups g ON g.id = u.group_id
+        LEFT JOIN products p ON p.id = le.product_id
+        GROUP BY u.id, g.id, le.product_id, p.name, le.description
+        ORDER BY g.sort_order, g.name COLLATE NOCASE, u.sort_order, u.name COLLATE NOCASE
+        """,
+        (),
+    )
+    per_user_products: dict[int, dict[str, Any]] = {}
+    for r in user_product_rows:
+        uid = int(r["user_id"])
+        if uid not in per_user_products:
+            per_user_products[uid] = {
+                "user_name": str(r["user_name"]),
+                "group_name": str(r["group_name"]),
+                "entries_count": 0,
+                "items": [],
+            }
+        item = per_user_products[uid]
+        qty = int(r["quantity"])
+        item["entries_count"] += qty
+        label = str((r["product_name"] or "").strip() or (r["description"] or "").strip() or "Unbekannt")
+        item["items"].append({"label": label, "quantity": qty})
+
+    user_product_tables: list[dict[str, Any]] = []
+    for row in per_user_products.values():
+        row["items"].sort(key=lambda x: (-int(x["quantity"]), str(x["label"]).casefold()))
+        if int(row["entries_count"]) > 0:
+            user_product_tables.append(row)
+    user_product_tables.sort(
+        key=lambda x: (-int(x["entries_count"]), str(x["user_name"]).casefold())
+    )
     product_rows = period_product_stats(conn, None, None, None)
     return {
         "created_at_iso": created_at,
@@ -552,6 +596,7 @@ def year_end_snapshot(conn: sqlite3.Connection) -> dict[str, Any]:
         },
         "users": user_rows,
         "product_rows": product_rows,
+        "user_product_tables": user_product_tables,
     }
 
 

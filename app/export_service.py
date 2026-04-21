@@ -273,6 +273,7 @@ def build_year_end_pdf_bytes(snapshot: dict[str, Any]) -> bytes:
     totals = cast(dict[str, int], snapshot["totals"])
     users = cast(list[dict[str, Any]], snapshot["users"])
     product_rows = cast(list[dict[str, Any]], snapshot["product_rows"])
+    user_product_tables = cast(list[dict[str, Any]], snapshot.get("user_product_tables", []))
     created = str(snapshot["created_at_iso"])
 
     pdf = FPDF(orientation="L", unit="mm", format="A4")
@@ -349,6 +350,26 @@ def build_year_end_pdf_bytes(snapshot: dict[str, Any]) -> bytes:
         for i, (c, w, m) in enumerate(zip(cells, w_p, maxl)):
             pdf.cell(w, 5.5, _pdf_cell_text(c, m), 1, 1 if i == len(w_p) - 1 else 0)
 
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(0, 6, _pdf_cell_text("Artikel je Nutzer (meiste Buchungen zuerst)", 64), 0, 1)
+    if not user_product_tables:
+        pdf.set_font("Helvetica", "", 8)
+        pdf.cell(0, 6, _pdf_cell_text("Keine Nutzerdaten mit Buchungen", 48), 0, 1)
+    for up in user_product_tables:
+        pdf.set_font("Helvetica", "B", 9)
+        title = f"{up['user_name']} ({up['group_name']}) - {int(up['entries_count'])} Buchungen"
+        pdf.cell(0, 6, _pdf_cell_text(title, 96), 0, 1)
+        w_up = (170, 32)
+        pdf.set_font("Helvetica", "B", 8)
+        pdf.cell(w_up[0], 6, _pdf_cell_text("Artikel", 24), 1, 0)
+        pdf.cell(w_up[1], 6, _pdf_cell_text("Anzahl", 12), 1, 1)
+        pdf.set_font("Helvetica", "", 8)
+        for item in cast(list[dict[str, Any]], up["items"]):
+            pdf.cell(w_up[0], 5.5, _pdf_cell_text(str(item["label"]), 78), 1, 0)
+            pdf.cell(w_up[1], 5.5, _pdf_cell_text(str(int(item["quantity"])), 12), 1, 1)
+        pdf.ln(1)
+
     out = pdf.output(dest="S")
     return out.encode("latin-1", errors="replace")
 
@@ -357,6 +378,7 @@ def build_year_end_xlsx_bytes(snapshot: dict[str, Any]) -> bytes:
     totals = cast(dict[str, int], snapshot["totals"])
     users = cast(list[dict[str, Any]], snapshot["users"])
     product_rows = cast(list[dict[str, Any]], snapshot["product_rows"])
+    user_product_tables = cast(list[dict[str, Any]], snapshot.get("user_product_tables", []))
     created = str(snapshot["created_at_iso"])
 
     wb = Workbook()
@@ -427,6 +449,21 @@ def build_year_end_xlsx_bytes(snapshot: dict[str, Any]) -> bytes:
                 round(int(r["total_cents"]) / 100, 2),
             ]
         )
+
+    ws3 = wb.create_sheet("Nutzer-Artikel")
+    ws3.append(["Artikel je Nutzer (meiste Buchungen zuerst)"])
+    ws3["A1"].font = bold
+    if not user_product_tables:
+        ws3.append(["Keine Nutzerdaten mit Buchungen"])
+    for up in user_product_tables:
+        ws3.append([])
+        ws3.append([f"{up['user_name']} ({up['group_name']})", f"{int(up['entries_count'])} Buchungen"])
+        ws3[f"A{ws3.max_row}"].font = bold
+        ws3.append(["Artikel", "Anzahl"])
+        ws3[f"A{ws3.max_row}"].font = bold
+        ws3[f"B{ws3.max_row}"].font = bold
+        for item in cast(list[dict[str, Any]], up["items"]):
+            ws3.append([item["label"], int(item["quantity"])])
 
     buf = io.BytesIO()
     wb.save(buf)

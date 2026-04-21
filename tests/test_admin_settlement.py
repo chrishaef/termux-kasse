@@ -50,12 +50,11 @@ def test_settlement_confirm_pdf_and_clears_balance() -> None:
             follow_redirects=False,
         )
         assert r.status_code == 303
-        path = urlparse(r.headers["location"]).path
-        assert path.endswith("/done")
-        done = client.get(path)
-        assert done.status_code == 200
-        assert "PDF wird geladen" in done.text
-        pdf = client.get(path.replace("/done", "/pdf"))
+        assert urlparse(r.headers["location"]).path == "/admin"
+        assert "settlement_done=1" in r.headers["location"]
+        with db.get_connection() as conn:
+            sid = int(conn.execute("SELECT id FROM settlements ORDER BY id DESC LIMIT 1").fetchone()[0])
+        pdf = client.get(f"/admin/settlements/{sid}/pdf")
         assert pdf.status_code == 200
         assert pdf.headers["content-type"] == "application/pdf"
         disp = pdf.headers.get("content-disposition", "")

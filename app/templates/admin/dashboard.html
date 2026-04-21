@@ -1,5 +1,11 @@
 {% extends "admin/shell.html" %}
 {% block admin_page %}
+{% if request.query_params.get('year_end') == '1' %}
+<article class="contrast">Jahresabschluss durchgeführt. Sie finden den Eintrag mit ZIP/XLS/PDF in "Abrechnungen".</article>
+{% endif %}
+{% if request.query_params.get('settlement_done') == '1' %}
+<article class="contrast">Nutzerabrechnung abgeschlossen. Exporte sind in "Abrechnungen" verfügbar.</article>
+{% endif %}
 <div class="admin-dash-header">
   <div class="admin-dash-stats" aria-label="Finanzübersicht">
     <div class="admin-stat">
