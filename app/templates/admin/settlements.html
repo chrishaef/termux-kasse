@@ -31,8 +31,14 @@
         <td>{{ s['group_name'] }}</td>
         <td>{{ s['total_cents']|eur }}</td>
         <td>
+          {% if s['row_type'] == 'year_end' %}
+          <a href="/admin/settlements/year-end/{{ s['id'] }}/zip" role="button" class="outline">ZIP</a>
+          <a href="/admin/settlements/year-end/{{ s['id'] }}/xlsx" role="button" class="outline">XLS</a>
+          <a href="/admin/settlements/year-end/{{ s['id'] }}/pdf" role="button" class="outline">PDF</a>
+          {% else %}
           <a href="/admin/settlements/{{ s['id'] }}/xlsx" role="button" class="outline">XLS</a>
           <a href="/admin/settlements/{{ s['id'] }}/pdf" role="button" class="outline">PDF</a>
+          {% endif %}
         </td>
       </tr>
       {% else %}

@@ -80,11 +80,17 @@ def test_year_end_archive_purge_keeps_open_ledger(tmp_path, monkeypatch) -> None
 
         with db.get_connection() as conn:
             assert int(conn.execute("SELECT COUNT(*) FROM settlements").fetchone()[0]) == 0
+            assert int(conn.execute("SELECT COUNT(*) FROM year_end_runs").fetchone()[0]) == 1
             assert int(
                 conn.execute("SELECT COUNT(*) FROM ledger_entries WHERE settlement_id IS NOT NULL").fetchone()[0]
             ) == 0
             assert int(conn.execute("SELECT COUNT(*) FROM ledger_entries").fetchone()[0]) == 1
             assert user_balance_cents(conn, uid) == 150
+
+        r_list = client.get("/admin/settlements")
+        assert r_list.status_code == 200
+        assert "Jahresabschluss" in r_list.text
+        assert "/admin/settlements/year-end/" in r_list.text
 
         export_dir = Path(os.environ["KASSE_DATA_DIR"]) / "jahresabschluss"
         assert export_dir.is_dir()

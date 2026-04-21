@@ -3,13 +3,25 @@
 <header class="page-head">
   <p class="page-head__eyebrow">Buchhaltung</p>
   <h1 class="page-head__title">Jahresabschluss / Datenbereinigung</h1>
-  <p class="page-head__lead">
-    Es wird ein Archivbericht erstellt (PDF, Excel und ZIP mit beiden Dateien), alles gespeichert unter <code>data/jahresabschluss/</code> (bzw. <code>KASSE_DATA_DIR/jahresabschluss/</code>). Der Browser lädt zusätzlich das ZIP herunter.
-    Anschließend werden nur <strong>abgeschlossene Abrechnungen</strong> und die dazugehörigen (bereits beglichenen) Buchungszeilen entfernt.
-    <strong>Offene Posten und aktuelle Kontostände bleiben erhalten.</strong> Nutzer, Gruppen und Artikel bleiben ebenfalls erhalten. Der Vorgang ist nicht rückgängig zu machen.
-  </p>
+  <p class="page-head__lead">Der Vorgang erstellt ein Archiv und bereinigt anschließend alte, bereits abgeschlossene Daten.</p>
 </header>
 <a href="/admin/settlements" class="admin-back">← Zurück zu Abrechnungen</a>
+
+<article class="k-panel" style="max-width: 52rem;">
+  <h3 style="margin-top:0;">Was passiert beim Jahresabschluss?</h3>
+  <ul style="margin-bottom:0.75rem;">
+    <li>Archiv wird erstellt: <strong>PDF + XLSX + ZIP</strong> unter <code>data/jahresabschluss/</code> (bzw. <code>KASSE_DATA_DIR/jahresabschluss/</code>).</li>
+    <li>Der Browser lädt das ZIP direkt herunter.</li>
+    <li>Der Abschluss erscheint danach in <strong>Abgeschlossene Abrechnungen</strong> inkl. Export-Links.</li>
+  </ul>
+  <h3>Was wird bereinigt?</h3>
+  <ul style="margin-bottom:0;">
+    <li>Es werden nur <strong>abgeschlossene Abrechnungen</strong> und zugehörige beglichene Buchungszeilen gelöscht.</li>
+    <li><strong>Offene Posten und aktuelle Kontostände bleiben erhalten.</strong></li>
+    <li>Nutzer, Gruppen und Artikel bleiben unverändert.</li>
+    <li>Der Vorgang ist <strong>nicht rückgängig</strong> zu machen.</li>
+  </ul>
+</article>
 
 {% if not master_configured %}
 <article class="contrast">

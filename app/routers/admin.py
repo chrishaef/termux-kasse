@@ -776,7 +776,13 @@ def admin_settlements_list(request: Request) -> Response:
         settlements = db.fetch_all(
             conn,
             """
-            SELECT s.id, s.created_at, s.total_cents, u.name AS user_name, g.name AS group_name
+            SELECT
+                s.id,
+                s.created_at,
+                s.total_cents,
+                u.name AS user_name,
+                g.name AS group_name,
+                'settlement' AS row_type
             FROM settlements s
             JOIN users u ON u.id = s.user_id
             JOIN user_groups g ON g.id = u.group_id
@@ -784,10 +790,30 @@ def admin_settlements_list(request: Request) -> Response:
             LIMIT 100
             """,
         )
+        year_end_runs = db.fetch_all(
+            conn,
+            """
+            SELECT
+                y.id,
+                y.created_at,
+                y.settlements_sum_cents AS total_cents,
+                'Jahresabschluss' AS user_name,
+                ('System · ' || y.settlements_count || ' Abrechnungen') AS group_name,
+                'year_end' AS row_type
+            FROM year_end_runs y
+            ORDER BY datetime(y.created_at) DESC
+            LIMIT 100
+            """,
+        )
+    rows = sorted(
+        [dict(r) for r in settlements] + [dict(r) for r in year_end_runs],
+        key=lambda x: str(x.get("created_at") or ""),
+        reverse=True,
+    )[:100]
     return TEMPLATES.TemplateResponse(
         request,
         "admin/settlements.html",
-        {"title": "Abrechnungen", "settlements": settlements},
+        {"title": "Abrechnungen", "settlements": rows},
     )
 
 
@@ -840,6 +866,22 @@ def admin_year_end_post(
     (out_dir / f"{stem}.zip").write_bytes(zip_bytes)
 
     with db.get_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO year_end_runs (
+                created_at, settlements_count, settlements_sum_cents,
+                zip_filename, pdf_filename, xlsx_filename
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(snapshot["created_at_iso"]),
+                int(snapshot["totals"]["settlements_count"]),
+                int(snapshot["totals"]["settlements_sum_cents"]),
+                f"{stem}.zip",
+                f"{stem}.pdf",
+                f"{stem}.xlsx",
+            ),
+        )
         ledger_service.purge_settled_ledger_and_settlements(conn)
 
     return Response(
@@ -847,6 +889,45 @@ def admin_year_end_post(
         media_type="application/zip",
         headers={"Content-Disposition": _attachment_disposition(stem, ".zip")},
     )
+
+
+def _year_end_file_response(request: Request, run_id: int, ext: str) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    col = {"zip": "zip_filename", "pdf": "pdf_filename", "xlsx": "xlsx_filename"}.get(ext)
+    if not col:
+        raise HTTPException(status_code=404)
+    with db.get_connection() as conn:
+        row = db.fetch_one(conn, f"SELECT {col} AS filename FROM year_end_runs WHERE id = ?", (run_id,))
+    if not row:
+        raise HTTPException(status_code=404)
+    filename = str(row["filename"] or "").strip()
+    if not filename:
+        raise HTTPException(status_code=404)
+    path = year_end_exports_dir() / filename
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Archivdatei nicht gefunden")
+    media = {
+        "zip": "application/zip",
+        "pdf": "application/pdf",
+        "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }[ext]
+    return FileResponse(path=path, media_type=media, filename=filename)
+
+
+@router.get("/settlements/year-end/{run_id}/zip")
+def admin_year_end_zip(request: Request, run_id: int) -> Response:
+    return _year_end_file_response(request, run_id, "zip")
+
+
+@router.get("/settlements/year-end/{run_id}/pdf")
+def admin_year_end_pdf(request: Request, run_id: int) -> Response:
+    return _year_end_file_response(request, run_id, "pdf")
+
+
+@router.get("/settlements/year-end/{run_id}/xlsx")
+def admin_year_end_xlsx(request: Request, run_id: int) -> Response:
+    return _year_end_file_response(request, run_id, "xlsx")
 
 
 @router.get("/settlements/start", response_class=HTMLResponse)

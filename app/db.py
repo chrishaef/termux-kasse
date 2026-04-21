@@ -64,6 +64,16 @@ def init_db() -> None:
                 period_end TEXT
             );
 
+            CREATE TABLE IF NOT EXISTS year_end_runs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,
+                settlements_count INTEGER NOT NULL DEFAULT 0,
+                settlements_sum_cents INTEGER NOT NULL DEFAULT 0,
+                zip_filename TEXT NOT NULL,
+                pdf_filename TEXT NOT NULL,
+                xlsx_filename TEXT NOT NULL
+            );
+
             CREATE TABLE IF NOT EXISTS ledger_entries (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -129,6 +139,19 @@ def _migrate_products_remove_categories(conn: sqlite3.Connection) -> None:
 
 
 def _migrate_schema(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS year_end_runs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT NOT NULL,
+            settlements_count INTEGER NOT NULL DEFAULT 0,
+            settlements_sum_cents INTEGER NOT NULL DEFAULT 0,
+            zip_filename TEXT NOT NULL,
+            pdf_filename TEXT NOT NULL,
+            xlsx_filename TEXT NOT NULL
+        );
+        """
+    )
     sinfo = conn.execute("PRAGMA table_info(settlements)").fetchall()
     if sinfo:
         cols = {r[1] for r in sinfo}
