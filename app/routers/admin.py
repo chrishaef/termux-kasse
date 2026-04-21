@@ -513,7 +513,6 @@ def admin_news_form(request: Request) -> Response:
         {
             "title": "Kiosk-Nachricht",
             "stored_notice": stored,
-            "default_notice": kiosk_notice.DEFAULT_KIOSK_NOTICE,
             "saved": request.query_params.get("saved") == "1",
         },
     )
