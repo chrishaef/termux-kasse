@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app import db
+from app import debt_thresholds
 
 
 def utc_now_iso() -> str:
@@ -129,6 +130,53 @@ def count_users_open_balance_gte(conn: sqlite3.Connection, min_cents: int) -> in
     return int(row["c"]) if row else 0
 
 
+def oldest_open_age_days(conn: sqlite3.Connection, user_id: int) -> int:
+    row = db.fetch_one(
+        conn,
+        """
+        SELECT MIN(created_at) AS oldest_open_at
+        FROM ledger_entries
+        WHERE user_id = ? AND settlement_id IS NULL
+        """,
+        (user_id,),
+    )
+    ts = str((row["oldest_open_at"] if row else "") or "").strip()
+    if not ts:
+        return 0
+    try:
+        dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return max(0, int((datetime.now(timezone.utc) - dt.astimezone(timezone.utc)).total_seconds() // 86400))
+    except Exception:
+        return 0
+
+
+def count_users_over_warnstufe_3(conn: sqlite3.Connection) -> int:
+    t1, t2, t3 = debt_thresholds.get_thresholds(conn)
+    d1, d2, d3 = debt_thresholds.get_age_thresholds(conn)
+    rows = db.fetch_all(
+        conn,
+        """
+        SELECT user_id, COALESCE(SUM(amount_cents), 0) AS open_balance_cents
+        FROM ledger_entries
+        WHERE settlement_id IS NULL
+        GROUP BY user_id
+        HAVING COALESCE(SUM(amount_cents), 0) > 0
+        """,
+        (),
+    )
+    count = 0
+    for r in rows:
+        uid = int(r["user_id"])
+        bal = int(r["open_balance_cents"])
+        age_days = oldest_open_age_days(conn, uid)
+        level = debt_thresholds.reminder_level(bal, t1, t2, t3, age_days, d1, d2, d3)
+        if level >= 3:
+            count += 1
+    return count
+
+
 def users_open_balance_gte_details(
     conn: sqlite3.Connection,
     min_cents: int,
@@ -140,6 +188,7 @@ def users_open_balance_gte_details(
         conn,
         """
         SELECT
+            u.id AS user_id,
             g.name AS group_name,
             u.name AS user_name,
             COALESCE(o.open_balance_cents, 0) AS open_balance_cents,
@@ -175,9 +224,37 @@ def users_open_balance_gte_details(
             "all_bookings_cents": int(r["all_bookings_cents"]),
             "open_balance_cents": int(r["open_balance_cents"]),
             "last_settlement_at": str(r["last_settlement_at"] or ""),
+            "user_id": int(r["user_id"]) if "user_id" in r.keys() else 0,
         }
         for r in rows
     ]
+
+
+def users_over_warnstufe_3_details(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+    t1, t2, t3 = debt_thresholds.get_thresholds(conn)
+    d1, d2, d3 = debt_thresholds.get_age_thresholds(conn)
+    rows = users_open_balance_gte_details(conn, 1)
+    out: list[dict[str, Any]] = []
+    for r in rows:
+        age_days = oldest_open_age_days(conn, int(r.get("user_id", 0)))
+        level = debt_thresholds.reminder_level(
+            int(r["open_balance_cents"]),
+            t1,
+            t2,
+            t3,
+            age_days,
+            d1,
+            d2,
+            d3,
+        )
+        if level >= 3:
+            row = dict(r)
+            row["oldest_open_days"] = age_days
+            out.append(row)
+    out.sort(
+        key=lambda x: (-int(x["open_balance_cents"]), -int(x.get("oldest_open_days", 0)), str(x["user_name"]).casefold())
+    )
+    return out
 
 
 def user_balance_cents(conn: sqlite3.Connection, user_id: int) -> int:

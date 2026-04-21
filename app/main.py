@@ -111,10 +111,7 @@ async def attach_admin_debt_alerts(request: Request, call_next):
             if request.session.get("admin_user"):
                 try:
                     with db.get_connection() as conn:
-                        _t1, _t2, t3 = debt_thresholds.get_thresholds(conn)
-                        request.state.admin_debt_alert_count = (
-                            ledger_service.count_users_open_balance_gte(conn, t3)
-                        )
+                        request.state.admin_debt_alert_count = ledger_service.count_users_over_warnstufe_3(conn)
                 except Exception:
                     request.state.admin_debt_alert_count = 0
         except Exception:

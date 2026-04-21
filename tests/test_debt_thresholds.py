@@ -30,7 +30,17 @@ def test_count_users_open_balance_gte() -> None:
 def test_admin_shows_global_alert_when_balance_reaches_t3() -> None:
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
-        client.post("/admin/debt-thresholds", data={"threshold_a_eur": "1", "threshold_b_eur": "2", "threshold_c_eur": "3"})
+        client.post(
+            "/admin/debt-thresholds",
+            data={
+                "threshold_a_eur": "1",
+                "threshold_b_eur": "2",
+                "threshold_c_eur": "3",
+                "age_threshold_a_days": "7",
+                "age_threshold_b_days": "21",
+                "age_threshold_c_days": "45",
+            },
+        )
         client.post("/admin/groups", data={"name": "G1"})
         with db.get_connection() as conn:
             gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
@@ -64,6 +74,9 @@ def test_admin_can_store_custom_threshold_messages() -> None:
                 "threshold_a_eur": "1",
                 "threshold_b_eur": "2",
                 "threshold_c_eur": "3",
+                "age_threshold_a_days": "7",
+                "age_threshold_b_days": "21",
+                "age_threshold_c_days": "45",
                 "message_1": "Bitte zeitnah zahlen",
                 "message_2": "Bitte diese Woche zahlen",
                 "message_3": "Bitte sofort mit Admin klaeren",
@@ -82,3 +95,39 @@ def test_admin_can_store_custom_threshold_messages() -> None:
         ru = client.get(f"/u/{uid}")
         assert ru.status_code == 200
         assert "Bitte sofort mit Admin klaeren" in ru.text
+
+
+def test_age_based_warnstufe_can_trigger_level_3() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post(
+            "/admin/debt-thresholds",
+            data={
+                "threshold_a_eur": "100",
+                "threshold_b_eur": "200",
+                "threshold_c_eur": "300",
+                "age_threshold_a_days": "1",
+                "age_threshold_b_days": "2",
+                "age_threshold_c_days": "3",
+                "message_1": "S1",
+                "message_2": "S2",
+                "message_3": "S3",
+            },
+            follow_redirects=False,
+        )
+        client.post("/admin/groups", data={"name": "G1"})
+        with db.get_connection() as conn:
+            gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
+        client.post("/admin/users", data={"name": "Tim", "group_id": str(gid)})
+        client.post("/admin/products", data={"name": "Snack", "price_eur": "1.00"})
+        with db.get_connection() as conn:
+            uid = int(conn.execute("SELECT id FROM users LIMIT 1").fetchone()[0])
+            pid = int(conn.execute("SELECT id FROM products LIMIT 1").fetchone()[0])
+            add_purchase(conn, uid, pid, "Snack", 100)
+            conn.execute(
+                "UPDATE ledger_entries SET created_at = '2020-01-01T00:00:00' WHERE user_id = ?",
+                (uid,),
+            )
+        r = client.get("/admin")
+        assert r.status_code == 200
+        assert "Warnung 1 Nutzer über dem Limit" in r.text

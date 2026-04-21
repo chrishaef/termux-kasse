@@ -536,18 +536,22 @@ def admin_debt_thresholds_get(request: Request) -> Response:
         return r
     with db.get_connection() as conn:
         t1, t2, t3 = debt_thresholds.get_thresholds(conn)
+        d1, d2, d3 = debt_thresholds.get_age_thresholds(conn)
         m1, m2, m3 = debt_thresholds.get_threshold_messages(conn)
     return TEMPLATES.TemplateResponse(
         request,
         "admin/debt_thresholds.html",
         {
-            "title": "Ausstands-Schwellen",
+            "title": "Ausstands-Warnstufen",
             "t1": t1,
             "t2": t2,
             "t3": t3,
             "t1_eur": _eur_field_from_cents(t1),
             "t2_eur": _eur_field_from_cents(t2),
             "t3_eur": _eur_field_from_cents(t3),
+            "d1_days": d1,
+            "d2_days": d2,
+            "d3_days": d3,
             "m1": m1,
             "m2": m2,
             "m3": m3,
@@ -563,6 +567,9 @@ def admin_debt_thresholds_post(
     threshold_a_eur: str = Form(...),
     threshold_b_eur: str = Form(...),
     threshold_c_eur: str = Form(...),
+    age_threshold_a_days: str = Form(...),
+    age_threshold_b_days: str = Form(...),
+    age_threshold_c_days: str = Form(...),
     message_1: str = Form(""),
     message_2: str = Form(""),
     message_3: str = Form(""),
@@ -573,10 +580,14 @@ def admin_debt_thresholds_post(
         ca = _parse_price_eur_to_cents(threshold_a_eur)
         cb = _parse_price_eur_to_cents(threshold_b_eur)
         cc = _parse_price_eur_to_cents(threshold_c_eur)
+        da = int((age_threshold_a_days or "").strip())
+        dbb = int((age_threshold_b_days or "").strip())
+        dc = int((age_threshold_c_days or "").strip())
     except ValueError:
         return RedirectResponse("/admin/debt-thresholds?err=invalid", status_code=303)
     with db.get_connection() as conn:
         debt_thresholds.save_thresholds_cents(conn, ca, cb, cc)
+        debt_thresholds.save_age_thresholds_days(conn, da, dbb, dc)
         current_m1, current_m2, current_m3 = debt_thresholds.get_threshold_messages(conn)
         debt_thresholds.save_threshold_messages(
             conn,
@@ -714,13 +725,15 @@ def admin_users_over_limit(request: Request) -> Response:
         return r
     with db.get_connection() as conn:
         _t1, _t2, t3 = debt_thresholds.get_thresholds(conn)
-        rows = ledger_service.users_open_balance_gte_details(conn, t3)
+        _d1, _d2, d3 = debt_thresholds.get_age_thresholds(conn)
+        rows = ledger_service.users_over_warnstufe_3_details(conn)
     return TEMPLATES.TemplateResponse(
         request,
         "admin/users_over_limit.html",
         {
             "title": "Nutzer über Warnstufe 3",
             "threshold_3_cents": t3,
+            "threshold_3_days": d3,
             "rows": rows,
         },
     )

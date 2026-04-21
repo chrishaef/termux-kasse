@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from app import db
 from app import debt_thresholds
 from app import ledger_service
-from app.ledger_service import add_purchase, last_settlement, user_balance_cents
+from app.ledger_service import add_purchase, last_settlement, oldest_open_age_days, user_balance_cents
 from app.templates_env import TEMPLATES
 
 router = APIRouter(tags=["kiosk"])
@@ -95,8 +95,10 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
             raise HTTPException(status_code=404, detail="Nutzer nicht gefunden")
         balance = user_balance_cents(conn, user_id)
         t1, t2, t3 = debt_thresholds.get_thresholds(conn)
+        d1, d2, d3 = debt_thresholds.get_age_thresholds(conn)
         m1, m2, m3 = debt_thresholds.get_threshold_messages(conn)
-        debt_reminder_level = debt_thresholds.reminder_level(balance, t1, t2, t3)
+        age_days = oldest_open_age_days(conn, user_id)
+        debt_reminder_level = debt_thresholds.reminder_level(balance, t1, t2, t3, age_days, d1, d2, d3)
         debt_message = ""
         if debt_reminder_level == 1:
             debt_message = m1
