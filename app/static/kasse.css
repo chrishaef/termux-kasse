@@ -1132,6 +1132,8 @@ body.app-admin .k-panel .admin-received-confirm {
   align-items: flex-start;
   gap: 0.7rem;
   margin-top: 0.8rem;
+  width: 100%;
+  box-sizing: border-box;
   position: relative;
   cursor: pointer;
 }
@@ -1185,6 +1187,8 @@ body.app-admin .k-panel .admin-received-confirm input[type="checkbox"]:checked +
 }
 
 body.app-admin .k-panel .admin-received-confirm__text {
+  flex: 1 1 auto;
+  min-width: 0;
   line-height: 1.4;
 }
 
