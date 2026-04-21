@@ -10,7 +10,7 @@
 {% if request.state.admin_debt_alert_count > 0 and request.url.path == "/admin" %}
 <div class="admin-debt-global-alert" role="status">
   <strong>Warnung {{ request.state.admin_debt_alert_count }} Nutzer über dem Limit</strong> -
-  <a href="/admin/users/over-limit" role="button" class="secondary">Nutzerliste</a>
+  <a href="/admin/users/over-limit"><strong>Nutzerliste</strong></a>
 </div>
 {% endif %}
 {% block admin_page %}{% endblock %}
