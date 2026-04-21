@@ -99,6 +99,12 @@ def test_system_backup_export_contains_db_and_year_end_files(tmp_path, monkeypat
             assert manifest["format"] == "kasse-system-backup"
             assert manifest["version"] == 1
             assert manifest["files"]["db"]["path"] == "kasse.db"
+        # Export should also be stored in archive on disk.
+        archive_dir = tmp_path / "data" / "system_backups"
+        assert archive_dir.exists()
+        stored = sorted(p.name for p in archive_dir.glob("*.zip") if p.is_file())
+        assert len(stored) >= 1
+        assert any("kasse-system-backup-" in n for n in stored)
 
 
 def test_system_backup_import_rejects_invalid_manifest(tmp_path, monkeypatch) -> None:

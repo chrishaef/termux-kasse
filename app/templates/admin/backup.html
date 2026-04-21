@@ -11,6 +11,9 @@
 {% if reset_ok %}
 <article class="contrast"><strong>Daten-Reset ausgeführt.</strong> Alle Buchungen und Abrechnungen wurden gelöscht. Nutzer, Gruppen und Artikel sind unverändert.</article>
 {% endif %}
+{% if archive_deleted %}
+<article class="contrast"><strong>Archiv gelöscht.</strong></article>
+{% endif %}
 {% if reset_err == "master" %}
 <article class="contrast">Master-Passwort ungültig.</article>
 {% elif reset_err == "noconfirm" %}
@@ -39,6 +42,40 @@
     <article id="backup_manifest_preview" class="contrast" style="display:none; margin-top:0.5rem;"></article>
     <button type="submit">Backup importieren</button>
   </form>
+</article>
+
+<article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">Backup-Archiv</h2>
+  {% if archive and archive|length > 0 %}
+  <div class="table-wrap" style="margin-top:0.75rem">
+    <table>
+      <thead>
+        <tr>
+          <th>Datei</th>
+          <th class="num">Größe</th>
+          <th class="num">Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in archive %}
+        <tr>
+          <td><code>{{ a['name'] }}</code></td>
+          <td class="num">{{ (a['bytes'] // 1024) }} KB</td>
+          <td class="num">
+            <a href="/admin/backup/archive/{{ a['name'] }}" role="button">Download</a>
+            <form method="post" action="/admin/backup/archive/{{ a['name'] }}/delete" class="inline" style="display:inline;">
+              <button type="submit" class="secondary">Löschen</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="secondary" style="margin-top:0.5rem">Hinweis: Beim Export wird das ZIP zusätzlich im System gespeichert (die Liste hält automatisch nur die letzten Backups).</p>
+  {% else %}
+  <p class="secondary">Noch keine Backups im Archiv.</p>
+  {% endif %}
 </article>
 
 <article class="k-panel">

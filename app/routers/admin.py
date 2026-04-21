@@ -34,6 +34,41 @@ from app.templates_env import TEMPLATES
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+_BACKUP_ARCHIVE_KEEP = 25
+
+
+def _backup_archive_dir() -> Path:
+    d = data_dir() / "system_backups"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _backup_archive_list() -> list[dict]:
+    d = _backup_archive_dir()
+    items: list[dict] = []
+    for p in d.glob("*.zip"):
+        if not p.is_file():
+            continue
+        st = p.stat()
+        items.append(
+            {
+                "name": p.name,
+                "bytes": int(st.st_size),
+                "mtime": float(st.st_mtime),
+            }
+        )
+    items.sort(key=lambda x: float(x.get("mtime") or 0.0), reverse=True)
+    return items
+
+
+def _backup_archive_prune() -> None:
+    items = _backup_archive_list()
+    for it in items[_BACKUP_ARCHIVE_KEEP:]:
+        try:
+            (_backup_archive_dir() / str(it["name"])).unlink(missing_ok=True)
+        except Exception:
+            pass
+
 
 def _redirect_login(request: Request) -> Optional[RedirectResponse]:
     if not request.session.get("admin_user"):
@@ -326,6 +361,7 @@ def admin_backup_get(request: Request) -> Response:
     db_file = db_path()
     mp = read_master_password()
     master_ok = bool(mp and str(mp).strip())
+    archive = _backup_archive_list()
     return TEMPLATES.TemplateResponse(
         request,
         "admin/backup.html",
@@ -337,6 +373,8 @@ def admin_backup_get(request: Request) -> Response:
             "reset_ok": request.query_params.get("reset") == "1",
             "master_configured": master_ok,
             "reset_err": request.query_params.get("reset_err"),
+            "archive": archive,
+            "archive_deleted": request.query_params.get("deleted") == "1",
         },
     )
 
@@ -360,11 +398,45 @@ def admin_backup_export(request: Request) -> Response:
         for p in sorted(exports_dir.glob("*")):
             if p.is_file():
                 zf.write(p, arcname=f"jahresabschluss/{p.name}")
+    try:
+        out = _backup_archive_dir() / filename
+        out.write_bytes(buf.getvalue())
+        _backup_archive_prune()
+    except Exception:
+        pass
     return Response(
         content=buf.getvalue(),
         media_type="application/zip",
         headers={"Content-Disposition": _attachment_disposition(f"kasse-system-backup-{stamp}", ".zip")},
     )
+
+
+@router.get("/backup/archive/{filename}")
+def admin_backup_archive_download(request: Request, filename: str) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    safe = Path(filename).name
+    if not safe.endswith(".zip"):
+        raise HTTPException(status_code=404)
+    path = _backup_archive_dir() / safe
+    if not path.exists():
+        raise HTTPException(status_code=404)
+    return FileResponse(path=path, media_type="application/zip", filename=safe)
+
+
+@router.post("/backup/archive/{filename}/delete")
+def admin_backup_archive_delete(request: Request, filename: str) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    safe = Path(filename).name
+    if not safe.endswith(".zip"):
+        raise HTTPException(status_code=404)
+    path = _backup_archive_dir() / safe
+    try:
+        path.unlink(missing_ok=True)
+    except Exception:
+        pass
+    return RedirectResponse("/admin/backup?deleted=1", status_code=303)
 
 
 @router.post("/backup/preview")

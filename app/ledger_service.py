@@ -331,14 +331,15 @@ def add_purchase(
     product_id: int,
     description: str,
     amount_cents: int,
-) -> None:
-    conn.execute(
+) -> int:
+    cur = conn.execute(
         """
         INSERT INTO ledger_entries (user_id, product_id, description, amount_cents, created_at)
         VALUES (?, ?, ?, ?, ?)
         """,
         (user_id, product_id, description, amount_cents, utc_now_iso()),
     )
+    return int(cur.lastrowid)
 
 
 def create_settlement_for_user(

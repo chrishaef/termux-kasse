@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -10,6 +12,33 @@ from app.ledger_service import add_purchase, last_settlement, oldest_open_age_da
 from app.templates_env import TEMPLATES
 
 router = APIRouter(tags=["kiosk"])
+
+UNDO_WINDOW_MS = 3000
+
+
+def _clear_undo_session(request: Request) -> None:
+    try:
+        request.session.pop("kiosk_undo", None)
+    except Exception:
+        pass
+
+
+def _get_active_undo(request: Request, user_id: int) -> dict | None:
+    try:
+        data = request.session.get("kiosk_undo")
+    except Exception:
+        return None
+    if not isinstance(data, dict):
+        return None
+    if int(data.get("user_id") or 0) != int(user_id):
+        return None
+    entry_id = int(data.get("entry_id") or 0)
+    expires_ms = int(data.get("expires_ms") or 0)
+    now_ms = int(time.time() * 1000)
+    if entry_id <= 0 or expires_ms <= now_ms:
+        _clear_undo_session(request)
+        return None
+    return {"entry_id": entry_id, "expires_ms": expires_ms, "remaining_ms": max(0, expires_ms - now_ms)}
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -80,6 +109,7 @@ def kiosk_group(request: Request, group_id: int) -> HTMLResponse:
 
 @router.get("/u/{user_id}", response_class=HTMLResponse)
 def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
+    undo_active = _get_active_undo(request, user_id) if request.query_params.get("undo") == "1" else None
     with db.get_connection() as conn:
         u = db.fetch_one(
             conn,
@@ -131,6 +161,8 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
             "last_settlement": last_s,
             "products": products,
             "title": u["name"],
+            "undo_active": undo_active,
+            "undone": request.query_params.get("undone") == "1",
         },
     )
 
@@ -156,8 +188,40 @@ def kiosk_add(
         if not p:
             raise HTTPException(status_code=400, detail="Artikel ungültig")
         desc = f'{p["name"]} (x1)'
-        add_purchase(conn, user_id, int(p["id"]), desc, int(p["price_cents"]))
-    return RedirectResponse(url=f"/u/{user_id}", status_code=303)
+        entry_id = add_purchase(conn, user_id, int(p["id"]), desc, int(p["price_cents"]))
+
+    try:
+        now_ms = int(time.time() * 1000)
+        request.session["kiosk_undo"] = {
+            "user_id": int(user_id),
+            "entry_id": int(entry_id),
+            "expires_ms": now_ms + UNDO_WINDOW_MS,
+        }
+    except Exception:
+        pass
+    return RedirectResponse(url=f"/u/{user_id}?undo=1", status_code=303)
+
+
+@router.post("/u/{user_id}/undo")
+def kiosk_undo(request: Request, user_id: int, entry_id: int = Form(...)) -> RedirectResponse:
+    active = _get_active_undo(request, user_id)
+    if not active or int(active["entry_id"]) != int(entry_id):
+        _clear_undo_session(request)
+        return RedirectResponse(url=f"/u/{user_id}", status_code=303)
+
+    with db.get_connection() as conn:
+        row = db.fetch_one(
+            conn,
+            """
+            SELECT id FROM ledger_entries
+            WHERE id = ? AND user_id = ? AND settlement_id IS NULL
+            """,
+            (int(entry_id), int(user_id)),
+        )
+        if row:
+            conn.execute("DELETE FROM ledger_entries WHERE id = ?", (int(entry_id),))
+    _clear_undo_session(request)
+    return RedirectResponse(url=f"/u/{user_id}?undone=1", status_code=303)
 
 
 @router.get("/egg/flappy", response_class=HTMLResponse)

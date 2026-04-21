@@ -20,10 +20,42 @@
     </div>
     <div class="admin-stat">
       <span class="admin-stat__label">Bisher eingenommen</span>
-      <span class="admin-stat__value">{{ finance['settled_total_cents']|eur }}</span>
+      <span class="admin-stat__value admin-stat__value--blurred" id="admin-settled-total" tabindex="0" aria-label="Bisher eingenommen (klicken zum Anzeigen)">
+        {{ finance['settled_total_cents']|eur }}
+      </span>
     </div>
   </div>
 </div>
+<script>
+  (function () {
+    const el = document.getElementById("admin-settled-total");
+    if (!el) return;
+
+    let timer = null;
+    function reblur() {
+      el.classList.add("admin-stat__value--blurred");
+      el.setAttribute("aria-label", "Bisher eingenommen (klicken zum Anzeigen)");
+    }
+    function revealTemporarily() {
+      el.classList.remove("admin-stat__value--blurred");
+      el.setAttribute("aria-label", "Bisher eingenommen (wird gleich wieder ausgeblendet)");
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(reblur, 8000);
+    }
+
+    el.addEventListener("click", function () {
+      if (el.classList.contains("admin-stat__value--blurred")) revealTemporarily();
+      else reblur();
+    });
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        if (el.classList.contains("admin-stat__value--blurred")) revealTemporarily();
+        else reblur();
+      }
+    });
+  })();
+</script>
 <ul class="admin-cards admin-cards--tight">
   <li>
     <a class="admin-card" href="/admin/groups">

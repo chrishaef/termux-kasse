@@ -706,6 +706,56 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   color: #ffeae8;
 }
 
+.k-undo-banner {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--kas-radius);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  background: rgba(20, 34, 18, 0.55);
+  color: #eaf3e7;
+}
+
+.k-undo-banner__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.k-undo-banner__text {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.k-undo-banner__count {
+  font-variant-numeric: tabular-nums;
+}
+
+.k-undo-banner__form {
+  margin: 0;
+}
+
+.k-undo-banner__btn {
+  margin: 0;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--kas-radius-button);
+  font-weight: 800;
+  border: 1px solid rgba(232, 188, 46, 0.55);
+  background: rgba(0, 0, 0, 0.15);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.k-undo-banner__btn:hover {
+  background: var(--kas-accent);
+  color: var(--kas-accent-contrast);
+  border-color: var(--kas-accent-bright);
+}
+
 .k-panel {
   background: var(--kas-surface);
   border: 1px solid var(--kas-border);
@@ -1004,6 +1054,18 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .admin-stat__value--credit {
   color: #6dc56d;
+}
+
+.admin-stat__value--blurred {
+  filter: blur(7px);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+.admin-stat__value--blurred:focus-visible {
+  outline: 2px solid var(--kas-accent-bright);
+  outline-offset: 2px;
 }
 
 .admin-cards--tight {
