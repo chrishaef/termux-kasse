@@ -160,8 +160,7 @@ def kiosk_add(
 
 @router.get("/egg/flappy", response_class=HTMLResponse)
 def kiosk_flappy_easter_egg(request: Request) -> HTMLResponse:
-    """Easter Egg: nicht verlinkt; am Kiosk-Footer „powered by OF Häfner“ Tipp-Muster lang–kurz–kurz–lang."""
-    return TEMPLATES.TemplateResponse(
+        return TEMPLATES.TemplateResponse(
         request,
         "kiosk/flappy.html",
         {"title": "Flappy"},

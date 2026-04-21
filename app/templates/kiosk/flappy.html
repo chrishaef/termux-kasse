@@ -4,7 +4,7 @@
 {% endblock %}
 {% block content %}
 <div class="flappy-egg" id="flappy-root">
-  <p class="flappy-egg__hint">Leertaste, Klick oder Tippen zum Flattern · weite Lücken zwischen den Rohren</p>
+  <p class="flappy-egg__hint">Klick oder Tippen zum Flattern.</p>
   <canvas id="flappy-canvas" width="360" height="520" aria-label="Flappy Easter Egg"></canvas>
   <p class="flappy-egg__score" id="flappy-score">Punkte: 0</p>
   <p class="flappy-egg__over" id="flappy-over" hidden>Game over — nochmal?</p>
@@ -31,7 +31,6 @@
   var W = 360, H = 520;
   var birdX = 78, birdR = 15;
   var birdY = H / 2, birdVy = 0;
-  /* Einfacherer Modus: weniger Schwerkraft, kräftigerer Flap, weitere Lücke, langsamere Rohre */
   var g = 0.26;
   var flapV = -7.4;
   var maxFallVy = 9.5;
