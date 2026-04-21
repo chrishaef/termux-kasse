@@ -134,7 +134,7 @@ def admin_login_post(
 @router.post("/logout")
 def admin_logout(request: Request) -> RedirectResponse:
     request.session.clear()
-    return RedirectResponse("/admin/login", status_code=303)
+    return RedirectResponse("/preisliste", status_code=303)
 
 
 @router.get("/password", response_class=HTMLResponse)
