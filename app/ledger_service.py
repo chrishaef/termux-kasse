@@ -536,6 +536,7 @@ def year_end_snapshot(conn: sqlite3.Connection) -> dict[str, Any]:
         (),
     )
     user_rows = [dict(r) for r in users]
+    user_stats_by_id = {int(u["user_id"]): dict(u) for u in user_rows}
     user_product_rows = db.fetch_all(
         conn,
         """
@@ -560,10 +561,16 @@ def year_end_snapshot(conn: sqlite3.Connection) -> dict[str, Any]:
     for r in user_product_rows:
         uid = int(r["user_id"])
         if uid not in per_user_products:
+            st = user_stats_by_id.get(uid, {})
+            paid_cents = int(st.get("settlements_sum_cents", 0))
+            open_cents = int(st.get("open_balance_cents", 0))
             per_user_products[uid] = {
                 "user_name": str(r["user_name"]),
                 "group_name": str(r["group_name"]),
                 "entries_count": 0,
+                "paid_cents": paid_cents,
+                "open_cents": open_cents,
+                "total_cents": paid_cents + open_cents,
                 "items": [],
             }
         item = per_user_products[uid]

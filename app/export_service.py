@@ -360,6 +360,20 @@ def build_year_end_pdf_bytes(snapshot: dict[str, Any]) -> bytes:
         pdf.set_font("Helvetica", "B", 9)
         title = f"{up['user_name']} ({up['group_name']}) - {int(up['entries_count'])} Buchungen"
         pdf.cell(0, 6, _pdf_cell_text(title, 96), 0, 1)
+        pdf.set_font("Helvetica", "", 8)
+        paid_eur = f"{int(up.get('paid_cents', 0)) / 100:.2f}"
+        open_eur = f"{int(up.get('open_cents', 0)) / 100:.2f}"
+        total_eur = f"{int(up.get('total_cents', 0)) / 100:.2f}"
+        pdf.cell(
+            0,
+            5.5,
+            _pdf_cell_text(
+                f"Gebucht/Gezahlt EUR: {paid_eur}   Offen EUR: {open_eur}   Gesamt EUR: {total_eur}",
+                120,
+            ),
+            0,
+            1,
+        )
         w_up = (170, 32)
         pdf.set_font("Helvetica", "B", 8)
         pdf.cell(w_up[0], 6, _pdf_cell_text("Artikel", 24), 1, 0)
@@ -459,6 +473,16 @@ def build_year_end_xlsx_bytes(snapshot: dict[str, Any]) -> bytes:
         ws3.append([])
         ws3.append([f"{up['user_name']} ({up['group_name']})", f"{int(up['entries_count'])} Buchungen"])
         ws3[f"A{ws3.max_row}"].font = bold
+        ws3.append(
+            [
+                "Gebucht/Gezahlt (EUR)",
+                round(int(up.get("paid_cents", 0)) / 100, 2),
+                "Offen (EUR)",
+                round(int(up.get("open_cents", 0)) / 100, 2),
+                "Gesamt (EUR)",
+                round(int(up.get("total_cents", 0)) / 100, 2),
+            ]
+        )
         ws3.append(["Artikel", "Anzahl"])
         ws3[f"A{ws3.max_row}"].font = bold
         ws3[f"B{ws3.max_row}"].font = bold
