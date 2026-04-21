@@ -2,7 +2,7 @@
 
 Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — die App spricht im Betrieb keine externen Dienste an; Styles und Skripte kommen aus dem Projekt (`/static`), Internet ist nur für Installation und Updates nötig.
 
-**Aktuelle Version:** **1.0.0** (Git-Tag [`v1.0.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.0.0)) — GitHub-Release: [anlegen](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.0.0) (einmal `gh auth login` oder im Browser veröffentlichen).
+**Aktuelle Version:** **1.1.0** (Git-Tag [`v1.1.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.1.0)) — GitHub-Release: [anlegen](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.1.0) (einmal `gh auth login` oder im Browser veröffentlichen).
 
 ---
 
@@ -11,10 +11,10 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 1. [Funktionen](#funktionen) — [Shop/Kiosk](#shop-und-kiosk-im-detail) · [Abrechnung](#abrechnung-im-detail) · [Statistik](#statistik-im-detail) · [Jahresabschluss](#jahresabschluss-im-detail)  
 2. [Technik](#technik)  
 3. [Installation auf Android (Termux)](#installation-auf-android-termux)  
-4. [Erster Start und Betrieb](#erster-start-und-betrieb)  
-5. [Netzwerk (LAN vs. nur Gerät)](#netzwerk-lan-vs-nur-gerät)  
-6. [Daten, Backup, Umgebungsvariablen](#daten-backup-umgebungsvariablen)  
-7. [Updates (`update.sh`)](#updates-updatesh)  
+4. [Start und Betrieb (`run.sh`)](#start-und-betrieb-runsh)  
+5. [Android-Autostart (Termux:Boot)](#android-autostart-termuxboot)  
+6. [Netzwerk (LAN vs. nur Gerät)](#netzwerk-lan-vs-nur-gerät)  
+7. [Daten, Backup, Umgebungsvariablen](#daten-backup-umgebungsvariablen)  
 8. [Admin-Bereich](#admin-bereich)  
 9. [Entwicklung (Windows / Linux / macOS)](#entwicklung-windows--linux--macos)  
 10. [Repository und Releases bei GitHub](#repository-und-releases-bei-github)  
@@ -170,7 +170,7 @@ Entweder **manuell**:
 pkg install -y git python
 ```
 
-oder beim ersten Lauf **`bash update.sh`** mitinstallieren lassen (siehe [Updates](#updates-updatesh)) — das Skript erkennt Termux und nutzt `pkg install`.
+oder danach direkt mit **`bash run.sh`** starten — das Skript erkennt Termux und installiert fehlende Pakete bei Bedarf selbst.
 
 ### 3. Privates GitHub-Repository klonen
 
@@ -227,7 +227,7 @@ git clone https://github.com/DEIN_USER/DEIN_REPO.git termux-kasse
 cd ~/termux-kasse
 ```
 
-Alle folgenden Befehle (`start.sh`, `update.sh`) beziehen sich auf diesen Ordner (Projektroot).
+Alle folgenden Befehle (`run.sh`, `stop.sh`, `setup_boot.sh`) beziehen sich auf diesen Ordner (Projektroot).
 
 **pip / Termux:** In `requirements.txt` gilt:
 
@@ -239,25 +239,31 @@ Alle folgenden Befehle (`start.sh`, `update.sh`) beziehen sich auf diesen Ordner
 
 ---
 
-## Erster Start und Betrieb
+## Start und Betrieb (`run.sh`)
 
-### Schnellstart mit Update-Skript (empfohlen auf dem Tablet)
-
-Installiert bei Bedarf Pakete, holt den neuesten Stand, richtet die virtuelle Umgebung ein und startet den Server **im Hintergrund**:
+### Schnellstart (empfohlen auf dem Tablet)
 
 ```bash
 cd ~/termux-kasse
-bash update.sh
+bash run.sh
 ```
 
-Log-Ausgabe: `server.log` im Projektroot, Prozess-ID: `.server.pid`.
+`run.sh` uebernimmt den kompletten Ablauf:
 
-### Nur vordergrund (zum Testen oder Debuggen)
+1. prueft/ installiert `git` und Python bei Bedarf
+2. prueft, ob GitHub (`origin`) erreichbar ist
+3. wenn erreichbar: `git pull --ff-only` + `pip install -r requirements.txt`
+4. wenn nicht erreichbar: Start ohne Update mit Hinweis
+5. startet Uvicorn im Hintergrund
+
+Log-Datei: `server.log`  
+PID-Datei: `.server.pid`
+
+Server sauber stoppen:
 
 ```bash
 cd ~/termux-kasse
-bash start.sh --sync    # einmalig: venv + pip
-bash start.sh           # Server im Vordergrund, Strg+C beendet
+bash stop.sh
 ```
 
 ### Admin-Zugang
@@ -273,9 +279,36 @@ Standardport ist **8000** (änderbar mit `PORT`, siehe nächster Abschnitt).
 
 ---
 
+## Android-Autostart (Termux:Boot)
+
+Fuer Autostart beim Android-Geraetestart wird die Zusatz-App **Termux:Boot** benoetigt.
+
+### Einrichten
+
+1. **Termux:Boot installieren** (empfohlen ueber F-Droid)
+2. Termux und Termux:Boot jeweils einmal oeffnen
+3. Im Projekt ausfuehren:
+
+```bash
+cd ~/termux-kasse
+bash setup_boot.sh
+```
+
+Das erstellt automatisch:
+
+- `~/.termux/boot/start-shopkasse.sh` (ruft `run.sh` auf)
+
+### Android-Einstellungen
+
+- Akku-Optimierung fuer **Termux** und **Termux:Boot** deaktivieren
+- Hintergrundstart/Autostart erlauben (je nach Hersteller unterschiedlich)
+- Tablet neu starten und `server.log` pruefen
+
+---
+
 ## Netzwerk (LAN vs. nur Gerät)
 
-`start.sh` und `update.sh` setzen standardmäßig:
+`run.sh` setzt standardmäßig:
 
 - **`HOST=0.0.0.0`** — Server lauscht auf allen Schnittstellen; im **WLAN** erreichbar unter `http://<IP-des-Tablets>:8000` (IP z. B. unter Android *WLAN-Details* oder mit `ip addr` / `ifconfig` in Termux).  
 - **`PORT=8000`**
@@ -283,15 +316,13 @@ Standardport ist **8000** (änderbar mit `PORT`, siehe nächster Abschnitt).
 Nur auf diesem Gerät (kein Zugriff von anderen Rechnern im Netz):
 
 ```bash
-HOST=127.0.0.1 bash start.sh
-# bzw. nach Änderungen:
-HOST=127.0.0.1 bash update.sh
+HOST=127.0.0.1 bash run.sh
 ```
 
 Anderer Port:
 
 ```bash
-PORT=9000 bash start.sh
+PORT=9000 bash run.sh
 ```
 
 Wenn aus dem LAN nichts antwortet: **Firewall** auf dem Gerät, VPN oder Router prüfen; für den Standardport **TCP 8000** freigeben bzw. testen.
@@ -306,36 +337,10 @@ Wenn aus dem LAN nichts antwortet: **Firewall** auf dem Gerät, VPN oder Router 
 | **Datenverzeichnis** | Überschreibbar mit **`KASSE_DATA_DIR`** (absoluter Pfad zum Ordner; die Datei heißt darin weiter `kasse.db`) |
 | **Session-Secret** | Datei **`.secret_key`** im Projektroot (von Git ignoriert) oder Umgebungsvariable **`KASSE_SECRET_KEY`** |
 | **Master-Passwort** | Datei **`.admin_master_password`** im Projektroot (Inhalt = Passwort, Standard `master`) oder alternativer Dateipfad via **`KASSE_MASTER_PASSWORD_FILE`** |
-| **Backup (Datei)** | Ordner `data/` kopieren oder nur `kasse.db` sichern — idealerweise bei **gestopptem** Server (`kill $(cat .server.pid)` im Projektroot oder Prozess beenden), damit die DB nicht mitten im Schreiben kopiert wird |
-| **Backup (Admin-UI)** | Unter `/admin/backup`: Datenbank als `.db` exportieren und wieder importieren (Import ersetzt die aktuelle DB) |
+| **Backup (Datei)** | Ordner `data/` kopieren oder nur `kasse.db` sichern — idealerweise bei **gestopptem** Server (`bash stop.sh`) |
+| **Backup (Admin-UI)** | Unter `/admin/backup`: Backup erstellen (wird im Archiv gespeichert), Import mit Vorschau, Archivansicht mit Download/Loeschen, Daten-Reset |
 | **Jahresabschluss-Archive** | Ordner **`jahresabschluss/`** unter `KASSE_DATA_DIR` (neben `kasse.db`): gespeicherte PDF-, XLSX- und ZIP-Dateien pro Abschluss |
-
----
-
-## Updates (`update.sh`)
-
-Wenn das Tablet kurz online ist (z. B. Handy-Hotspot):
-
-```bash
-cd ~/termux-kasse
-bash update.sh
-```
-
-Ablauf in Kurzform:
-
-1. **System:** Prüft `git` und Python; unter **Termux** Installation per `pkg`, unter **Debian/Ubuntu** per `apt-get` (optional mit `sudo`).  
-2. **`git pull --ff-only`**  
-3. Virtuelle Umgebung **`.venv`** anlegen/verwenden, **`pip install -r requirements.txt`**  
-4. Laufenden Uvicorn beenden (`.server.pid` und/oder `pkill`) und Server wieder **im Hintergrund** starten → **`server.log`**
-
-Optionen:
-
-```bash
-bash update.sh --no-restart           # kein Neustart (nur Systemcheck / pull / pip)
-bash update.sh --no-system-install    # keine Paketinstallation (bricht ab, wenn git/Python fehlt)
-```
-
-Läuft die Kasse nur mit `bash start.sh` im Vordergrund, gibt es keine `.server.pid` — dann beendet `update.sh` passende `uvicorn`-Prozesse per `pkill`, oder du beendest vorher mit **Strg+C** und startest danach manuell neu.
+| **System-Backup-Archiv** | Ordner **`system_backups/`** unter `KASSE_DATA_DIR` |
 
 ---
 
@@ -348,7 +353,7 @@ Nach dem Login (`/admin`):
 - **Statistik** (`/admin/statistics`): Zeitraum + Nutzergruppe filtern, Toplisten sehen, PDF/XLSX herunterladen  
 - **Warnstufen** (`/admin/debt-thresholds`): Schwellen und Meldungstexte für Kiosk-Warnungen pflegen  
 - **Kiosk-Nachricht** (`/admin/news`): Text oben auf allen Kiosk-Seiten; leer speichern stellt den Standardhinweis wieder her  
-- **Backup** (`/admin/backup`): Datenbank exportieren/importieren; optional **Daten-Reset** (alle Buchungen und Abrechnungen löschen, Stammdaten bleiben; Master-Passwort)
+- **Backup** (`/admin/backup`): Backup erstellen (Archiv), Import mit Vorschau, Archivliste, optional **Daten-Reset** (Master-Passwort)
 
 Hinweis: **Kontostände** ergeben sich nur aus Buchungen; eine manuelle Saldo-Korrektur im Nutzer-Edit gibt es nicht (dazu Daten-Reset oder Jahresabschluss-Archiv nutzen).
 
@@ -393,12 +398,12 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ### Versionierung und Releases
 
-- Aktueller Git-Tag: **v1.0.0** — Übersicht: [Tag v1.0.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.0.0).  
-- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.0.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.0.0) öffnen, Titel z. B. `Termux-Shopkasse 1.0.0`, Beschreibung einfügen, *Publish release*.  
+- Aktueller Git-Tag: **v1.1.0** — Übersicht: [Tag v1.1.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.1.0).  
+- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.1.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.1.0) öffnen, Titel z. B. `Termux-Shopkasse 1.1.0`, Beschreibung einfügen, *Publish release*.  
 - **GitHub CLI** (einmalig `gh auth login`):  
-  `gh release create v1.0.0 --title "Termux-Shopkasse 1.0.0" --generate-notes`
+  `gh release create v1.1.0 --title "Termux-Shopkasse 1.1.0" --generate-notes`
 
-**v1.0.0** (Kurzüberblick): Jahresabschluss mit Archiv (PDF/XLSX/ZIP), Backup-Daten-Reset, Kiosk-/Admin-Verbesserungen (Passwort-Login, Schwellen, Footer, Nutzerkopf-Layout), Finanzübersicht netto, ohne manuelle Kontostand-Korrektur im Nutzer-Edit.
+**v1.1.0** (Kurzüberblick): Ein-Script-Betrieb mit `run.sh`, sauberes Stop-Script `stop.sh`, Android-Autostart per `setup_boot.sh`/Termux:Boot, Backup-Archivansicht und kompaktere Backup-UI, Undo-Flow am Kiosk (Button-only Anzeige, 3s).
 
 ---
 
