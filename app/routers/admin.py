@@ -855,6 +855,10 @@ def admin_year_end_post(
     xlsx_bytes = build_year_end_xlsx_bytes(snapshot)
     stem = _year_end_export_stem(str(snapshot["created_at_iso"]))
     out_dir = year_end_exports_dir()
+    # Keep system storage bounded: remove older year-end archives before writing new ones.
+    for old in out_dir.glob("*"):
+        if old.is_file():
+            old.unlink(missing_ok=True)
     (out_dir / f"{stem}.pdf").write_bytes(pdf_bytes)
     (out_dir / f"{stem}.xlsx").write_bytes(xlsx_bytes)
 
@@ -866,6 +870,8 @@ def admin_year_end_post(
     (out_dir / f"{stem}.zip").write_bytes(zip_bytes)
 
     with db.get_connection() as conn:
+        # Keep only the latest year-end run in history view.
+        conn.execute("DELETE FROM year_end_runs")
         conn.execute(
             """
             INSERT INTO year_end_runs (
