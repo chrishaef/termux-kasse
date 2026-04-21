@@ -114,7 +114,6 @@
           if (!logoutForm) return;
 
           const IDLE_MS = 60000;
-          const WARNING_SECONDS = 10;
           let idleTimer = 0;
           let countdownTimer = 0;
           let deadlineAt = 0;
@@ -155,9 +154,7 @@
                 return;
               }
               const secondsLeft = Math.ceil(msLeft / 1000);
-              if (secondsLeft <= WARNING_SECONDS) {
-                renderWarning(secondsLeft);
-              }
+              renderWarning(secondsLeft);
             }, 250);
           };
 
