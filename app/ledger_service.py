@@ -377,6 +377,50 @@ def period_user_toplist(
     return out
 
 
+def open_balance_toplist(
+    conn: sqlite3.Connection,
+    period_start: str | None,
+    period_end: str | None,
+    group_id: int | None = None,
+) -> list[dict[str, Any]]:
+    sql = """
+        SELECT
+            g.name AS group_name,
+            u.name AS user_name,
+            COUNT(le.id) AS open_entries_count,
+            COALESCE(SUM(le.amount_cents), 0) AS open_balance_cents
+        FROM users u
+        JOIN user_groups g ON g.id = u.group_id
+        JOIN ledger_entries le ON le.user_id = u.id AND le.settlement_id IS NULL
+        WHERE 1=1
+    """
+    params: list[Any] = []
+    if period_start:
+        sql += " AND datetime(le.created_at) >= datetime(?)"
+        params.append(period_start)
+    if period_end:
+        sql += " AND datetime(le.created_at) <= datetime(?)"
+        params.append(period_end)
+    if group_id is not None:
+        sql += " AND g.id = ?"
+        params.append(group_id)
+    sql += """
+        GROUP BY u.id, g.id
+        HAVING COALESCE(SUM(le.amount_cents), 0) > 0
+        ORDER BY COALESCE(SUM(le.amount_cents), 0) DESC, COUNT(le.id) DESC, u.name COLLATE NOCASE
+    """
+    rows = db.fetch_all(conn, sql, params)
+    return [
+        {
+            "group_name": str(r["group_name"]),
+            "user_name": str(r["user_name"]),
+            "open_entries_count": int(r["open_entries_count"]),
+            "open_balance_cents": int(r["open_balance_cents"]),
+        }
+        for r in rows
+    ]
+
+
 def period_product_stats(
     conn: sqlite3.Connection,
     period_start: str | None,

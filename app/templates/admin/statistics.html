@@ -78,6 +78,26 @@
   </table>
 </div>
 
+<h2 class="k-section-title">Topliste Nutzer mit offenen Ausständen</h2>
+<div class="table-wrap">
+  <table role="grid">
+    <thead><tr><th>#</th><th>Gruppe</th><th>Nutzer</th><th class="num">Offene Buchungen</th><th class="num">Offener Ausstand</th></tr></thead>
+    <tbody>
+      {% for row in open_balance_rows %}
+      <tr>
+        <td class="num">{{ loop.index }}</td>
+        <td>{{ row['group_name'] }}</td>
+        <td>{{ row['user_name'] }}</td>
+        <td class="num">{{ row['open_entries_count'] }}</td>
+        <td class="num">{{ row['open_balance_cents']|eur }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="secondary">Keine offenen Ausstände vorhanden.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
 <h2 class="k-section-title">Artikel-Auswertung (zusammengefasst)</h2>
 <div class="table-wrap">
   <table role="grid">

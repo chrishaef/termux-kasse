@@ -1331,6 +1331,7 @@ def admin_statistics(
         selected_group_name = str(group_row["name"]) if group_row else None
         totals = ledger_service.period_totals(conn, period_start, period_end, gid)
         user_rows = ledger_service.period_user_toplist(conn, period_start, period_end, gid)
+        open_balance_rows = ledger_service.open_balance_toplist(conn, period_start, period_end, gid)
         product_rows = ledger_service.period_product_stats(conn, period_start, period_end, gid)
     return TEMPLATES.TemplateResponse(
         request,
@@ -1345,6 +1346,7 @@ def admin_statistics(
             "selected_group_name": selected_group_name,
             "totals": totals,
             "user_rows": user_rows,
+            "open_balance_rows": open_balance_rows,
             "product_rows": product_rows,
         },
     )
