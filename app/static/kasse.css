@@ -207,6 +207,30 @@ body {
   color: #fff;
 }
 
+.admin-idle-warning {
+  position: fixed;
+  top: 4.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 120;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--kas-radius-sm);
+  border: 1px solid #d58428;
+  background: linear-gradient(180deg, #fff3db 0%, #ffd8a6 100%);
+  color: #3d1e00;
+  font-size: 0.86rem;
+  font-weight: 800;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  white-space: nowrap;
+}
+
+.admin-idle-warning--critical {
+  border-color: #b22222;
+  background: linear-gradient(180deg, #ffd9d9 0%, #ff9f9f 100%);
+  color: #3a0303;
+  box-shadow: 0 10px 26px rgba(130, 0, 0, 0.34);
+}
+
 .site-main {
   max-width: 1100px;
   padding-bottom: 2.5rem;

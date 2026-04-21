@@ -108,6 +108,75 @@
         });
       }
 
+      if (document.body.classList.contains("app-admin")) {
+        (function () {
+          const logoutForm = document.querySelector("form.admin-head-logout");
+          if (!logoutForm) return;
+
+          const IDLE_MS = 60000;
+          const WARNING_SECONDS = 10;
+          let idleTimer = 0;
+          let countdownTimer = 0;
+          let deadlineAt = 0;
+          const warningEl = document.createElement("div");
+          warningEl.className = "admin-idle-warning";
+          warningEl.setAttribute("role", "status");
+          warningEl.setAttribute("aria-live", "polite");
+          warningEl.hidden = true;
+          document.body.appendChild(warningEl);
+
+          const hideWarning = function () {
+            warningEl.hidden = true;
+            warningEl.textContent = "";
+          };
+
+          const renderWarning = function (secondsLeft) {
+            warningEl.hidden = false;
+            warningEl.classList.toggle("admin-idle-warning--critical", secondsLeft <= 3);
+            warningEl.textContent = "Auto-Logout in " + secondsLeft + "s ohne Aktivitaet.";
+          };
+
+          const triggerLogout = function () {
+            logoutForm.submit();
+          };
+
+          const stopCountdown = function () {
+            window.clearInterval(countdownTimer);
+            countdownTimer = 0;
+            hideWarning();
+          };
+
+          const startCountdown = function () {
+            stopCountdown();
+            countdownTimer = window.setInterval(function () {
+              const msLeft = deadlineAt - Date.now();
+              if (msLeft <= 0) {
+                stopCountdown();
+                return;
+              }
+              const secondsLeft = Math.ceil(msLeft / 1000);
+              if (secondsLeft <= WARNING_SECONDS) {
+                renderWarning(secondsLeft);
+              }
+            }, 250);
+          };
+
+          const resetIdleTimer = function () {
+            window.clearTimeout(idleTimer);
+            deadlineAt = Date.now() + IDLE_MS;
+            stopCountdown();
+            startCountdown();
+            idleTimer = window.setTimeout(triggerLogout, IDLE_MS);
+          };
+
+          ["pointerdown", "pointermove", "keydown", "input", "touchstart", "scroll"].forEach(function (ev) {
+            document.addEventListener(ev, resetIdleTimer, { passive: true });
+          });
+
+          resetIdleTimer();
+        })();
+      }
+
       if (document.body.classList.contains("app-kiosk")) {
         (function () {
           const el = document.getElementById("footer-flappy-egg");
