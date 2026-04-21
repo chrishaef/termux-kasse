@@ -114,6 +114,7 @@
           if (!logoutForm) return;
 
           const IDLE_MS = 60000;
+          const SHOW_AFTER_INACTIVE_MS = 15000;
           let idleTimer = 0;
           let countdownTimer = 0;
           let deadlineAt = 0;
@@ -154,7 +155,12 @@
                 return;
               }
               const secondsLeft = Math.ceil(msLeft / 1000);
-              renderWarning(secondsLeft);
+              const inactiveMs = IDLE_MS - msLeft;
+              if (inactiveMs >= SHOW_AFTER_INACTIVE_MS) {
+                renderWarning(secondsLeft);
+              } else {
+                hideWarning();
+              }
             }, 250);
           };
 
