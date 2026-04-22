@@ -1534,7 +1534,7 @@ body.app-admin .table-wrap .td-actions {
 body.app-admin .table-wrap .td-actions__inner {
   display: flex;
   flex-wrap: nowrap;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
   gap: 0.45rem;
 }
@@ -1542,15 +1542,20 @@ body.app-admin .table-wrap .td-actions__inner {
 body.app-admin .table-wrap .form-inline-action {
   margin: 0;
   display: inline-flex;
-  align-items: center;
+  align-items: stretch;
+  height: 2.2rem;
 }
 
 body.app-admin .table-wrap button.admin-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0 0.9rem;
   font-size: 0.76rem;
   font-weight: 700;
   line-height: 1.2;
   border-radius: var(--kas-radius-button);
+  height: 100%;
   min-height: 2.2rem;
   box-sizing: border-box;
 }
@@ -1575,6 +1580,9 @@ body.app-admin .table-wrap a.admin-btn-edit {
   font-weight: 700;
   line-height: 1.2;
   border-radius: var(--kas-radius-button);
+  height: 2.2rem;
+  min-height: 2.2rem;
+  box-sizing: border-box;
   text-decoration: none;
   color: #141414 !important;
   background: #e8e4da !important;
@@ -1676,18 +1684,18 @@ body.app-admin .admin-products-table td:nth-child(4) {
 }
 
 body.app-admin .admin-table-groups {
-  table-layout: auto;
+  table-layout: fixed;
 }
 
 body.app-admin .admin-table-groups th:nth-child(1),
 body.app-admin .admin-table-groups td:nth-child(1) {
-  width: 1%;
-  white-space: nowrap;
+  width: 42%;
+  white-space: normal;
 }
 
 body.app-admin .admin-table-groups th:nth-child(2),
 body.app-admin .admin-table-groups td:nth-child(2) {
-  width: 16rem;
+  width: 58%;
 }
 
 body.app-admin .admin-user-overview th:last-child,
