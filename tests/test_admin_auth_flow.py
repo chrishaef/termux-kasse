@@ -74,3 +74,4 @@ def test_admin_dashboard_shows_telemetry_data() -> None:
         assert "Buchungen heute" in r.text
         assert "Umsatz heute" in r.text
         assert "Speicher:" in r.text
+        assert ("latest" in r.text) or ("outdated" in r.text)

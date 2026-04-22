@@ -1193,6 +1193,27 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   color: #0a0f0a;
 }
 
+.admin-version-state {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.02rem 0.3rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.1;
+  vertical-align: middle;
+}
+
+.admin-version-state--latest {
+  background: #1d6e2f;
+  color: #eaffea;
+}
+
+.admin-version-state--outdated {
+  background: #8e1f1f;
+  color: #ffe9e9;
+}
+
 @media (max-width: 700px) {
   .admin-cards__item--wide {
     grid-column: span 1;

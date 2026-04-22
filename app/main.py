@@ -62,6 +62,33 @@ def _git_commit_short(root: Path) -> str:
         return "unbekannt"
 
 
+def _is_latest_commit(root: Path) -> bool:
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=1.5,
+        )
+        origin_main = subprocess.run(
+            ["git", "rev-parse", "refs/remotes/origin/main"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=1.5,
+        )
+        head_sha = (head.stdout or "").strip()
+        origin_sha = (origin_main.stdout or "").strip()
+        if not head_sha or not origin_sha:
+            return False
+        return head_sha == origin_sha
+    except Exception:
+        return False
+
+
 def _last_sync_at(root: Path) -> datetime | None:
     sync_file = root / ".last_sync"
     git_dir = root / ".git"
@@ -117,9 +144,10 @@ async def attach_kiosk_notice(request: Request, call_next):
     version_label, last_sync_label, last_sync_at_label = _sync_labels()
     request.state.version_label = version_label
     request.state.version_commit_label = f"{version_label} ({_git_commit_short(root)})"
+    request.state.version_status_label = "latest" if _is_latest_commit(root) else "outdated"
     request.state.last_sync_label = last_sync_label
     request.state.last_sync_at_label = last_sync_at_label
-    request.state.system_started_label = APP_STARTED_AT.strftime("%d.%m.%y")
+    request.state.system_started_label = APP_STARTED_AT.strftime("%d.%m.%y %H.%M")
     request.state.repo_url = REPO_URL
     return await call_next(request)
 
