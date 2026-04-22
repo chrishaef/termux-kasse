@@ -1214,6 +1214,11 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   color: #ffe9e9;
 }
 
+.admin-version-state--unknown {
+  background: #4a5568;
+  color: #f7fafc;
+}
+
 @media (max-width: 700px) {
   .admin-cards__item--wide {
     grid-column: span 1;
