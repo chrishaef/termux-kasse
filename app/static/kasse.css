@@ -1164,6 +1164,11 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .admin-cards li {
   margin: 0;
+  list-style: none;
+}
+
+.admin-cards li::marker {
+  content: "";
 }
 
 .admin-cards__item--wide {
