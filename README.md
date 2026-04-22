@@ -16,9 +16,10 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 6. [Netzwerk (LAN vs. nur Gerät)](#netzwerk-lan-vs-nur-gerät)  
 7. [Daten, Backup, Umgebungsvariablen](#daten-backup-umgebungsvariablen)  
 8. [Admin-Bereich](#admin-bereich)  
-9. [Entwicklung (Windows / Linux / macOS)](#entwicklung-windows--linux--macos)  
-10. [Repository und Releases bei GitHub](#repository-und-releases-bei-github)  
-11. [Lizenz / Hinweise](#lizenz--hinweise)
+9. [Systemstatus, Online-Erkennung und Update-Flow](#systemstatus-online-erkennung-und-update-flow)  
+10. [Entwicklung (Windows / Linux / macOS)](#entwicklung-windows--linux--macos)  
+11. [Repository und Releases bei GitHub](#repository-und-releases-bei-github)  
+12. [Lizenz / Hinweise](#lizenz--hinweise)
 
 ---
 
@@ -252,7 +253,7 @@ bash run.sh
 
 1. prueft/ installiert `git` und Python bei Bedarf
 2. prueft, ob GitHub (`origin`) erreichbar ist
-3. wenn erreichbar: `git pull --ff-only` + `pip install -r requirements.txt`
+3. wenn erreichbar: `git fetch --tags --prune origin` + `git pull --ff-only` + `pip install -r requirements.txt`
 4. wenn nicht erreichbar: Start ohne Update mit Hinweis
 5. startet Uvicorn im Hintergrund
 
@@ -353,9 +354,64 @@ Nach dem Login (`/admin`):
 - **Statistik** (`/admin/statistics`): Zeitraum + Nutzergruppe filtern, Toplisten sehen, PDF/XLSX herunterladen  
 - **Warnstufen** (`/admin/debt-thresholds`): Schwellen und Meldungstexte für Kiosk-Warnungen pflegen  
 - **Kiosk-Nachricht** (`/admin/news`): Text oben auf allen Kiosk-Seiten; leer speichern stellt den Standardhinweis wieder her  
-- **Backup** (`/admin/backup`): Backup erstellen (Archiv), Import mit Vorschau, Archivliste, optional **Daten-Reset** (Master-Passwort)
+- **Backup** (`/admin/backup`): Backup erstellen (Archiv), Import mit Vorschau, Archivliste, optional **Daten-Reset** (Master-Passwort)  
+- **System-Update** (`/admin/system-update`): Online-/Versionscheck, Start nur mit Master-Passwort, Update-Neustart mit Warteseite und separater Log-Ergebnisseite
 
 Hinweis: **Kontostände** ergeben sich nur aus Buchungen; eine manuelle Saldo-Korrektur im Nutzer-Edit gibt es nicht (dazu Daten-Reset oder Jahresabschluss-Archiv nutzen).
+
+---
+
+## Systemstatus, Online-Erkennung und Update-Flow
+
+Dieser Abschnitt ist bewusst für den Alltag geschrieben: Was sehe ich in der Oberfläche, und was bedeutet es?
+
+### Was bedeutet die Versionsanzeige?
+
+- Auf Startseite und Preisliste steht unten die aktuelle **Version** (mit kurzer Kennung in Klammern).
+- Im Admin-Bereich steht derselbe Stand in der Systemübersicht.
+- So erkennt ihr schnell, ob das Gerät wirklich auf dem gewünschten Stand läuft.
+
+### Was bedeutet das `online`-Badge?
+
+- Oben rechts im Header erscheint ein grünes **`online`**.
+- Das heißt: Das Gerät hat gerade Verbindung zum Update-Server (GitHub).
+- Kein Badge heißt in der Regel: aktuell keine Verbindung (z. B. offline ohne Hotspot/WLAN).
+- Der Status wird regelmäßig geprüft (etwa minütlich), damit er nicht „hängen bleibt“.
+
+### Was bedeuten `latest`, `outdated`, `unknown`?
+
+- **`latest`**: Alles aktuell.
+- **`outdated`**: Es gibt eine neuere Version.
+- **`unknown`**: Der Stand konnte gerade nicht geprüft werden (typisch offline).
+
+### Update über Admin (`update / reboot`) – einfacher Ablauf
+
+1. Im Admin-Dashboard auf **`update / reboot`** tippen.
+2. Es erscheint eine Vorbereitungsseite mit:
+   - Netzwerkstatus,
+   - installierter Version,
+   - neuester verfügbarer Version,
+   - klarer Empfehlung (nur Neustart oder Update + Neustart).
+3. Zur Sicherheit muss das **Master-Passwort** eingegeben werden.
+4. Das System führt den Vorgang aus und startet den Dienst neu.
+5. Danach erscheint eine **eigene Protokollseite** mit den letzten Meldungen.
+6. Mit **„Zurück zum System“** zurück ins normale Admin-Menü.
+
+### Update-Protokoll (Log)
+
+- Auf der Vorbereitungsseite seht ihr die letzten bisherigen Meldungen.
+- Nach dem Vorgang seht ihr auf der Ergebnisseite die aktuellen Meldungen.
+- Der Bereich ist scrollbar, damit mehr Einträge sichtbar sind.
+
+### Automatische Backups – kurz erklärt
+
+- Das System erstellt automatische Backups im **7-Tage-Rhythmus**.
+- Sehr alte automatische Backups werden entfernt (älter als 28 Tage).
+- Zusätzlich gibt es eine Gesamtgrenze im Archiv, damit der Speicher nicht vollläuft.
+- Falls alle Auto-Backups gelöscht wurden:
+  - wartet das System kurz (5 Minuten),
+  - erstellt dann ein neues Auto-Backup,
+  - und läuft danach wieder normal im 7-Tage-Rhythmus weiter.
 
 ---
 
@@ -404,7 +460,7 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
   `gh release create v1.2.0 --title "Termux-Shopkasse 1.2.0" --generate-notes`
 - Änderungsübersicht im Repo: [`CHANGELOG.md`](./CHANGELOG.md)
 
-**v1.2.0** (Kurzüberblick): Dashboard-Systemstatus mit Version/Commit-Status, `update / reboot`-Trigger mit Sicherheitsabfrage per Master-Passwort, Update-Vorbereitungsseite mit Online-/Versionscheck und automatischem Neustart-Countdown.
+**v1.2.0** (Kurzüberblick): Dashboard-Systemstatus mit Version/Commit-Status, `update / reboot`-Trigger im Headerbereich, Sicherheitsabfrage per Master-Passwort, Update-Vorbereitung mit Online-/Versionscheck sowie eigene Log-Seiten vor/nach dem Neustart.
 
 ---
 
