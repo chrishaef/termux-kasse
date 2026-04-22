@@ -34,10 +34,10 @@
         <td class="td-actions">
           <div class="td-actions__inner">
             <a href="/admin/products/{{ p['id'] }}/edit" class="admin-btn-sm admin-action-btn admin-btn-edit">Bearbeiten</a>
-            <form method="post" action="/admin/products/{{ p['id'] }}/toggle" class="form-inline-action">
+            <form method="post" action="/admin/products/{{ p['id'] }}/toggle" class="form-inline-action js-product-toggle-form">
               <button
                 type="submit"
-                class="secondary admin-btn-sm admin-action-btn admin-btn-status {% if p['active'] %}admin-btn-status--active{% else %}admin-btn-status--inactive{% endif %}"
+                class="secondary admin-btn-sm admin-action-btn admin-btn-status js-product-toggle-button {% if p['active'] %}admin-btn-status--active{% else %}admin-btn-status--inactive{% endif %}"
               >
                 {{ 'Aktiv' if p['active'] else 'Inaktiv' }}
               </button>
@@ -52,4 +52,42 @@
     </tbody>
   </table>
 </div>
+<script>
+  (function () {
+    const forms = document.querySelectorAll(".js-product-toggle-form");
+    forms.forEach(function (form) {
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const button = form.querySelector(".js-product-toggle-button");
+        if (!button || button.disabled) return;
+
+        const originalText = button.textContent;
+        button.disabled = true;
+
+        try {
+          const response = await fetch(form.action, {
+            method: "POST",
+            headers: {
+              "Accept": "application/json",
+              "X-Requested-With": "fetch"
+            }
+          });
+          if (!response.ok) {
+            throw new Error("toggle_failed");
+          }
+          const data = await response.json();
+          const active = !!(data && data.active);
+          button.textContent = active ? "Aktiv" : "Inaktiv";
+          button.classList.toggle("admin-btn-status--active", active);
+          button.classList.toggle("admin-btn-status--inactive", !active);
+        } catch (_error) {
+          button.textContent = originalText;
+          window.location.reload();
+        } finally {
+          button.disabled = false;
+        }
+      });
+    });
+  })();
+</script>
 {% endblock %}

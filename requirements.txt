@@ -13,6 +13,7 @@ passlib==1.7.4
 openpyxl==3.1.5
 # fpdf2 hängt Pillow als Pflicht an. PyFPDF 1.x (Paketname ``fpdf``) ohne Pillow — Termux-tauglich.
 fpdf==1.7.2
+qrcode==8.2
 pytest==8.3.4
 # httpx 0.28: TestClient (Starlette 0.27) übergibt app= — inkompatibel; für Tests <0.28
 httpx>=0.24.0,<0.28.0

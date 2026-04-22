@@ -44,6 +44,8 @@
 
 body {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   color: var(--kas-page-fg);
   background-color: var(--kas-bg-deep);
   /* Kachel-PNG, darüber halbtransparente Schicht damit Text/UI lesbar bleiben */
@@ -271,6 +273,7 @@ body {
 
 .site-main {
   max-width: 1100px;
+  flex: 1 0 auto;
   padding-bottom: 2.5rem;
 }
 
@@ -279,24 +282,13 @@ body {
 }
 
 .site-footer-note {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0.45rem;
-  z-index: 70;
+  margin-top: auto;
+  padding: 0.75rem 0 1rem;
+  border-top: 1px solid rgba(212, 160, 18, 0.26);
   font-size: 0.72rem;
   letter-spacing: 0.01em;
   color: rgba(236, 240, 232, 0.72);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.48);
-}
-
-.site-footer-note__center {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 0.45rem;
-  text-align: center;
-  font-weight: 800;
 }
 
 /* Easter-Egg: größere Touch-Fläche, kein Text-Markieren */
@@ -309,20 +301,95 @@ body {
   border-radius: 8px;
 }
 
-.site-footer-note__right {
-  position: fixed;
-  right: 1rem;
-  bottom: 0.45rem;
-  display: inline-flex;
+.site-footer-note__inner {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
+  justify-content: center;
+  gap: 0.3rem;
+  text-align: center;
   font-weight: 600;
 }
 
-.site-footer-note__repo {
+.site-footer-note__version {
+  color: rgba(236, 240, 232, 0.72);
+}
+
+.site-footer-note__repo-link {
   color: rgba(236, 240, 232, 0.88);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(236, 240, 232, 0.44);
+}
+
+.site-footer-note__repo-link:hover {
+  color: #fff7d0;
+  border-bottom-color: rgba(255, 247, 208, 0.72);
+}
+
+.site-repo-qr-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+}
+
+.site-repo-qr-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 10, 8, 0.72);
+}
+
+.site-repo-qr-modal__card {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 22rem);
+  margin: 8vh auto 0;
+  padding: 1rem 1rem 1.15rem;
+  border-radius: var(--kas-radius);
+  border: 1px solid rgba(212, 160, 18, 0.35);
+  background: var(--kas-surface);
+  color: var(--kas-text);
+  box-shadow: var(--kas-shadow-hover);
+  text-align: center;
+}
+
+.site-repo-qr-modal__close {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.site-repo-qr-modal__title {
+  margin: 0 0 0.8rem;
+  font-size: 1.05rem;
+}
+
+.site-repo-qr-modal__image {
+  display: block;
+  width: min(15rem, 70vw);
+  height: auto;
+  margin: 0 auto 0.8rem;
+  background: #fff;
+  padding: 0.5rem;
+  border-radius: var(--kas-radius-sm);
+}
+
+.site-repo-qr-modal__url {
+  word-break: break-word;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+body.site-repo-qr-open {
+  overflow: hidden;
 }
 
 .site-main a:not([role="button"]):not(.k-tile):not(.admin-card) {
@@ -1479,12 +1546,13 @@ body.app-admin .table-wrap .form-inline-action {
 }
 
 body.app-admin .table-wrap button.admin-btn-sm {
-  padding: 0.38rem 0.78rem;
+  padding: 0 0.9rem;
   font-size: 0.76rem;
   font-weight: 700;
   line-height: 1.2;
   border-radius: var(--kas-radius-button);
-  min-height: 2rem;
+  min-height: 2.2rem;
+  box-sizing: border-box;
 }
 
 body.app-admin .table-wrap .admin-action-btn {
@@ -1492,14 +1560,17 @@ body.app-admin .table-wrap .admin-action-btn {
   align-items: center;
   justify-content: center;
   min-width: 5.8rem;
-  min-height: 2rem;
+  height: 2.2rem;
+  min-height: 2.2rem;
+  box-sizing: border-box;
+  vertical-align: middle;
 }
 
 body.app-admin .table-wrap a.admin-btn-edit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.38rem 0.78rem;
+  padding: 0 0.9rem;
   font-size: 0.76rem;
   font-weight: 700;
   line-height: 1.2;
@@ -1580,27 +1651,28 @@ body.app-admin .table-wrap a[role="button"]:hover {
 }
 
 body.app-admin .admin-products-table {
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 body.app-admin .admin-products-table th:nth-child(1),
 body.app-admin .admin-products-table td:nth-child(1) {
-  width: 42%;
+  width: 1%;
+  white-space: nowrap;
 }
 
 body.app-admin .admin-products-table th:nth-child(2),
 body.app-admin .admin-products-table td:nth-child(2) {
-  width: 16%;
+  width: 7rem;
 }
 
 body.app-admin .admin-products-table th:nth-child(3),
 body.app-admin .admin-products-table td:nth-child(3) {
-  width: 10%;
+  width: 5rem;
 }
 
 body.app-admin .admin-products-table th:nth-child(4),
 body.app-admin .admin-products-table td:nth-child(4) {
-  width: 32%;
+  width: 18rem;
 }
 
 body.app-admin .backup-archive-wrap {

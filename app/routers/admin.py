@@ -12,7 +12,7 @@ from typing import Optional
 from urllib.parse import quote
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 
 from app import admin_auth
 from app import backup_service
@@ -1046,13 +1046,27 @@ def admin_products_delete(request: Request, product_id: int) -> RedirectResponse
 
 
 @router.post("/products/{product_id}/toggle")
-def admin_products_toggle(request: Request, product_id: int) -> RedirectResponse:
+def admin_products_toggle(request: Request, product_id: int) -> Response:
     if (r := _redirect_login(request)):
         return r
     with db.get_connection() as conn:
+        row = db.fetch_one(conn, "SELECT id, active FROM products WHERE id = ?", (product_id,))
+        if not row:
+            raise HTTPException(status_code=404)
         conn.execute(
             "UPDATE products SET active = CASE WHEN active = 1 THEN 0 ELSE 1 END WHERE id = ?",
             (product_id,),
+        )
+        updated = db.fetch_one(conn, "SELECT active FROM products WHERE id = ?", (product_id,))
+    accepts_json = "application/json" in (request.headers.get("accept") or "").lower()
+    fetch_toggle = (request.headers.get("x-requested-with") or "").lower() == "fetch"
+    if accepts_json or fetch_toggle:
+        return JSONResponse(
+            {
+                "ok": True,
+                "product_id": int(product_id),
+                "active": bool(updated and int(updated["active"]) == 1),
+            }
         )
     return RedirectResponse("/admin/products", status_code=303)
 

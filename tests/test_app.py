@@ -34,6 +34,9 @@ def test_kiosk_home() -> None:
         assert "kasse.css" in r.text
         assert "Top 10" in r.text or "Top Ten" in r.text
         assert "Preisliste" in r.text
+        assert "github.com/chrishaef/termux-kasse" in r.text
+        assert 'id="site-repo-link"' in r.text
+        assert 'src="/repo/qr.svg"' in r.text
 
 
 def test_kiosk_top_ten_shows_active_users() -> None:
@@ -99,3 +102,11 @@ def test_kiosk_flappy_easter_egg_route() -> None:
         r = c.get("/egg/flappy")
         assert r.status_code == 200
         assert "flappy-canvas" in r.text
+
+
+def test_repo_qr_svg_route() -> None:
+    with TestClient(app) as c:
+        r = c.get("/repo/qr.svg")
+        assert r.status_code == 200
+        assert r.headers["content-type"].startswith("image/svg+xml")
+        assert "<svg" in r.text

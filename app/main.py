@@ -2,12 +2,16 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from datetime import datetime
+import io
 from pathlib import Path
 import re
 import subprocess
 
+import qrcode
 from fastapi import FastAPI, Request
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
+from qrcode.image.svg import SvgPathImage
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_secret_key
@@ -19,6 +23,8 @@ from app import ledger_service
 from app import system_settings
 from app.db import init_db
 from app.routers import admin, kiosk
+
+REPO_URL = "https://github.com/chrishaef/termux-kasse"
 
 
 def _git_version_label(root: Path) -> str:
@@ -86,6 +92,7 @@ async def attach_kiosk_notice(request: Request, call_next):
     except Exception:
         request.state.kiosk_notice = kiosk_notice.DEFAULT_KIOSK_NOTICE
     request.state.last_sync_label = _last_sync_label()
+    request.state.repo_url = REPO_URL
     return await call_next(request)
 
 
@@ -152,6 +159,14 @@ app.add_middleware(
 
 static_dir = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+
+@app.get("/repo/qr.svg")
+def repo_qr_svg() -> Response:
+    buf = io.BytesIO()
+    img = qrcode.make(REPO_URL, image_factory=SvgPathImage, box_size=8, border=2)
+    img.save(buf)
+    return Response(content=buf.getvalue(), media_type="image/svg+xml")
 
 app.include_router(kiosk.router)
 app.include_router(admin.router)

@@ -32,3 +32,23 @@ def test_admin_products_status_is_shown_on_toggle_button() -> None:
         assert page_after.status_code == 200
         assert re.search(r">\s*Inaktiv\s*</button>", page_after.text)
         assert "admin-btn-status--inactive" in page_after.text
+
+
+def test_admin_products_toggle_returns_json_for_fetch_requests() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/products", data={"name": "Wasser", "price_eur": "1.00"})
+
+        with db.get_connection() as conn:
+            pid = int(conn.execute("SELECT id FROM products WHERE name = 'Wasser'").fetchone()[0])
+
+        toggle = client.post(
+            f"/admin/products/{pid}/toggle",
+            headers={"accept": "application/json", "x-requested-with": "fetch"},
+        )
+        assert toggle.status_code == 200
+        assert toggle.json() == {"ok": True, "product_id": pid, "active": False}
+
+        with db.get_connection() as conn:
+            active = int(conn.execute("SELECT active FROM products WHERE id = ?", (pid,)).fetchone()[0])
+        assert active == 0
