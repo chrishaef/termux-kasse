@@ -64,6 +64,38 @@ def test_kiosk_top_ten_shows_active_users() -> None:
         assert r.text.find("Ben") < r.text.find("Anna")
 
 
+def test_kiosk_top_ten_can_rank_by_payments() -> None:
+    with TestClient(app) as c:
+        c.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        c.post("/admin/groups", data={"name": "G1"})
+        with db.get_connection() as conn:
+            gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
+        c.post("/admin/users", data={"name": "Anna", "group_id": str(gid)})
+        c.post("/admin/users", data={"name": "Ben", "group_id": str(gid)})
+        c.post("/admin/products", data={"name": "Groß", "price_eur": "3.00"})
+        c.post("/admin/products", data={"name": "Klein", "price_eur": "1.00"})
+        with db.get_connection() as conn:
+            users = conn.execute("SELECT id FROM users ORDER BY name").fetchall()
+            uid_anna = int(users[0][0])
+            uid_ben = int(users[1][0])
+            pid_gross = int(conn.execute("SELECT id FROM products WHERE name='Groß'").fetchone()[0])
+            pid_klein = int(conn.execute("SELECT id FROM products WHERE name='Klein'").fetchone()[0])
+            add_purchase(conn, uid_anna, pid_gross, "Groß (x1)", 300)
+            add_purchase(conn, uid_ben, pid_klein, "Klein (x1)", 100)
+            add_purchase(conn, uid_ben, pid_klein, "Klein (x1)", 100)
+        by_entries = c.get("/top-ten?ranking=entries")
+        assert by_entries.status_code == 200
+        assert ">Buchungen<" not in by_entries.text
+        assert ">Zahlungen<" not in by_entries.text
+        assert "k-top-ten-switch__btn--active" in by_entries.text
+        assert by_entries.text.find("Ben") < by_entries.text.find("Anna")
+        by_payments = c.get("/top-ten?ranking=payments")
+        assert by_payments.status_code == 200
+        assert ">Buchungen<" not in by_payments.text
+        assert ">Zahlungen<" not in by_payments.text
+        assert by_payments.text.find("Anna") < by_payments.text.find("Ben")
+
+
 def test_kiosk_preisliste_shows_products() -> None:
     with TestClient(app) as c:
         c.post("/admin/login", data={"password": "admin"}, follow_redirects=False)

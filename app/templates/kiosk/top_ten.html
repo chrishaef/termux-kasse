@@ -3,24 +3,37 @@
 {% block content %}
 <a href="/" class="admin-back">← Zurück</a>
 
-<article class="k-panel k-top-ten-head">
-  <h1 class="k-top-ten-head__title">Top 10</h1>
-  <p class="k-top-ten-head__lead">Ranking nach Anzahl der Buchungen.</p>
-</article>
+<div class="k-top-ten-switch" role="tablist" aria-label="Ranking-Sortierung">
+  <a
+    href="/top-ten?ranking=entries"
+    role="button"
+    class="{% if ranking_mode == 'entries' %}k-top-ten-switch__btn--active{% else %}secondary outline{% endif %}"
+  >Nach Buchungen</a>
+  <a
+    href="/top-ten?ranking=payments"
+    role="button"
+    class="{% if ranking_mode == 'payments' %}k-top-ten-switch__btn--active{% else %}secondary outline{% endif %}"
+  >Nach Zahlungen</a>
+</div>
 
 <div class="table-wrap k-top-ten-table-wrap">
   <table role="grid" class="k-top-ten-table">
-    <thead><tr><th>#</th><th>Nutzer</th><th>Gruppe</th><th class="num">Buchungen</th></tr></thead>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Nutzer</th>
+        <th>Gruppe</th>
+      </tr>
+    </thead>
     <tbody>
       {% for row in rows %}
       <tr>
         <td class="num">{{ loop.index }}</td>
         <td>{{ row['user_name'] }}</td>
         <td>{{ row['group_name'] }}</td>
-        <td class="num">{{ row['entries_count'] }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="4" class="secondary">Noch keine Buchungen vorhanden.</td></tr>
+      <tr><td colspan="3" class="secondary">Noch keine Buchungen vorhanden.</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -579,10 +579,13 @@ def period_product_stats(
     return aggregate_ledger_lines(rows)
 
 
-def top_ten_active_users(conn: sqlite3.Connection) -> list[sqlite3.Row]:
+def top_ten_active_users(conn: sqlite3.Connection, ranking: str = "entries") -> list[sqlite3.Row]:
+    order_by = "entries_count DESC, total_cents DESC, u.name COLLATE NOCASE"
+    if ranking == "payments":
+        order_by = "total_cents DESC, entries_count DESC, u.name COLLATE NOCASE"
     return db.fetch_all(
         conn,
-        """
+        f"""
         SELECT
             g.name AS group_name,
             u.name AS user_name,
@@ -592,7 +595,7 @@ def top_ten_active_users(conn: sqlite3.Connection) -> list[sqlite3.Row]:
         JOIN users u ON u.id = le.user_id
         JOIN user_groups g ON g.id = u.group_id
         GROUP BY u.id, g.id
-        ORDER BY entries_count DESC, total_cents DESC, u.name COLLATE NOCASE
+        ORDER BY {order_by}
         LIMIT 10
         """,
         (),

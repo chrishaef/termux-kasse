@@ -27,13 +27,14 @@ def kiosk_home(request: Request) -> HTMLResponse:
 
 
 @router.get("/top-ten", response_class=HTMLResponse)
-def kiosk_top_ten(request: Request) -> HTMLResponse:
+def kiosk_top_ten(request: Request, ranking: str = "entries") -> HTMLResponse:
+    ranking_mode = "payments" if ranking == "payments" else "entries"
     with db.get_connection() as conn:
-        rows = ledger_service.top_ten_active_users(conn)
+        rows = ledger_service.top_ten_active_users(conn, ranking_mode)
     return TEMPLATES.TemplateResponse(
         request,
         "kiosk/top_ten.html",
-        {"title": "Top Ten", "rows": rows},
+        {"title": "Top Ten", "rows": rows, "ranking_mode": ranking_mode},
     )
 
 
