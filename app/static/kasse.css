@@ -334,6 +334,19 @@ body {
   border-bottom-color: rgba(255, 247, 208, 0.72);
 }
 
+.site-footer-note__online-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.08rem 0.44rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #eaffea;
+  background: #1d6e2f;
+}
+
 .site-repo-qr-modal {
   position: fixed;
   inset: 0;

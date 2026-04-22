@@ -48,6 +48,9 @@
       <button type="button" class="site-footer-note__version site-footer-note__version-btn" id="site-repo-link">
         Version: {{ request.state.version_commit_label }}
       </button>
+      {% if request.state.remote_online %}
+      <span class="site-footer-note__online-badge">online</span>
+      {% endif %}
     </div>
   </footer>
   <div class="site-repo-qr-modal" id="site-repo-qr-modal" hidden>

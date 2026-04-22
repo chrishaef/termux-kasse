@@ -27,9 +27,10 @@ from app.routers import admin, kiosk
 
 REPO_URL = "https://github.com/chrishaef/termux-kasse"
 APP_STARTED_AT = datetime.now()
-_FRESHNESS_CACHE_TTL_SECONDS = 300.0
+_FRESHNESS_CACHE_TTL_SECONDS = 60.0
 _freshness_cache_checked_at = 0.0
 _freshness_cache_label = "unknown"
+_freshness_cache_online = False
 
 
 def _git_version_label(root: Path) -> str:
@@ -74,6 +75,7 @@ def _git_commit_short(root: Path) -> str:
 def _commit_freshness_label(root: Path) -> str:
     global _freshness_cache_checked_at
     global _freshness_cache_label
+    global _freshness_cache_online
     now = time.monotonic()
     if (now - _freshness_cache_checked_at) < _FRESHNESS_CACHE_TTL_SECONDS:
         return _freshness_cache_label
@@ -99,10 +101,13 @@ def _commit_freshness_label(root: Path) -> str:
         remote_sha = remote_line.split()[0] if remote_line else ""
         if head.returncode != 0 or origin_main.returncode != 0 or not head_sha or not remote_sha:
             _freshness_cache_label = "unknown"
+            _freshness_cache_online = False
         else:
             _freshness_cache_label = "latest" if head_sha == remote_sha else "outdated"
+            _freshness_cache_online = True
     except Exception:
         _freshness_cache_label = "unknown"
+        _freshness_cache_online = False
     _freshness_cache_checked_at = now
     return _freshness_cache_label
 
@@ -163,6 +168,7 @@ async def attach_kiosk_notice(request: Request, call_next):
     request.state.version_label = version_label
     request.state.version_commit_label = f"{version_label} ({_git_commit_short(root)})"
     request.state.version_status_label = _commit_freshness_label(root)
+    request.state.remote_online = _freshness_cache_online
     request.state.last_sync_label = last_sync_label
     request.state.last_sync_at_label = last_sync_at_label
     request.state.system_started_label = APP_STARTED_AT.strftime("%d.%m.%y %H.%M")

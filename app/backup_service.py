@@ -14,6 +14,7 @@ from app.config import db_path, year_end_exports_dir
 BACKUP_ARCHIVE_KEEP = 25
 AUTO_BACKUP_INTERVAL_DAYS = 7
 AUTO_BACKUP_RETENTION_DAYS = 28
+AUTO_BACKUP_MISSING_GRACE_MINUTES = 5
 KEY_LAST_AUTO_BACKUP_AT = "last_auto_backup_at"
 
 _AUTO_BACKUP_LOCK = threading.Lock()
@@ -199,10 +200,17 @@ def maybe_create_weekly_backup(now: datetime | None = None) -> Path | None:
         return None
     with _AUTO_BACKUP_LOCK:
         prune_expired_auto_backups(current)
+        latest_existing_auto = get_last_existing_auto_backup_at()
         with db.get_connection() as conn:
             last = get_last_auto_backup_at(conn)
-            if last and current - last < timedelta(days=AUTO_BACKUP_INTERVAL_DAYS):
-                return None
+            if latest_existing_auto is None:
+                # If auto backups were deleted manually, wait a short grace period
+                # before creating a replacement backup, then recreate immediately.
+                if last and current - last < timedelta(minutes=AUTO_BACKUP_MISSING_GRACE_MINUTES):
+                    return None
+            else:
+                if last and current - last < timedelta(days=AUTO_BACKUP_INTERVAL_DAYS):
+                    return None
         created = create_system_backup_archive(current, automatic=True)
         if created is None:
             return None

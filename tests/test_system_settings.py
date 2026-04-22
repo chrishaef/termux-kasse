@@ -139,3 +139,30 @@ def test_last_auto_backup_is_none_when_auto_backup_files_are_deleted(tmp_path) -
             assert stored_after is not None
         existing_after = backup_service.get_last_existing_auto_backup_at()
         assert existing_after is None
+
+
+def test_missing_auto_backup_waits_five_minutes_then_recreates(tmp_path) -> None:
+    archive_dir = tmp_path / "data" / "system_backups"
+    with TestClient(app) as client:
+        first = client.get("/")
+        assert first.status_code == 200
+        existing = sorted(archive_dir.glob("kasse-system-backup-*.zip"))
+        assert len(existing) == 1
+
+        for path in archive_dir.glob("*.zip"):
+            path.unlink(missing_ok=True)
+        assert sorted(archive_dir.glob("kasse-system-backup-*.zip")) == []
+
+        with db.get_connection() as conn:
+            backup_service.set_last_auto_backup_at(conn, datetime.now() - timedelta(minutes=4))
+        not_yet = client.get("/top-ten")
+        assert not_yet.status_code == 200
+        after_4m = sorted(archive_dir.glob("kasse-system-backup-*.zip"))
+        assert len(after_4m) == 0
+
+        with db.get_connection() as conn:
+            backup_service.set_last_auto_backup_at(conn, datetime.now() - timedelta(minutes=6))
+        due = client.get("/")
+        assert due.status_code == 200
+        after_6m = sorted(archive_dir.glob("kasse-system-backup-*.zip"))
+        assert len(after_6m) == 1
