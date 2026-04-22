@@ -1,7 +1,7 @@
 {% extends "admin/shell.html" %}
 {% block admin_page %}
 <a href="/admin" class="admin-back js-history-back">← Zurück</a>
-<article class="k-panel">
+<article class="k-panel" data-disable-admin-idle="1">
   {% if started %}
   <h2>Update und Neustart laufen</h2>
   <p>
@@ -43,9 +43,9 @@
   {% endif %}
 
   <hr />
-  <p><strong>Letzte Update-Logzeilen</strong></p>
+  <p><strong>Bisherige Update-Logzeilen</strong></p>
   {% if update_log_lines %}
-  <pre>{{ "\n".join(update_log_lines) }}</pre>
+  <pre class="admin-update-log-box">{{ "\n".join(update_log_lines) }}</pre>
   {% else %}
   <p class="secondary">Noch keine Update-Logs vorhanden.</p>
   {% endif %}

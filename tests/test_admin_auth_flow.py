@@ -100,7 +100,8 @@ def test_admin_system_update_page_is_available() -> None:
         assert "Installiert:" in r.text
         assert "Neueste verfügbare Version:" in r.text
         assert 'name="master_password"' in r.text
-        assert "Letzte Update-Logzeilen" in r.text
+        assert "Bisherige Update-Logzeilen" in r.text
+        assert ("admin-update-log-box" in r.text) or ("Noch keine Update-Logs vorhanden." in r.text)
 
 
 def test_admin_system_update_result_page_is_available() -> None:
@@ -109,6 +110,8 @@ def test_admin_system_update_result_page_is_available() -> None:
         r = client.get("/admin/system-update/result")
         assert r.status_code == 200
         assert "System-Update Protokoll" in r.text
+        assert "Aktuelle Update-Logzeilen nach dem Neustart" in r.text
+        assert ("admin-update-log-box" in r.text) or ("Noch keine Update-Logs vorhanden." in r.text)
         assert "Zurück zum System" in r.text
 
 

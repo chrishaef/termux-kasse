@@ -143,6 +143,7 @@
 
       if (document.body.classList.contains("app-admin")) {
         (function () {
+          if (document.querySelector("[data-disable-admin-idle='1']")) return;
           const logoutForm = document.querySelector("form.admin-head-logout");
           if (!logoutForm) return;
 

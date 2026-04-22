@@ -167,7 +167,7 @@ def _system_update_precheck() -> dict[str, str | bool]:
     }
 
 
-def _read_update_log_snippet(max_lines: int = 12) -> list[str]:
+def _read_update_log_snippet(max_lines: int = 80) -> list[str]:
     root = Path(__file__).resolve().parent.parent.parent
     log_path = root / "update-trigger.log"
     try:
