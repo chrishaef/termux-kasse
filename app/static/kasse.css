@@ -616,9 +616,9 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .k-user-head__title-row {
   display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
 }
 
 .k-user-head__inline-back {

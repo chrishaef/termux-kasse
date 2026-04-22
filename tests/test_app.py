@@ -98,7 +98,7 @@ def test_kiosk_user_shows_credit_with_plus_and_green_class() -> None:
         assert "k-user-head__balance-value--credit" in r.text
         assert 'href="/g/' in r.text
         assert "k-user-head__inline-back" in r.text
-        assert ">← Zurück</a>" in r.text
+        assert ">← G1</a>" in r.text
         assert 'id="site-repo-link"' not in r.text
 
 
