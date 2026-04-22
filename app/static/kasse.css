@@ -1171,17 +1171,22 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .admin-card--meta {
-  gap: 0.25rem;
-}
-
-.admin-card--meta strong {
-  white-space: normal;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.08rem;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  overflow: hidden;
 }
 
 .admin-card--meta span {
-  font-size: 0.73rem;
-  line-height: 1.18;
+  font-size: 0.67rem;
+  line-height: 1.06;
   color: #c8d1c2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 @media (max-width: 700px) {

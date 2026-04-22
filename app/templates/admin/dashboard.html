@@ -134,9 +134,10 @@
   </li>
   <li class="admin-cards__item--wide">
     <article class="admin-card admin-card--meta">
-      <strong>Systemstatus</strong>
-      <span>Update {{ request.state.last_sync_at_label }} · Version {{ request.state.version_label }} · Start {{ request.state.system_started_label }}</span>
-      <span>Auto-Backup {{ telemetry_extra['auto_backup_label'] }} ({{ telemetry_extra['auto_backup_next_label'] }}) · Speicher frei {{ telemetry_extra['disk_free_label'] }}</span>
+      <span>Version: {{ request.state.version_commit_label }}</span>
+      <span>Start: {{ request.state.system_started_label }}</span>
+      <span>Backup: {{ telemetry_extra['auto_backup_label'] }} ({{ telemetry_extra['auto_backup_next_label'] }})</span>
+      <span>Speicher: {{ telemetry_extra['disk_free_label'] }}</span>
     </article>
   </li>
 </ul>

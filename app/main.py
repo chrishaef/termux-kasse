@@ -46,6 +46,22 @@ def _git_version_label(root: Path) -> str:
         return "unbekannt"
 
 
+def _git_commit_short(root: Path) -> str:
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=1.5,
+        )
+        sha = (out.stdout or "").strip()
+        return sha if sha else "unbekannt"
+    except Exception:
+        return "unbekannt"
+
+
 def _last_sync_at(root: Path) -> datetime | None:
     sync_file = root / ".last_sync"
     git_dir = root / ".git"
@@ -97,8 +113,10 @@ async def attach_kiosk_notice(request: Request, call_next):
         request.state.kiosk_notice = kiosk_notice.get_display_text()
     except Exception:
         request.state.kiosk_notice = kiosk_notice.DEFAULT_KIOSK_NOTICE
+    root = Path(__file__).resolve().parent.parent
     version_label, last_sync_label, last_sync_at_label = _sync_labels()
     request.state.version_label = version_label
+    request.state.version_commit_label = f"{version_label} ({_git_commit_short(root)})"
     request.state.last_sync_label = last_sync_label
     request.state.last_sync_at_label = last_sync_at_label
     request.state.system_started_label = APP_STARTED_AT.strftime("%d.%m.%y")
