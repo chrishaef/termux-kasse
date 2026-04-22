@@ -41,6 +41,8 @@
     {% block trust %}{% endblock %}
     {% block content %}{% endblock %}
   </main>
+  {% set show_footer_note = request.url.path in ['/', '/preisliste'] %}
+  {% if show_footer_note %}
   <footer class="site-footer-note" aria-label="Systemhinweis">
     <div class="site-footer-note__inner container">
       <span class="site-footer-note__version">Version: {{ request.state.last_sync_label }}</span>
@@ -54,13 +56,12 @@
   </footer>
   <div class="site-repo-qr-modal" id="site-repo-qr-modal" hidden>
     <div class="site-repo-qr-modal__backdrop" data-close-repo-qr="1"></div>
-    <div class="site-repo-qr-modal__card" role="dialog" aria-modal="true" aria-labelledby="site-repo-qr-title">
+    <div class="site-repo-qr-modal__card" role="dialog" aria-modal="true" aria-label="QR-Code zum Repository">
       <button type="button" class="site-repo-qr-modal__close" id="site-repo-qr-close" aria-label="QR-Code schließen">×</button>
-      <h2 id="site-repo-qr-title" class="site-repo-qr-modal__title">Repository QR-Code</h2>
       <img src="/repo/qr.svg" alt="QR-Code zum Repository" class="site-repo-qr-modal__image" />
-      <a href="{{ request.state.repo_url }}" class="site-repo-qr-modal__url" target="_blank" rel="noopener noreferrer">{{ request.state.repo_url }}</a>
     </div>
   </div>
+  {% endif %}
   <script>
     (function () {
       const APP_TIMEOUTS = {

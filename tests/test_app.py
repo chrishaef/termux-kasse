@@ -59,6 +59,7 @@ def test_kiosk_top_ten_shows_active_users() -> None:
         r = c.get("/top-ten")
         assert r.status_code == 200
         assert "Top Ten" in r.text
+        assert 'id="site-repo-link"' not in r.text
         # Ben hat mehr Buchungen und sollte vor Anna erscheinen.
         assert r.text.find("Ben") < r.text.find("Anna")
 
@@ -71,6 +72,8 @@ def test_kiosk_preisliste_shows_products() -> None:
         assert r.status_code == 200
         assert "Preisliste" in r.text
         assert "Wasser" in r.text
+        assert 'id="site-repo-link"' in r.text
+        assert 'src="/repo/qr.svg"' in r.text
 
 
 def test_kiosk_user_shows_credit_with_plus_and_green_class() -> None:
@@ -95,6 +98,7 @@ def test_kiosk_user_shows_credit_with_plus_and_green_class() -> None:
         assert "k-user-head__balance-value--credit" in r.text
         assert 'href="/g/' in r.text
         assert ">G1</a>" in r.text
+        assert 'id="site-repo-link"' not in r.text
 
 
 def test_kiosk_flappy_easter_egg_route() -> None:
