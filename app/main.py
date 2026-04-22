@@ -196,6 +196,17 @@ async def ensure_weekly_backup(request: Request, call_next):
     return await call_next(request)
 
 
+def _is_public_kiosk_html_path(path: str) -> bool:
+    """HTML routes of the kiosk UI (not /admin). Used to end admin session only when actually opening the kiosk."""
+    if path in ("/", "/preisliste", "/top-ten"):
+        return True
+    if path.startswith("/g/") or path.startswith("/u/"):
+        return True
+    if path.startswith("/egg/"):
+        return True
+    return False
+
+
 @app.middleware("http")
 async def auto_logout_admin_outside_panel(request: Request, call_next):
     path = request.url.path
@@ -206,7 +217,11 @@ async def auto_logout_admin_outside_panel(request: Request, call_next):
     if is_admin_logged_in:
         accept = (request.headers.get("accept") or "").lower()
         is_html_navigation = request.method == "GET" and "text/html" in accept
-        if is_html_navigation and not path.startswith("/admin"):
+        if (
+            is_html_navigation
+            and not path.startswith("/admin")
+            and _is_public_kiosk_html_path(path)
+        ):
             request.session.clear()
     return await call_next(request)
 

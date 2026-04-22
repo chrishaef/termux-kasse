@@ -64,6 +64,20 @@ def test_admin_session_is_closed_when_leaving_admin_panel() -> None:
         assert admin_again.headers["location"] == "/admin/login"
 
 
+def test_admin_session_not_cleared_on_non_kiosk_paths_even_with_html_accept() -> None:
+    """Avoids logging out on odd clients (e.g. WebView) that send text/html for subresources."""
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        weird = client.get(
+            "/static/pico.min.css",
+            headers={"accept": "text/html;q=0.8,text/css,*/*;q=0.1"},
+            follow_redirects=False,
+        )
+        assert weird.status_code == 200
+        admin_again = client.get("/admin", follow_redirects=False)
+        assert admin_again.status_code == 200
+
+
 def test_admin_dashboard_shows_telemetry_data() -> None:
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
