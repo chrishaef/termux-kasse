@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.routers import admin as admin_router
 
 
 def test_admin_login_accepts_default_password() -> None:
@@ -76,3 +77,28 @@ def test_admin_dashboard_shows_telemetry_data() -> None:
         assert "Speicher:" in r.text
         assert "GB frei /" in r.text
         assert ("latest" in r.text) or ("outdated" in r.text) or ("unknown" in r.text)
+
+
+def test_admin_dashboard_shows_system_update_button() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.get("/admin")
+        assert r.status_code == 200
+        assert 'action="/admin/system-update"' in r.text
+        assert "admin-version-state--action" in r.text
+        assert ">update</button>" in r.text
+
+
+def test_admin_system_update_triggers_background_runner(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def fake_trigger() -> None:
+        calls.append("called")
+
+    monkeypatch.setattr(admin_router, "_trigger_background_update", fake_trigger)
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.post("/admin/system-update", follow_redirects=False)
+        assert r.status_code == 303
+        assert r.headers["location"] == "/admin?update=1"
+    assert calls == ["called"]

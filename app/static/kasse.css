@@ -1224,6 +1224,23 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   color: #f7fafc;
 }
 
+.admin-version-update-form {
+  display: inline;
+  margin: 0;
+}
+
+.admin-version-state--action {
+  margin-left: 0.28rem;
+  border: 0;
+  cursor: pointer;
+  background: #1f4b6f;
+  color: #e9f5ff;
+}
+
+.admin-version-state--action:hover {
+  background: #255b87;
+}
+
 @media (max-width: 700px) {
   .admin-cards__item--wide {
     grid-column: span 1;

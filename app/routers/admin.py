@@ -5,6 +5,7 @@ import json
 import re
 import shutil
 import sqlite3
+import subprocess
 import time
 import zipfile
 from datetime import datetime, timedelta
@@ -54,6 +55,24 @@ def _redirect_login(request: Request) -> Optional[RedirectResponse]:
     if not request.session.get("admin_user"):
         return RedirectResponse("/admin/login", status_code=303)
     return None
+
+
+def _trigger_background_update() -> None:
+    root = Path(__file__).resolve().parent.parent.parent
+    run_script = root / "run.sh"
+    if not run_script.exists():
+        raise FileNotFoundError("run.sh nicht gefunden")
+    log_path = root / "update-trigger.log"
+    with log_path.open("a", encoding="utf-8") as log_file:
+        log_file.write(f"\n=== Update ausgelöst: {datetime.now().isoformat()} ===\n")
+        log_file.flush()
+        subprocess.Popen(
+            ["bash", str(run_script)],
+            cwd=str(root),
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
 
 
 def _parse_price_eur_to_cents(raw: str) -> int:
@@ -269,6 +288,17 @@ def admin_dashboard(request: Request) -> Response:
             },
         },
     )
+
+
+@router.post("/system-update")
+def admin_system_update(request: Request) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    try:
+        _trigger_background_update()
+        return RedirectResponse("/admin?update=1", status_code=303)
+    except Exception:
+        return RedirectResponse("/admin?update_err=1", status_code=303)
 
 
 def _is_valid_sqlite_file(path: Path) -> bool:

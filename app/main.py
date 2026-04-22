@@ -6,6 +6,7 @@ import io
 from pathlib import Path
 import re
 import subprocess
+import time
 
 import qrcode
 from fastapi import FastAPI, Request
@@ -26,6 +27,9 @@ from app.routers import admin, kiosk
 
 REPO_URL = "https://github.com/chrishaef/termux-kasse"
 APP_STARTED_AT = datetime.now()
+_FRESHNESS_CACHE_TTL_SECONDS = 300.0
+_freshness_cache_checked_at = 0.0
+_freshness_cache_label = "unknown"
 
 
 def _git_version_label(root: Path) -> str:
@@ -63,6 +67,11 @@ def _git_commit_short(root: Path) -> str:
 
 
 def _commit_freshness_label(root: Path) -> str:
+    global _freshness_cache_checked_at
+    global _freshness_cache_label
+    now = time.monotonic()
+    if (now - _freshness_cache_checked_at) < _FRESHNESS_CACHE_TTL_SECONDS:
+        return _freshness_cache_label
     try:
         head = subprocess.run(
             ["git", "rev-parse", "HEAD"],
@@ -73,7 +82,7 @@ def _commit_freshness_label(root: Path) -> str:
             timeout=1.5,
         )
         origin_main = subprocess.run(
-            ["git", "rev-parse", "refs/remotes/origin/main"],
+            ["git", "ls-remote", "origin", "refs/heads/main"],
             cwd=str(root),
             capture_output=True,
             text=True,
@@ -81,12 +90,16 @@ def _commit_freshness_label(root: Path) -> str:
             timeout=1.5,
         )
         head_sha = (head.stdout or "").strip()
-        origin_sha = (origin_main.stdout or "").strip()
-        if not head_sha or not origin_sha:
-            return "unknown"
-        return "latest" if head_sha == origin_sha else "outdated"
+        remote_line = (origin_main.stdout or "").strip()
+        remote_sha = remote_line.split()[0] if remote_line else ""
+        if head.returncode != 0 or origin_main.returncode != 0 or not head_sha or not remote_sha:
+            _freshness_cache_label = "unknown"
+        else:
+            _freshness_cache_label = "latest" if head_sha == remote_sha else "outdated"
     except Exception:
-        return "unknown"
+        _freshness_cache_label = "unknown"
+    _freshness_cache_checked_at = now
+    return _freshness_cache_label
 
 
 def _last_sync_at(root: Path) -> datetime | None:
