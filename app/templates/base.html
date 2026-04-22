@@ -45,13 +45,9 @@
   {% if show_footer_note %}
   <footer class="site-footer-note" aria-label="Systemhinweis">
     <div class="site-footer-note__inner container">
-      <span class="site-footer-note__version">Version: {{ request.state.last_sync_label }}</span>
-      <a
-        href="{{ request.state.repo_url }}"
-        class="site-footer-note__repo-link"
-        id="site-repo-link"
-        rel="noopener noreferrer"
-      >github.com/chrishaef/termux-kasse</a>
+      <button type="button" class="site-footer-note__version site-footer-note__version-btn" id="site-repo-link">
+        Version: {{ request.state.last_sync_label }}
+      </button>
     </div>
   </footer>
   <div class="site-repo-qr-modal" id="site-repo-qr-modal" hidden>

@@ -34,8 +34,8 @@ def test_kiosk_home() -> None:
         assert "kasse.css" in r.text
         assert "Top 10" in r.text or "Top Ten" in r.text
         assert "Preisliste" in r.text
-        assert "github.com/chrishaef/termux-kasse" in r.text
         assert 'id="site-repo-link"' in r.text
+        assert "Version:" in r.text
         assert 'src="/repo/qr.svg"' in r.text
 
 

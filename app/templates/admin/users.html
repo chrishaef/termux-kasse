@@ -42,9 +42,9 @@
         <td class="num{% if u['settlements_count'] == 0 %} secondary{% endif %}">{{ u['settlements_count'] }}</td>
         <td class="td-actions">
           <div class="td-actions__inner">
-            <a href="/admin/users/{{ u['id'] }}/edit" class="admin-btn-sm admin-btn-edit">Bearbeiten</a>
+            <a href="/admin/users/{{ u['id'] }}/edit" class="admin-btn-sm admin-action-btn admin-btn-edit">Bearbeiten</a>
             <form method="post" action="/admin/users/{{ u['id'] }}/delete" class="form-inline-action" onsubmit="return confirm('Nutzer löschen?');">
-              <button type="submit" class="secondary admin-btn-sm admin-btn-danger">Löschen</button>
+              <button type="submit" class="secondary admin-btn-sm admin-action-btn admin-btn-danger">Löschen</button>
             </form>
           </div>
         </td>

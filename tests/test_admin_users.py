@@ -29,6 +29,8 @@ def test_admin_users_overview_shows_balances_and_totals() -> None:
         r = client.get("/admin/users")
         assert r.status_code == 200
         assert "Nutzer" in r.text
+        assert "admin-user-overview" in r.text
+        assert "admin-action-btn" in r.text
         assert "Saldo" in r.text
         assert "2,00 €" in r.text
         assert "<tfoot>" in r.text

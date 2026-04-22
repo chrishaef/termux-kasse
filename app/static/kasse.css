@@ -315,15 +315,21 @@ body {
   color: rgba(236, 240, 232, 0.72);
 }
 
-.site-footer-note__repo-link {
+.site-footer-note__version-btn {
+  padding: 0;
+  min-height: 0;
+  border: 0;
+  background: transparent;
   color: rgba(236, 240, 232, 0.88);
+  font: inherit;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  text-decoration: none;
   border-bottom: 1px dashed rgba(236, 240, 232, 0.44);
+  border-radius: 0;
+  cursor: pointer;
 }
 
-.site-footer-note__repo-link:hover {
+.site-footer-note__version-btn:hover {
   color: #fff7d0;
   border-bottom-color: rgba(255, 247, 208, 0.72);
 }
@@ -1667,6 +1673,26 @@ body.app-admin .admin-products-table td:nth-child(3) {
 body.app-admin .admin-products-table th:nth-child(4),
 body.app-admin .admin-products-table td:nth-child(4) {
   width: 18rem;
+}
+
+body.app-admin .admin-table-groups {
+  table-layout: auto;
+}
+
+body.app-admin .admin-table-groups th:nth-child(1),
+body.app-admin .admin-table-groups td:nth-child(1) {
+  width: 1%;
+  white-space: nowrap;
+}
+
+body.app-admin .admin-table-groups th:nth-child(2),
+body.app-admin .admin-table-groups td:nth-child(2) {
+  width: 16rem;
+}
+
+body.app-admin .admin-user-overview th:last-child,
+body.app-admin .admin-user-overview td:last-child {
+  width: 12.5rem;
 }
 
 body.app-admin .backup-archive-wrap {

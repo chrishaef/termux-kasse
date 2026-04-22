@@ -10,6 +10,10 @@ def test_admin_group_edit_flow() -> None:
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         client.post("/admin/groups", data={"name": "Alpha"})
+        overview = client.get("/admin/groups")
+        assert overview.status_code == 200
+        assert "admin-table-groups" in overview.text
+        assert "admin-action-btn" in overview.text
         with db.get_connection() as conn:
             gid = int(conn.execute("SELECT id FROM user_groups WHERE name='Alpha'").fetchone()[0])
         r = client.get(f"/admin/groups/{gid}/edit")
