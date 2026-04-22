@@ -54,6 +54,7 @@ def test_admin_statistics_page_pdf_and_xlsx() -> None:
         assert r.status_code == 200
         assert "Statistik Zeitraum wählen" in r.text
         assert "admin-statistics-toolbar" in r.text
+        assert "admin-statistics-toolbar__filters" in r.text
         assert "admin-statistics-toolbar__actions" in r.text
         assert "Topliste Nutzer (nach Summe)" in r.text
         assert "Topliste Nutzer (Ausstände)" in r.text

@@ -5,16 +5,18 @@
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.1rem">Statistik Zeitraum wählen</h2>
   <form method="get" action="/admin/statistics" class="admin-statistics-toolbar">
-    <label>Von <input type="date" name="start" value="{{ start }}" /></label>
-    <label>Bis <input type="date" name="end" value="{{ end }}" /></label>
-    <label>Nutzergruppe
-      <select name="group_id">
-        <option value="">Alle Gruppen</option>
-        {% for g in groups %}
-        <option value="{{ g['id'] }}"{% if selected_group_id == g['id'] %} selected{% endif %}>{{ g['name'] }}</option>
-        {% endfor %}
-      </select>
-    </label>
+    <div class="admin-statistics-toolbar__filters">
+      <label>Von <input type="date" name="start" value="{{ start }}" /></label>
+      <label>Bis <input type="date" name="end" value="{{ end }}" /></label>
+      <label>Nutzergruppe
+        <select name="group_id">
+          <option value="">Alle Gruppen</option>
+          {% for g in groups %}
+          <option value="{{ g['id'] }}"{% if selected_group_id == g['id'] %} selected{% endif %}>{{ g['name'] }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
     <div class="admin-statistics-toolbar__actions">
       <button type="submit">Auswerten</button>
       <a class="secondary admin-statistics-toolbar__link" href="/admin/statistics/pdf?start={{ start }}&end={{ end }}&group_id={{ group_id }}">PDF herunterladen</a>

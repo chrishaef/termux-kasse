@@ -1271,14 +1271,20 @@ body.app-admin .k-panel form.system-settings-grid button[type="submit"] {
 }
 
 body.app-admin .k-panel form.admin-statistics-toolbar {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr)) auto;
-  gap: 0.75rem 1rem;
-  align-items: end;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 body.app-admin .k-panel form.admin-statistics-toolbar label {
   margin: 0;
+}
+
+body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar__filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 0.75rem 1rem;
+  align-items: end;
 }
 
 body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar__actions {
@@ -1316,7 +1322,7 @@ body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar_
     grid-template-columns: 1fr;
   }
 
-  body.app-admin .k-panel form.admin-statistics-toolbar {
+  body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar__filters {
     grid-template-columns: 1fr;
   }
 
