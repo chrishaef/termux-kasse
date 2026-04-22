@@ -1171,34 +1171,38 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .admin-card--meta {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 0.2rem 0.45rem;
-  overflow: visible;
+  display: block;
+  grid-template-rows: none;
+  align-items: initial;
+  justify-items: initial;
+  padding: 0.55rem 0.7rem;
+  overflow: hidden;
   text-align: left;
 }
 
 .admin-card-meta-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
+  border: 0;
+  background: transparent;
 }
 
 .admin-card-meta-table td {
-  padding: 0.01rem 0;
-  font-size: 0.5rem;
-  line-height: 0.95;
+  padding: 0.08rem 0;
+  font-size: 0.72rem;
+  line-height: 1.15;
   color: #0f140f;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-align: left;
   vertical-align: middle;
+  border: 0;
 }
 
 .admin-card-meta-table td:first-child {
-  width: 2.9rem;
+  width: 4.6rem;
   font-weight: 700;
   color: #0a0f0a;
 }
