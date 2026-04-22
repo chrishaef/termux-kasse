@@ -134,10 +134,14 @@
   </li>
   <li class="admin-cards__item--wide">
     <article class="admin-card admin-card--meta">
-      <span>Version: {{ request.state.version_commit_label }}</span>
-      <span>Start: {{ request.state.system_started_label }}</span>
-      <span>Backup: {{ telemetry_extra['auto_backup_label'] }} ({{ telemetry_extra['auto_backup_next_label'] }})</span>
-      <span>Speicher: {{ telemetry_extra['disk_free_label'] }}</span>
+      <table class="admin-card-meta-table" aria-label="Systemmetrie">
+        <tbody>
+          <tr><td>Version:</td><td>{{ request.state.version_commit_label }}</td></tr>
+          <tr><td>Start:</td><td>{{ request.state.system_started_label }}</td></tr>
+          <tr><td>Backup:</td><td>{{ telemetry_extra['auto_backup_label'] }} ({{ telemetry_extra['auto_backup_next_label'] }})</td></tr>
+          <tr><td>Speicher:</td><td>{{ telemetry_extra['disk_free_label'] }}</td></tr>
+        </tbody>
+      </table>
     </article>
   </li>
 </ul>

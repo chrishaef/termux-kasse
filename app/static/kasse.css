@@ -1172,30 +1172,35 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .admin-card--meta {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: flex-start;
-  align-items: flex-start;
-  gap: 0.08rem;
-  padding: 0.4rem 0.7rem;
+  padding: 0.35rem 0.7rem;
   overflow: hidden;
   text-align: left;
 }
 
-.admin-card--meta span {
-  display: block;
-  margin: 0;
+.admin-card-meta-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.admin-card-meta-table td {
+  padding: 0.04rem 0;
   font-size: 0.6rem;
-  line-height: 0.95;
+  line-height: 1;
   color: #c8d1c2;
   white-space: nowrap;
-  text-overflow: ellipsis;
   overflow: hidden;
-  width: 100%;
+  text-overflow: ellipsis;
+  text-align: left;
+  vertical-align: middle;
 }
 
-.admin-card.admin-card--meta,
-.admin-card.admin-card--meta span {
-  text-align: left;
+.admin-card-meta-table td:first-child {
+  width: 4.2rem;
+  font-weight: 700;
+  color: #d2dacd;
 }
 
 @media (max-width: 700px) {
