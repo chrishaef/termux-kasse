@@ -6,12 +6,6 @@
 {% if request.query_params.get('settlement_done') == '1' %}
 <article class="contrast">Nutzerabrechnung abgeschlossen. Exporte sind in "Abrechnungen" verfügbar.</article>
 {% endif %}
-{% if request.query_params.get('update') == '1' %}
-<article class="contrast">Update gestartet. Der Server führt jetzt Pull, Paket-Update und Neustart im Hintergrund aus.</article>
-{% endif %}
-{% if request.query_params.get('update_err') == '1' %}
-<article class="contrast">Update konnte nicht gestartet werden.</article>
-{% endif %}
 <div class="admin-dash-header">
   <div class="admin-dash-stats" aria-label="Finanzübersicht">
     <div class="admin-stat">
@@ -145,11 +139,11 @@
           <tr>
             <td>Version:</td>
             <td>
-              {{ request.state.version_commit_label }}
-              <span class="admin-version-state admin-version-state--{{ request.state.version_status_label }}">{{ request.state.version_status_label }}</span>
-              <form method="post" action="/admin/system-update" class="admin-version-update-form">
-                <button type="submit" class="admin-version-state admin-version-state--action">update</button>
-              </form>
+              <span class="admin-version-line">
+                {{ request.state.version_commit_label }}
+                <span class="admin-version-state admin-version-state--{{ request.state.version_status_label }}">{{ request.state.version_status_label }}</span>
+                <a href="/admin/system-update" class="admin-version-state admin-version-state--action">update</a>
+              </span>
             </td>
           </tr>
           <tr><td>Start:</td><td>{{ request.state.system_started_label }}</td></tr>

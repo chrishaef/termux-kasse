@@ -291,14 +291,25 @@ def admin_dashboard(request: Request) -> Response:
 
 
 @router.post("/system-update")
-def admin_system_update(request: Request) -> RedirectResponse:
+def admin_system_update_start(request: Request) -> Response:
     if (r := _redirect_login(request)):
         return r
     try:
         _trigger_background_update()
-        return RedirectResponse("/admin?update=1", status_code=303)
+        return JSONResponse({"ok": True})
     except Exception:
-        return RedirectResponse("/admin?update_err=1", status_code=303)
+        return JSONResponse({"ok": False}, status_code=500)
+
+
+@router.get("/system-update", response_class=HTMLResponse)
+def admin_system_update_page(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/system_update.html",
+        {"title": "System-Update"},
+    )
 
 
 def _is_valid_sqlite_file(path: Path) -> bool:

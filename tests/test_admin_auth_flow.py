@@ -84,12 +84,21 @@ def test_admin_dashboard_shows_system_update_button() -> None:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         r = client.get("/admin")
         assert r.status_code == 200
-        assert 'action="/admin/system-update"' in r.text
+        assert 'href="/admin/system-update"' in r.text
         assert "admin-version-state--action" in r.text
-        assert ">update</button>" in r.text
+        assert ">update</a>" in r.text
 
 
-def test_admin_system_update_triggers_background_runner(monkeypatch) -> None:
+def test_admin_system_update_page_is_available() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.get("/admin/system-update")
+        assert r.status_code == 200
+        assert "Update und Neustart laufen" in r.text
+        assert 'fetch("/admin/system-update"' in r.text
+
+
+def test_admin_system_update_post_triggers_background_runner(monkeypatch) -> None:
     calls: list[str] = []
 
     def fake_trigger() -> None:
@@ -99,6 +108,6 @@ def test_admin_system_update_triggers_background_runner(monkeypatch) -> None:
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         r = client.post("/admin/system-update", follow_redirects=False)
-        assert r.status_code == 303
-        assert r.headers["location"] == "/admin?update=1"
+        assert r.status_code == 200
+        assert r.json() == {"ok": True}
     assert calls == ["called"]
