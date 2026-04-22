@@ -1071,7 +1071,7 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .admin-dash-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   margin-bottom: 0.75rem;
 }
 
@@ -1079,7 +1079,7 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  justify-content: flex-end;
+  justify-content: center;
   max-width: 100%;
 }
 
@@ -1172,12 +1172,12 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .admin-card--meta {
   display: grid;
-  grid-auto-rows: min-content;
+  grid-template-rows: repeat(4, minmax(0, 1fr));
   align-content: center;
+  align-items: center;
   justify-items: start;
   row-gap: 0;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
+  padding: 0.35rem 0.75rem;
   overflow: hidden;
   text-align: left;
 }
@@ -1185,8 +1185,8 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 .admin-card--meta span {
   display: block;
   margin: 0;
-  font-size: 0.56rem;
-  line-height: 0.88;
+  font-size: 0.62rem;
+  line-height: 1;
   color: #c8d1c2;
   white-space: nowrap;
   text-overflow: ellipsis;
