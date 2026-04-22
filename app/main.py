@@ -35,17 +35,22 @@ _freshness_cache_label = "unknown"
 def _git_version_label(root: Path) -> str:
     try:
         out = subprocess.run(
-            ["git", "describe", "--tags", "--abbrev=0"],
+            ["git", "tag", "--sort=-v:refname"],
             cwd=str(root),
             capture_output=True,
             text=True,
             check=False,
             timeout=1.5,
         )
-        tag = (out.stdout or "").strip()
-        if not tag:
+        tags = [line.strip() for line in (out.stdout or "").splitlines() if line.strip()]
+        version_tag = None
+        for tag in tags:
+            if re.fullmatch(r"[vV]?\d+\.\d+\.\d+", tag):
+                version_tag = tag
+                break
+        if not version_tag:
             return "unbekannt"
-        return re.sub(r"^[vV]", "", tag)
+        return re.sub(r"^[vV]", "", version_tag)
     except Exception:
         return "unbekannt"
 
