@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from fastapi.testclient import TestClient
 
 from app import db
@@ -17,7 +19,10 @@ def test_admin_products_status_is_shown_on_toggle_button() -> None:
         page = client.get("/admin/products")
         assert page.status_code == 200
         assert "<th>Aktiv</th>" not in page.text
-        assert ">Aktiv</button>" in page.text
+        assert "admin-products-table" in page.text
+        assert re.search(r">\s*Aktiv\s*</button>", page.text)
+        assert "admin-btn-status--active" in page.text
+        assert "confirm('Artikel wirklich löschen?')" in page.text
 
         toggle = client.post(f"/admin/products/{pid}/toggle", follow_redirects=False)
         assert toggle.status_code == 303
@@ -25,4 +30,5 @@ def test_admin_products_status_is_shown_on_toggle_button() -> None:
 
         page_after = client.get("/admin/products")
         assert page_after.status_code == 200
-        assert ">Inaktiv</button>" in page_after.text
+        assert re.search(r">\s*Inaktiv\s*</button>", page_after.text)
+        assert "admin-btn-status--inactive" in page_after.text

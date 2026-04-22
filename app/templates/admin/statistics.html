@@ -1,14 +1,10 @@
 {% extends "admin/shell.html" %}
 {% block admin_page %}
-<header class="page-head">
-  <p class="page-head__eyebrow">Auswertung</p>
-  <h1 class="page-head__title">Statistik (Zeitraum)</h1>
-</header>
 <a href="/admin" class="admin-back">← Admin-Übersicht</a>
 
 <article class="k-panel">
-  <h2 style="margin-top:0;font-size:1.1rem">Zeitraum wählen</h2>
-  <form method="get" action="/admin/statistics" class="k-toolbar">
+  <h2 style="margin-top:0;font-size:1.1rem">Statistik Zeitraum wählen</h2>
+  <form method="get" action="/admin/statistics" class="admin-statistics-toolbar">
     <label>Von <input type="date" name="start" value="{{ start }}" /></label>
     <label>Bis <input type="date" name="end" value="{{ end }}" /></label>
     <label>Nutzergruppe
@@ -19,9 +15,11 @@
         {% endfor %}
       </select>
     </label>
-    <button type="submit">Auswerten</button>
-    <a class="secondary" style="display:inline-flex;align-items:center;padding:0.4rem 0.7rem;border-radius:8px;border:1px solid #999;text-decoration:none" href="/admin/statistics/pdf?start={{ start }}&end={{ end }}&group_id={{ group_id }}">PDF herunterladen</a>
-    <a class="secondary" style="display:inline-flex;align-items:center;padding:0.4rem 0.7rem;border-radius:8px;border:1px solid #999;text-decoration:none" href="/admin/statistics/xlsx?start={{ start }}&end={{ end }}&group_id={{ group_id }}">XLSX herunterladen</a>
+    <div class="admin-statistics-toolbar__actions">
+      <button type="submit">Auswerten</button>
+      <a class="secondary admin-statistics-toolbar__link" href="/admin/statistics/pdf?start={{ start }}&end={{ end }}&group_id={{ group_id }}">PDF herunterladen</a>
+      <a class="secondary admin-statistics-toolbar__link" href="/admin/statistics/xlsx?start={{ start }}&end={{ end }}&group_id={{ group_id }}">XLSX herunterladen</a>
+    </div>
   </form>
 </article>
 

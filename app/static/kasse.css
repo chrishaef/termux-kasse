@@ -1270,6 +1270,43 @@ body.app-admin .k-panel form.system-settings-grid button[type="submit"] {
   grid-column: 1 / -1;
 }
 
+body.app-admin .k-panel form.admin-statistics-toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr)) auto;
+  gap: 0.75rem 1rem;
+  align-items: end;
+}
+
+body.app-admin .k-panel form.admin-statistics-toolbar label {
+  margin: 0;
+}
+
+body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar__actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar__actions button,
+body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar__actions a {
+  margin: 0;
+  min-height: 2.35rem;
+}
+
+body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--kas-radius-button);
+  border: 1px solid #999;
+  text-decoration: none;
+  font-weight: 700;
+}
+
 @media (max-width: 760px) {
   body.app-admin .k-panel form.debt-thresholds-grid {
     grid-template-columns: 1fr;
@@ -1277,6 +1314,14 @@ body.app-admin .k-panel form.system-settings-grid button[type="submit"] {
 
   body.app-admin .k-panel form.system-settings-grid {
     grid-template-columns: 1fr;
+  }
+
+  body.app-admin .k-panel form.admin-statistics-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar__actions {
+    flex-wrap: wrap;
   }
 }
 
@@ -1417,8 +1462,8 @@ body.app-admin .table-wrap .td-actions__inner {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.35rem;
+  justify-content: flex-start;
+  gap: 0.45rem;
 }
 
 body.app-admin .table-wrap .form-inline-action {
@@ -1428,18 +1473,28 @@ body.app-admin .table-wrap .form-inline-action {
 }
 
 body.app-admin .table-wrap button.admin-btn-sm {
-  padding: 0.2rem 0.45rem;
-  font-size: 0.72rem;
-  font-weight: 600;
+  padding: 0.38rem 0.78rem;
+  font-size: 0.76rem;
+  font-weight: 700;
   line-height: 1.2;
-  border-radius: 6px;
-  min-height: unset;
+  border-radius: var(--kas-radius-button);
+  min-height: 2rem;
+}
+
+body.app-admin .table-wrap .admin-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.8rem;
+  min-height: 2rem;
 }
 
 body.app-admin .table-wrap a.admin-btn-edit {
-  display: inline-block;
-  padding: 0.2rem 0.45rem;
-  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.38rem 0.78rem;
+  font-size: 0.76rem;
   font-weight: 700;
   line-height: 1.2;
   border-radius: var(--kas-radius-button);
@@ -1453,6 +1508,32 @@ body.app-admin .table-wrap a.admin-btn-edit:hover {
   background: #f2efe6 !important;
   border-color: #8f8872 !important;
   color: #0a0a06 !important;
+}
+
+body.app-admin .table-wrap .admin-btn-status--active {
+  background: #e3f6e6 !important;
+  border-color: #3f9b58 !important;
+  color: #124e20 !important;
+  font-weight: 800 !important;
+}
+
+body.app-admin .table-wrap .admin-btn-status--active:hover {
+  background: #d1f0d7 !important;
+  border-color: #2f8747 !important;
+  color: #0d4019 !important;
+}
+
+body.app-admin .table-wrap .admin-btn-status--inactive {
+  background: #f3ede0 !important;
+  border-color: #b08c4d !important;
+  color: #6a4a12 !important;
+  font-weight: 800 !important;
+}
+
+body.app-admin .table-wrap .admin-btn-status--inactive:hover {
+  background: #ebe1cc !important;
+  border-color: #9a7638 !important;
+  color: #593b08 !important;
 }
 
 body.app-admin .table-wrap .admin-btn-danger {
@@ -1490,6 +1571,30 @@ body.app-admin .table-wrap a[role="button"]:hover {
   color: #050805;
   border-color: var(--kas-accent);
   background: #fff8e6;
+}
+
+body.app-admin .admin-products-table {
+  table-layout: fixed;
+}
+
+body.app-admin .admin-products-table th:nth-child(1),
+body.app-admin .admin-products-table td:nth-child(1) {
+  width: 42%;
+}
+
+body.app-admin .admin-products-table th:nth-child(2),
+body.app-admin .admin-products-table td:nth-child(2) {
+  width: 16%;
+}
+
+body.app-admin .admin-products-table th:nth-child(3),
+body.app-admin .admin-products-table td:nth-child(3) {
+  width: 10%;
+}
+
+body.app-admin .admin-products-table th:nth-child(4),
+body.app-admin .admin-products-table td:nth-child(4) {
+  width: 32%;
 }
 
 body.app-admin .backup-archive-wrap {
