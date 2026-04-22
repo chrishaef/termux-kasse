@@ -242,7 +242,7 @@ def admin_dashboard(request: Request) -> Response:
     if last_auto_backup_at:
         next_due = last_auto_backup_at + timedelta(days=backup_service.AUTO_BACKUP_INTERVAL_DAYS)
         remaining_days = max(0, (next_due.date() - datetime.now().date()).days)
-        auto_backup_label = last_auto_backup_at.strftime("%d.%m.%Y %H:%M")
+        auto_backup_label = last_auto_backup_at.strftime("%d.%m.%y")
         auto_backup_next_label = f"in {remaining_days} Tag{'en' if remaining_days != 1 else ''}"
     else:
         auto_backup_label = "noch nicht erfolgt"

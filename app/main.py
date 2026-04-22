@@ -79,7 +79,7 @@ def _sync_labels() -> tuple[str, str, str]:
     ts = _last_sync_at(root)
     if ts is None:
         return version, f"{version} - unbekannt", "unbekannt"
-    return version, f"{version} - {ts.strftime('%d%m%y')}", ts.strftime("%d.%m.%Y %H:%M")
+    return version, f"{version} - {ts.strftime('%d%m%y')}", ts.strftime("%d.%m.%y")
 
 
 @asynccontextmanager
@@ -101,7 +101,7 @@ async def attach_kiosk_notice(request: Request, call_next):
     request.state.version_label = version_label
     request.state.last_sync_label = last_sync_label
     request.state.last_sync_at_label = last_sync_at_label
-    request.state.system_started_label = APP_STARTED_AT.strftime("%d.%m.%Y %H:%M")
+    request.state.system_started_label = APP_STARTED_AT.strftime("%d.%m.%y")
     request.state.repo_url = REPO_URL
     return await call_next(request)
 

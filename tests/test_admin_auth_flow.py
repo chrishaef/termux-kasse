@@ -68,10 +68,11 @@ def test_admin_dashboard_shows_telemetry_data() -> None:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         r = client.get("/admin")
         assert r.status_code == 200
-        assert "Letztes Update" in r.text
+        assert "Systemstatus" in r.text
+        assert "Update" in r.text
         assert "Version" in r.text
-        assert "Systemstart" in r.text
-        assert "Letztes Auto-Backup" in r.text
+        assert "Start" in r.text
+        assert "Auto-Backup" in r.text
         assert "Buchungen heute" in r.text
         assert "Umsatz heute" in r.text
-        assert "Freier Speicher" in r.text
+        assert "Speicher frei" in r.text
