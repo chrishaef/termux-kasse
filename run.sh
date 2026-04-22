@@ -140,6 +140,8 @@ echo ">>> Verwende Python: $(${PYTHON} --version 2>&1)"
 if [[ -d .git ]] && is_origin_reachable; then
   CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"
   echo ">>> Verbindung zu GitHub erkannt: Update wird durchgeführt"
+  echo ">>> Hole Remote-Tags für Versionsanzeige"
+  git fetch --tags --prune origin || true
   git pull --ff-only origin "${CURRENT_BRANCH}"
   echo ">>> pip install -r requirements.txt"
   pip install -q -r requirements.txt
