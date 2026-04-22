@@ -1174,8 +1174,8 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0.35rem 0.7rem;
-  overflow: hidden;
+  padding: 0.2rem 0.45rem;
+  overflow: visible;
   text-align: left;
 }
 
@@ -1186,21 +1186,21 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .admin-card-meta-table td {
-  padding: 0.04rem 0;
-  font-size: 0.6rem;
-  line-height: 1;
-  color: #c8d1c2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding: 0.01rem 0;
+  font-size: 0.5rem;
+  line-height: 0.95;
+  color: #0f140f;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
   text-align: left;
   vertical-align: middle;
 }
 
 .admin-card-meta-table td:first-child {
-  width: 4.2rem;
+  width: 2.9rem;
   font-weight: 700;
-  color: #d2dacd;
+  color: #0a0f0a;
 }
 
 @media (max-width: 700px) {
