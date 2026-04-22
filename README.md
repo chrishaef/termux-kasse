@@ -402,6 +402,7 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 - **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.2.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.2.0) öffnen, Titel z. B. `Termux-Shopkasse 1.2.0`, Beschreibung einfügen, *Publish release*.  
 - **GitHub CLI** (einmalig `gh auth login`):  
   `gh release create v1.2.0 --title "Termux-Shopkasse 1.2.0" --generate-notes`
+- Änderungsübersicht im Repo: [`CHANGELOG.md`](./CHANGELOG.md)
 
 **v1.2.0** (Kurzüberblick): Dashboard-Systemstatus mit Version/Commit-Status, `update / reboot`-Trigger mit Sicherheitsabfrage per Master-Passwort, Update-Vorbereitungsseite mit Online-/Versionscheck und automatischem Neustart-Countdown.
 
