@@ -22,7 +22,7 @@
   {% if not precheck["online"] %}
   <p>Es besteht keine Internetverbindung. Ein Versionscheck konnte nicht durchgeführt werden, daher kann aktuell nur ein Neustart ausgeführt werden.</p>
   {% elif precheck["update_available"] %}
-  <p>Es ist ein Update verfügbar. Beim Start werden neue Änderungen geladen und anschließend wird der Server neu gestartet.</p>
+  <p><strong>Es ist ein Update verfügbar.</strong> Beim Start werden neue Änderungen geladen und anschließend wird der Server neu gestartet.</p>
   {% else %}
   <p>Das System ist bereits auf dem aktuellen Stand. Es kann ein reiner Neustart ausgeführt werden.</p>
   {% endif %}
