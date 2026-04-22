@@ -85,6 +85,7 @@ def test_admin_dashboard_shows_system_update_button() -> None:
         r = client.get("/admin")
         assert r.status_code == 200
         assert 'href="/admin/system-update"' in r.text
+        assert 'id="admin-update-link"' in r.text
         assert "admin-version-state--action" in r.text
         assert ">update / reboot</a>" in r.text
 
@@ -99,6 +100,7 @@ def test_admin_system_update_page_is_available() -> None:
         assert "Installiert:" in r.text
         assert "Neueste verfügbare Version:" in r.text
         assert 'name="master_password"' in r.text
+        assert "Letzte Update-Logzeilen" in r.text
 
 
 def test_admin_system_update_post_triggers_background_runner(monkeypatch) -> None:

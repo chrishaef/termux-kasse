@@ -38,8 +38,16 @@
   <form method="post" action="/admin/system-update">
     <label for="master-password-confirm">Master-Passwort</label>
     <input id="master-password-confirm" name="master_password" type="password" required autocomplete="current-password" />
-    <button type="submit">{{ "Update & Neustart starten" if precheck["update_available"] else "Neustart starten" }}</button>
+    <button id="system-update-submit" type="submit">{{ "Update & Neustart starten" if precheck["update_available"] else "Neustart starten" }}</button>
   </form>
+  {% endif %}
+
+  <hr />
+  <p><strong>Letzte Update-Logzeilen</strong></p>
+  {% if update_log_lines %}
+  <pre>{{ "\n".join(update_log_lines) }}</pre>
+  {% else %}
+  <p class="secondary">Noch keine Update-Logs vorhanden.</p>
   {% endif %}
 </article>
 {% if started %}
@@ -55,6 +63,18 @@
         window.location.href = "/admin";
       }
     }, 1000);
+  })();
+</script>
+{% else %}
+<script>
+  (function () {
+    const form = document.querySelector('form[action="/admin/system-update"]');
+    const submitBtn = document.getElementById("system-update-submit");
+    if (!form || !submitBtn) return;
+    form.addEventListener("submit", function () {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Wird gestartet ...";
+    });
   })();
 </script>
 {% endif %}

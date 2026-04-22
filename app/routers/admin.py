@@ -167,6 +167,20 @@ def _system_update_precheck() -> dict[str, str | bool]:
     }
 
 
+def _read_update_log_snippet(max_lines: int = 12) -> list[str]:
+    root = Path(__file__).resolve().parent.parent.parent
+    log_path = root / "update-trigger.log"
+    try:
+        if not log_path.exists():
+            return []
+        lines = [line.rstrip("\r\n") for line in log_path.read_text(encoding="utf-8").splitlines()]
+        if not lines:
+            return []
+        return lines[-max_lines:]
+    except Exception:
+        return []
+
+
 def _parse_price_eur_to_cents(raw: str) -> int:
     s = raw.strip().replace(",", ".")
     if not re.fullmatch(r"\d+(\.\d{1,2})?", s):
@@ -388,6 +402,7 @@ def admin_system_update_start(request: Request, master_password: str = Form(""))
         return r
     master_password = (master_password or "").strip()
     precheck = _system_update_precheck()
+    update_log_lines = _read_update_log_snippet()
     if read_master_password() is None:
         return TEMPLATES.TemplateResponse(
             request,
@@ -395,6 +410,7 @@ def admin_system_update_start(request: Request, master_password: str = Form(""))
             {
                 "title": "System-Update",
                 "precheck": precheck,
+                "update_log_lines": update_log_lines,
                 "err": "nomaster",
                 "started": False,
             },
@@ -407,6 +423,7 @@ def admin_system_update_start(request: Request, master_password: str = Form(""))
             {
                 "title": "System-Update",
                 "precheck": precheck,
+                "update_log_lines": update_log_lines,
                 "err": "master",
                 "started": False,
             },
@@ -420,6 +437,7 @@ def admin_system_update_start(request: Request, master_password: str = Form(""))
             {
                 "title": "System-Update",
                 "precheck": precheck,
+                "update_log_lines": update_log_lines,
                 "started": True,
                 "err": None,
             },
@@ -431,6 +449,7 @@ def admin_system_update_start(request: Request, master_password: str = Form(""))
             {
                 "title": "System-Update",
                 "precheck": precheck,
+                "update_log_lines": update_log_lines,
                 "err": "start",
                 "started": False,
             },
@@ -444,12 +463,14 @@ def admin_system_update_page(request: Request) -> Response:
         return r
     precheck = _system_update_precheck()
     master_ok = bool(read_master_password())
+    update_log_lines = _read_update_log_snippet()
     return TEMPLATES.TemplateResponse(
         request,
         "admin/system_update.html",
         {
             "title": "System-Update",
             "precheck": precheck,
+            "update_log_lines": update_log_lines,
             "master_configured": master_ok,
             "err": None,
             "started": False,
