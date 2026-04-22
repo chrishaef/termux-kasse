@@ -1171,13 +1171,12 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .admin-card--meta {
-  display: grid;
-  grid-template-rows: repeat(4, minmax(0, 1fr));
-  align-content: center;
-  align-items: center;
-  justify-items: start;
-  row-gap: 0;
-  padding: 0.35rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.08rem;
+  padding: 0.4rem 0.7rem;
   overflow: hidden;
   text-align: left;
 }
@@ -1185,13 +1184,17 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 .admin-card--meta span {
   display: block;
   margin: 0;
-  font-size: 0.62rem;
-  line-height: 1;
+  font-size: 0.6rem;
+  line-height: 0.95;
   color: #c8d1c2;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
   width: 100%;
+}
+
+.admin-card.admin-card--meta,
+.admin-card.admin-card--meta span {
   text-align: left;
 }
 
