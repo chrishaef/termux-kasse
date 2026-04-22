@@ -18,7 +18,7 @@
       </select>
     </label>
     <label style="min-width:220px;flex:2 1 360px">Nutzer
-      <select name="user_id">
+      <select name="user_id" onchange="this.form.submit()">
         {% for u in users %}
         <option value="{{ u['id'] }}"{% if selected_user_id == u['id'] %} selected{% endif %}>{{ u['name'] }}</option>
         {% endfor %}
@@ -29,10 +29,24 @@
   </form>
   {% endif %}
   {% if selected_user %}
-  <p class="secondary" style="margin:0.3rem 0 0">
-    Aktuell gewählt: <strong>{{ selected_user['group_name'] }} — {{ selected_user['name'] }}</strong> · Kontostand:
-    <strong>{{ (-selected_balance_cents)|eur }}</strong>
-  </p>
+  <div class="k-toolbar" style="margin-top:0.35rem">
+    <article class="k-panel" style="flex:1;min-width:170px;margin:0">
+      <h3 style="margin:0 0 0.35rem;font-size:0.85rem;text-transform:uppercase;color:var(--kas-muted)">Bisher abgerechnet</h3>
+      <p style="margin:0;font-size:1.35rem;font-weight:800;color:#7a5f0c">{{ selected_settled_total_cents|eur }}</p>
+    </article>
+    <article class="k-panel" style="flex:1;min-width:170px;margin:0">
+      <h3 style="margin:0 0 0.35rem;font-size:0.85rem;text-transform:uppercase;color:var(--kas-muted)">Letzte Abrechnung</h3>
+      {% if selected_last_settlement %}
+      <p style="margin:0;font-size:1rem;font-weight:700;color:#d6b96f">{{ selected_last_settlement['created_at']|date_de }}</p>
+      {% else %}
+      <p class="secondary" style="margin:0;font-size:0.95rem">keine</p>
+      {% endif %}
+    </article>
+    <article class="k-panel" style="flex:1;min-width:170px;margin:0;border-top:3px solid var(--kas-accent)">
+      <h3 style="margin:0 0 0.35rem;font-size:0.85rem;text-transform:uppercase;color:var(--kas-muted)">Kontostand</h3>
+      <p style="margin:0;font-size:1.35rem;font-weight:800;color:#7a5f0c">{{ (-selected_balance_cents)|eur }}</p>
+    </article>
+  </div>
   {% endif %}
   {% if users %}
   {% else %}

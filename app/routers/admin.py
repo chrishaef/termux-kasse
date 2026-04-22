@@ -1271,6 +1271,8 @@ def admin_settlement_start_get(
             uid = int(users[0]["id"])
         selected_user = None
         selected_balance_cents = 0
+        selected_settled_total_cents = 0
+        selected_last_settlement = None
         if uid is not None:
             selected_user = db.fetch_one(
                 conn,
@@ -1284,6 +1286,8 @@ def admin_settlement_start_get(
             )
             if selected_user:
                 selected_balance_cents = ledger_service.user_balance_cents(conn, uid)
+                selected_settled_total_cents = ledger_service.total_previously_settled_cents(conn, uid)
+                selected_last_settlement = ledger_service.last_settlement(conn, uid)
             else:
                 uid = None
     return TEMPLATES.TemplateResponse(
@@ -1297,6 +1301,8 @@ def admin_settlement_start_get(
             "selected_user_id": uid,
             "selected_user": selected_user,
             "selected_balance_cents": selected_balance_cents,
+            "selected_settled_total_cents": selected_settled_total_cents,
+            "selected_last_settlement": selected_last_settlement,
         },
     )
 

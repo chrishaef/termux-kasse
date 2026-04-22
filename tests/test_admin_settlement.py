@@ -101,3 +101,6 @@ def test_settlement_start_shows_selected_user_balance() -> None:
         assert r.status_code == 200
         assert "Kontostand" in r.text
         assert "-2,00 €" in r.text
+        assert "Bisher abgerechnet" in r.text
+        assert "Letzte Abrechnung" in r.text
+        assert 'name="user_id" onchange="this.form.submit()"' in r.text
