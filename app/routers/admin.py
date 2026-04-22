@@ -77,22 +77,65 @@ def _trigger_background_update() -> None:
 
 def _system_update_precheck() -> dict[str, str | bool]:
     root = Path(__file__).resolve().parent.parent.parent
+    installed_version = "unbekannt"
+    installed_commit = "unbekannt"
+    installed_head_full = ""
     try:
-        head = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
+        version = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
             cwd=str(root),
             capture_output=True,
             text=True,
             check=False,
             timeout=1.5,
         )
-        installed = (head.stdout or "").strip() or "unbekannt"
+        vtag = (version.stdout or "").strip()
+        if vtag:
+            installed_version = re.sub(r"^[vV]", "", vtag)
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=1.5,
+        )
+        installed_head_full = (head.stdout or "").strip()
+        if installed_head_full:
+            installed_commit = installed_head_full[:7]
     except Exception:
-        installed = "unbekannt"
+        pass
 
     online = False
-    latest = "unbekannt"
+    latest_version = "unbekannt"
+    latest_commit = "unbekannt"
+    latest_head_full = ""
     try:
+        remote_tags = subprocess.run(
+            ["git", "ls-remote", "--tags", "--refs", "origin"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=2.5,
+        )
+        best_tag: tuple[int, int, int] | None = None
+        best_version = "unbekannt"
+        for raw_line in (remote_tags.stdout or "").splitlines():
+            parts = raw_line.strip().split()
+            if len(parts) != 2:
+                continue
+            ref = parts[1]
+            m = re.fullmatch(r"refs/tags/v?(\d+)\.(\d+)\.(\d+)", ref)
+            if not m:
+                continue
+            key = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            if best_tag is None or key > best_tag:
+                best_tag = key
+                best_version = f"{key[0]}.{key[1]}.{key[2]}"
+        if best_tag is not None:
+            latest_version = best_version
+
         remote = subprocess.run(
             ["git", "ls-remote", "origin", "refs/heads/main"],
             cwd=str(root),
@@ -105,16 +148,22 @@ def _system_update_precheck() -> dict[str, str | bool]:
         sha = line.split()[0] if line else ""
         if remote.returncode == 0 and sha:
             online = True
-            latest = sha[:7]
+            latest_head_full = sha
+            latest_commit = sha[:7]
     except Exception:
         online = False
-        latest = "unbekannt"
+        latest_commit = "unbekannt"
 
+    update_available = bool(
+        online and installed_head_full and latest_head_full and installed_head_full != latest_head_full
+    )
     return {
         "online": online,
         "online_label": "Ja" if online else "Nein",
-        "installed": installed,
-        "latest": latest,
+        "online_badge": "online" if online else "offline",
+        "installed_version_commit": f"{installed_version} ({installed_commit})",
+        "latest_version_commit": f"{latest_version} ({latest_commit})",
+        "update_available": update_available,
     }
 
 

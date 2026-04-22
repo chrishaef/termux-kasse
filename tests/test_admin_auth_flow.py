@@ -94,8 +94,8 @@ def test_admin_system_update_page_is_available() -> None:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         r = client.get("/admin/system-update")
         assert r.status_code == 200
-        assert "System-Update vorbereiten" in r.text
-        assert "Online-Check:" in r.text
+        assert "System-Update Vorbereitung" in r.text
+        assert "Netzwerk:" in r.text
         assert "Installiert:" in r.text
         assert "Neueste verfügbare Version:" in r.text
         assert 'name="master_password"' in r.text
@@ -116,6 +116,48 @@ def test_admin_system_update_post_triggers_background_runner(monkeypatch) -> Non
         assert r.status_code == 200
         assert "Update und Neustart laufen" in r.text
     assert calls == ["called"]
+
+
+def test_admin_system_update_page_shows_restart_button_without_update(monkeypatch) -> None:
+    monkeypatch.setattr(
+        admin_router,
+        "_system_update_precheck",
+        lambda: {
+            "online": True,
+            "online_label": "Ja",
+            "online_badge": "online",
+            "installed_version_commit": "1.1.0 (abc1234)",
+            "latest_version_commit": "1.1.0 (abc1234)",
+            "update_available": False,
+        },
+    )
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.get("/admin/system-update")
+        assert r.status_code == 200
+        assert "Neustart starten" in r.text
+
+
+def test_admin_system_update_page_shows_offline_hint(monkeypatch) -> None:
+    monkeypatch.setattr(
+        admin_router,
+        "_system_update_precheck",
+        lambda: {
+            "online": False,
+            "online_label": "Nein",
+            "online_badge": "offline",
+            "installed_version_commit": "1.1.0 (abc1234)",
+            "latest_version_commit": "unbekannt (unbekannt)",
+            "update_available": False,
+        },
+    )
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.get("/admin/system-update")
+        assert r.status_code == 200
+        assert "Es besteht keine Internetverbindung." in r.text
+        assert "Versionscheck konnte nicht durchgeführt werden" in r.text
+        assert "Neustart starten" in r.text
 
 
 def test_admin_system_update_post_rejects_wrong_master_password(monkeypatch) -> None:

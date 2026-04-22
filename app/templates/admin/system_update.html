@@ -10,13 +10,22 @@
   <p>Verbleibende Zeit: <strong id="update-countdown">35</strong>s</p>
   <p class="secondary">Bitte warten, bis der Server neu verfügbar ist.</p>
   {% else %}
-  <h2>System-Update vorbereiten</h2>
-  <p>Online-Check: <strong>{{ precheck["online_label"] }}</strong></p>
-  <p>Installiert: <strong>{{ request.state.version_commit_label }}</strong></p>
-  <p>Neueste verfügbare Version: <strong>{{ precheck["latest"] }}</strong></p>
+  <h2>System-Update Vorbereitung</h2>
   <p>
-    Beim Start werden Update und Neustart ausgelöst (`run.sh`: Pull, Abhängigkeiten aktualisieren, Server stoppen und neu starten).
+    Netzwerk:
+    <span class="admin-version-state admin-version-state--{{ precheck['online_badge'] }}">
+      {{ "online" if precheck["online"] else "offline" }}
+    </span>
   </p>
+  <p>Installiert: <strong>{{ precheck["installed_version_commit"] }}</strong></p>
+  <p>Neueste verfügbare Version: <strong>{{ precheck["latest_version_commit"] }}</strong></p>
+  {% if not precheck["online"] %}
+  <p>Es besteht keine Internetverbindung. Ein Versionscheck konnte nicht durchgeführt werden, daher kann aktuell nur ein Neustart ausgeführt werden.</p>
+  {% elif precheck["update_available"] %}
+  <p>Es ist ein Update verfügbar. Beim Start werden neue Änderungen geladen und anschließend wird der Server neu gestartet.</p>
+  {% else %}
+  <p>Das System ist bereits auf dem aktuellen Stand. Es kann ein reiner Neustart ausgeführt werden.</p>
+  {% endif %}
 
   {% if err == "nomaster" %}
   <article class="contrast">Kein Master-Passwort konfiguriert.</article>
@@ -29,7 +38,7 @@
   <form method="post" action="/admin/system-update">
     <label for="master-password-confirm">Master-Passwort</label>
     <input id="master-password-confirm" name="master_password" type="password" required autocomplete="current-password" />
-    <button type="submit">Update und Neustart starten</button>
+    <button type="submit">{{ "Update & Neustart starten" if precheck["update_available"] else "Neustart starten" }}</button>
   </form>
   {% endif %}
 </article>
