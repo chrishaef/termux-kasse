@@ -478,6 +478,21 @@ def admin_system_update_page(request: Request) -> Response:
     )
 
 
+@router.get("/system-update/result", response_class=HTMLResponse)
+def admin_system_update_result_page(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    update_log_lines = _read_update_log_snippet()
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/system_update_result.html",
+        {
+            "title": "System-Update Log",
+            "update_log_lines": update_log_lines,
+        },
+    )
+
+
 def _is_valid_sqlite_file(path: Path) -> bool:
     try:
         with sqlite3.connect(path) as conn:

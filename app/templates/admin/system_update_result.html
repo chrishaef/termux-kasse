@@ -1,0 +1,17 @@
+{% extends "admin/shell.html" %}
+{% block admin_page %}
+<a href="/admin" class="admin-back js-history-back">← Zurück</a>
+<article class="k-panel">
+  <h2>System-Update Protokoll</h2>
+  <p>Der Update-/Neustart-Prozess wurde ausgeführt. Prüfe unten die letzten Logzeilen.</p>
+  <p><strong>Letzte Update-Logzeilen</strong></p>
+  {% if update_log_lines %}
+  <pre>{{ "\n".join(update_log_lines) }}</pre>
+  {% else %}
+  <p class="secondary">Noch keine Update-Logs vorhanden.</p>
+  {% endif %}
+  <p>
+    <a href="/admin" role="button">Zurück zum System</a>
+  </p>
+</article>
+{% endblock %}

@@ -103,6 +103,15 @@ def test_admin_system_update_page_is_available() -> None:
         assert "Letzte Update-Logzeilen" in r.text
 
 
+def test_admin_system_update_result_page_is_available() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.get("/admin/system-update/result")
+        assert r.status_code == 200
+        assert "System-Update Protokoll" in r.text
+        assert "Zurück zum System" in r.text
+
+
 def test_admin_system_update_post_triggers_background_runner(monkeypatch) -> None:
     calls: list[str] = []
 
@@ -117,6 +126,7 @@ def test_admin_system_update_post_triggers_background_runner(monkeypatch) -> Non
         r = client.post("/admin/system-update", data={"master_password": "master"}, follow_redirects=False)
         assert r.status_code == 200
         assert "Update und Neustart laufen" in r.text
+        assert "/admin/system-update/result" in r.text
     assert calls == ["called"]
 
 
