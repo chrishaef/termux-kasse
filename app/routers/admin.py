@@ -15,11 +15,13 @@ from fastapi import APIRouter, File, Form, HTTPException, Query, Request, Upload
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 
 from app import admin_auth
+from app import backup_service
 from app import db
 from app import debt_thresholds
 from app import kiosk_notice
 from app import ledger_service
 from app import sort_order_util
+from app import system_settings
 from app.config import data_dir, db_path, read_master_password, year_end_exports_dir
 from app.db import init_db
 from app.export_service import (
@@ -34,40 +36,17 @@ from app.templates_env import TEMPLATES
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-_BACKUP_ARCHIVE_KEEP = 25
-
 
 def _backup_archive_dir() -> Path:
-    d = data_dir() / "system_backups"
-    d.mkdir(parents=True, exist_ok=True)
-    return d
+    return backup_service.backup_archive_dir()
 
 
 def _backup_archive_list() -> list[dict]:
-    d = _backup_archive_dir()
-    items: list[dict] = []
-    for p in d.glob("*.zip"):
-        if not p.is_file():
-            continue
-        st = p.stat()
-        items.append(
-            {
-                "name": p.name,
-                "bytes": int(st.st_size),
-                "mtime": float(st.st_mtime),
-            }
-        )
-    items.sort(key=lambda x: float(x.get("mtime") or 0.0), reverse=True)
-    return items
+    return backup_service.backup_archive_list()
 
 
 def _backup_archive_prune() -> None:
-    items = _backup_archive_list()
-    for it in items[_BACKUP_ARCHIVE_KEEP:]:
-        try:
-            (_backup_archive_dir() / str(it["name"])).unlink(missing_ok=True)
-        except Exception:
-            pass
+    backup_service.backup_archive_prune()
 
 
 def _redirect_login(request: Request) -> Optional[RedirectResponse]:
@@ -287,19 +266,12 @@ def _sqlite_copy_into(src_path: Path, dst_path: Path) -> None:
 
 
 def _build_backup_manifest(db_file: Path, exports_dir: Path, created_at: str) -> dict:
-    export_files = [p.name for p in sorted(exports_dir.glob("*")) if p.is_file()]
-    return {
-        "format": "kasse-system-backup",
-        "version": 1,
-        "created_at": created_at,
-        "files": {
-            "db": {"path": "kasse.db", "bytes": int(db_file.stat().st_size)},
-            "year_end_exports": [
-                {"path": f"jahresabschluss/{name}", "bytes": int((exports_dir / name).stat().st_size)}
-                for name in export_files
-            ],
-        },
-    }
+    return backup_service._build_backup_manifest(
+        db_file,
+        exports_dir,
+        created_at,
+        automatic=False,
+    )
 
 
 def _validate_backup_manifest(raw: bytes, zip_names: set[str]) -> bool:
@@ -362,6 +334,9 @@ def admin_backup_get(request: Request) -> Response:
     mp = read_master_password()
     master_ok = bool(mp and str(mp).strip())
     archive = _backup_archive_list()
+    last_auto_backup_at = None
+    with db.get_connection() as conn:
+        last_auto_backup_at = backup_service.get_last_auto_backup_at(conn)
     return TEMPLATES.TemplateResponse(
         request,
         "admin/backup.html",
@@ -376,6 +351,7 @@ def admin_backup_get(request: Request) -> Response:
             "reset_err": request.query_params.get("reset_err"),
             "archive": archive,
             "archive_deleted": request.query_params.get("deleted") == "1",
+            "last_auto_backup_at": last_auto_backup_at,
         },
     )
 
@@ -384,27 +360,9 @@ def admin_backup_get(request: Request) -> Response:
 def admin_backup_export(request: Request) -> Response:
     if (r := _redirect_login(request)):
         return r
-    db_file = db_path()
-    if not db_file.exists():
+    if not db_path().exists():
         raise HTTPException(status_code=404, detail="Datenbank nicht gefunden")
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"kasse-system-backup-{stamp}.zip"
-    exports_dir = year_end_exports_dir()
-    created_iso = datetime.now().isoformat(timespec="seconds")
-    manifest = _build_backup_manifest(db_file, exports_dir, created_iso)
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr("manifest.json", json.dumps(manifest, ensure_ascii=True, indent=2))
-        zf.writestr("kasse.db", db_file.read_bytes())
-        for p in sorted(exports_dir.glob("*")):
-            if p.is_file():
-                zf.write(p, arcname=f"jahresabschluss/{p.name}")
-    try:
-        out = _backup_archive_dir() / filename
-        out.write_bytes(buf.getvalue())
-        _backup_archive_prune()
-    except Exception:
-        pass
+    backup_service.create_system_backup_archive()
     return RedirectResponse("/admin/backup?created=1", status_code=303)
 
 
@@ -597,6 +555,49 @@ def admin_news_save(request: Request, message: str = Form("")) -> RedirectRespon
 
 def _eur_field_from_cents(cents: int) -> str:
     return f"{int(cents) / 100:.2f}"
+
+
+@router.get("/system-settings", response_class=HTMLResponse)
+def admin_system_settings_get(request: Request) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    with db.get_connection() as conn:
+        timeouts = system_settings.get_timeout_settings(conn)
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/system_settings.html",
+        {
+            "title": "Systemzeiten",
+            "timeouts": timeouts,
+            "saved": request.query_params.get("saved") == "1",
+            "error": request.query_params.get("err") == "invalid",
+        },
+    )
+
+
+@router.post("/system-settings")
+def admin_system_settings_post(
+    request: Request,
+    admin_logout_seconds: str = Form(...),
+    kiosk_preisliste_seconds: str = Form(...),
+    kiosk_home_seconds: str = Form(...),
+) -> RedirectResponse:
+    if (r := _redirect_login(request)):
+        return r
+    try:
+        admin_seconds = int((admin_logout_seconds or "").strip())
+        preisliste_seconds = int((kiosk_preisliste_seconds or "").strip())
+        home_seconds = int((kiosk_home_seconds or "").strip())
+    except ValueError:
+        return RedirectResponse("/admin/system-settings?err=invalid", status_code=303)
+    with db.get_connection() as conn:
+        system_settings.save_timeout_settings(
+            conn,
+            admin_logout_seconds=admin_seconds,
+            kiosk_preisliste_seconds=preisliste_seconds,
+            kiosk_home_seconds=home_seconds,
+        )
+    return RedirectResponse("/admin/system-settings?saved=1", status_code=303)
 
 
 @router.get("/debt-thresholds", response_class=HTMLResponse)

@@ -11,10 +11,12 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_secret_key
+from app import backup_service
 from app import db
 from app import debt_thresholds
 from app import kiosk_notice
 from app import ledger_service
+from app import system_settings
 from app.db import init_db
 from app.routers import admin, kiosk
 
@@ -84,6 +86,26 @@ async def attach_kiosk_notice(request: Request, call_next):
     except Exception:
         request.state.kiosk_notice = kiosk_notice.DEFAULT_KIOSK_NOTICE
     request.state.last_sync_label = _last_sync_label()
+    return await call_next(request)
+
+
+@app.middleware("http")
+async def attach_system_timeouts(request: Request, call_next):
+    try:
+        with db.get_connection() as conn:
+            request.state.system_timeouts = system_settings.get_timeout_settings(conn)
+    except Exception:
+        request.state.system_timeouts = system_settings.default_timeout_settings()
+    return await call_next(request)
+
+
+@app.middleware("http")
+async def ensure_weekly_backup(request: Request, call_next):
+    try:
+        if not request.url.path.startswith("/static/"):
+            backup_service.maybe_create_weekly_backup()
+    except Exception:
+        pass
     return await call_next(request)
 
 

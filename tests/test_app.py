@@ -5,9 +5,7 @@ from app.ledger_service import add_purchase
 from app.main import app
 
 
-def test_kiosk_can_undo_last_booking_within_window() -> None:
-    import re
-
+def test_kiosk_add_purchase_redirects_back_to_user_page() -> None:
     with TestClient(app) as c:
         c.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         c.post("/admin/groups", data={"name": "G1"})
@@ -21,22 +19,11 @@ def test_kiosk_can_undo_last_booking_within_window() -> None:
 
         r = c.post(f"/u/{uid}/add", data={"product_id": str(pid)}, follow_redirects=False)
         assert r.status_code == 303
-        assert r.headers["location"].endswith(f"/u/{uid}?undo=1")
-
-        page = c.get(r.headers["location"])
-        assert page.status_code == 200
-        assert "Undo" in page.text
-        m = re.search(r'name="entry_id"\s+value="(\d+)"', page.text)
-        assert m, "entry_id hidden field missing"
-        entry_id = int(m.group(1))
-
-        rr = c.post(f"/u/{uid}/undo", data={"entry_id": str(entry_id)}, follow_redirects=False)
-        assert rr.status_code == 303
-        assert rr.headers["location"].endswith(f"/u/{uid}?undone=1")
+        assert r.headers["location"].endswith(f"/u/{uid}")
 
         with db.get_connection() as conn:
             n = int(conn.execute("SELECT COUNT(*) FROM ledger_entries WHERE user_id = ?", (uid,)).fetchone()[0])
-            assert n == 0
+            assert n == 1
 
 
 def test_kiosk_home() -> None:

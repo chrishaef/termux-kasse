@@ -403,7 +403,7 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 - **GitHub CLI** (einmalig `gh auth login`):  
   `gh release create v1.1.0 --title "Termux-Shopkasse 1.1.0" --generate-notes`
 
-**v1.1.0** (Kurzüberblick): Ein-Script-Betrieb mit `run.sh`, sauberes Stop-Script `stop.sh`, Android-Autostart per `setup_boot.sh`/Termux:Boot, Backup-Archivansicht und kompaktere Backup-UI, Undo-Flow am Kiosk (Button-only Anzeige, 3s).
+**v1.1.0** (Kurzüberblick): Ein-Script-Betrieb mit `run.sh`, sauberes Stop-Script `stop.sh`, Android-Autostart per `setup_boot.sh`/Termux:Boot, Backup-Archivansicht und kompaktere Backup-UI.
 
 ---
 

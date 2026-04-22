@@ -706,60 +706,6 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   color: #ffeae8;
 }
 
-.k-undo-banner {
-  margin: 0 0 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--kas-radius);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
-  background: rgba(20, 34, 18, 0.55);
-  color: #eaf3e7;
-}
-
-.k-undo-banner__row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-}
-
-.k-undo-banner__text {
-  margin: 0;
-  font-size: 0.92rem;
-  font-weight: 650;
-  text-align: center;
-}
-
-.k-undo-banner__count {
-  font-variant-numeric: tabular-nums;
-}
-
-.k-undo-banner__form {
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.k-undo-banner__btn {
-  margin: 0;
-  padding: 0.35rem 0.7rem;
-  border-radius: var(--kas-radius-button);
-  font-weight: 800;
-  border: 1px solid rgba(232, 188, 46, 0.55);
-  background: rgba(0, 0, 0, 0.15);
-  color: #fff;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.k-undo-banner__btn:hover {
-  background: var(--kas-accent);
-  color: var(--kas-accent-contrast);
-  border-color: var(--kas-accent-bright);
-}
-
 .k-panel {
   background: var(--kas-surface);
   border: 1px solid var(--kas-border);
@@ -1298,7 +1244,17 @@ body.app-admin .k-panel form.debt-thresholds-grid {
   gap: 0.55rem 0.9rem;
 }
 
+body.app-admin .k-panel form.system-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 0.9rem;
+}
+
 body.app-admin .k-panel form.debt-thresholds-grid label {
+  margin: 0;
+}
+
+body.app-admin .k-panel form.system-settings-grid label {
   margin: 0;
 }
 
@@ -1308,8 +1264,18 @@ body.app-admin .k-panel form.debt-thresholds-grid button[type="submit"] {
   grid-column: 1 / -1;
 }
 
+body.app-admin .k-panel form.system-settings-grid .system-settings-grid__full,
+body.app-admin .k-panel form.system-settings-grid p,
+body.app-admin .k-panel form.system-settings-grid button[type="submit"] {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 760px) {
   body.app-admin .k-panel form.debt-thresholds-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.app-admin .k-panel form.system-settings-grid {
     grid-template-columns: 1fr;
   }
 }

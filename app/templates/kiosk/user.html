@@ -26,21 +26,6 @@
     </aside>
   </div>
 </header>
-{% if undone %}
-<div class="k-undo-banner" role="status">
-  <p class="k-undo-banner__text"><strong>Storniert.</strong></p>
-</div>
-{% endif %}
-{% if undo_active %}
-<div class="k-undo-banner" id="k-undo-banner" role="status" data-remaining-ms="{{ undo_active['remaining_ms'] }}" data-entry-id="{{ undo_active['entry_id'] }}">
-  <div class="k-undo-banner__row">
-    <form method="post" action="/u/{{ user['id'] }}/undo" class="k-undo-banner__form">
-      <input type="hidden" name="entry_id" value="{{ undo_active['entry_id'] }}" />
-      <button type="submit" class="k-undo-banner__btn">Rückgänging</button>
-    </form>
-  </div>
-</div>
-{% endif %}
 {% if debt_reminder_level > 0 %}
 <div class="k-debt-banner k-debt-banner--level{{ debt_reminder_level }}" role="status">
   <p class="k-debt-banner__text">{{ debt_message }}</p>
@@ -161,16 +146,4 @@
     });
   })();
 </script>
-{% if undo_active %}
-<script>
-  (function () {
-    const banner = document.getElementById("k-undo-banner");
-    if (!banner) return;
-    const remaining = parseInt(banner.dataset.remainingMs || "0", 10) || 0;
-    window.setTimeout(function () {
-      banner.remove();
-    }, Math.max(0, remaining));
-  })();
-</script>
-{% endif %}
 {% endblock %}

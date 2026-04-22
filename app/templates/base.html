@@ -49,6 +49,12 @@
   </footer>
   <script>
     (function () {
+      const APP_TIMEOUTS = {
+        adminLogoutSeconds: {{ request.state.system_timeouts['admin_logout_seconds']|int }},
+        kioskPreislisteSeconds: {{ request.state.system_timeouts['kiosk_preisliste_seconds']|int }},
+        kioskHomeSeconds: {{ request.state.system_timeouts['kiosk_home_seconds']|int }}
+      };
+
       // Extra zoom lock for iPad Safari (double-tap and pinch gestures).
       (function () {
         let lastTouchEnd = 0;
@@ -118,8 +124,8 @@
           const logoutForm = document.querySelector("form.admin-head-logout");
           if (!logoutForm) return;
 
-          const IDLE_MS = 60000;
-          const SHOW_AFTER_INACTIVE_MS = 15000;
+          const IDLE_MS = APP_TIMEOUTS.adminLogoutSeconds * 1000;
+          const SHOW_AFTER_INACTIVE_MS = Math.min(15000, Math.max(0, IDLE_MS - 10000));
           let idleTimer = 0;
           let countdownTimer = 0;
           let deadlineAt = 0;
@@ -234,7 +240,9 @@
           document.addEventListener("keydown", goHome, { once: true });
         } else {
           const isBookingPage = /^\/u\/\d+$/.test(path);
-          const idleMs = isBookingPage ? 30000 : 60000;
+          const idleMs = isBookingPage
+            ? APP_TIMEOUTS.kioskHomeSeconds * 1000
+            : APP_TIMEOUTS.kioskPreislisteSeconds * 1000;
           const idleTarget = isBookingPage ? "/" : "/preisliste";
           let timer = 0;
           const reset = function () {

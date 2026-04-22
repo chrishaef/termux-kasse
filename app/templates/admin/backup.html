@@ -2,6 +2,14 @@
 {% block admin_page %}
 <a href="/admin" class="admin-back">← Admin-Übersicht</a>
 
+<article class="k-panel" style="margin-bottom:1rem;">
+  <h2 style="margin-top:0;font-size:1.1rem">Automatisches Wochen-Backup</h2>
+  <p class="secondary" style="margin-bottom:0;">
+    Das System erstellt zusätzlich automatisch einmal pro Woche ein Backup und legt es im Archiv ab.
+    {% if last_auto_backup_at %}Letztes Auto-Backup: <strong>{{ last_auto_backup_at.strftime('%d.%m.%Y %H:%M') }}</strong>.{% endif %}
+  </p>
+</article>
+
 {% if saved %}
 <article class="contrast"><strong>Import erfolgreich.</strong> Systemdaten wurden wiederhergestellt.</article>
 {% endif %}
@@ -12,7 +20,7 @@
 <article class="contrast" style="border-color:#b33"><strong>Import fehlgeschlagen.</strong> Bitte ein gültiges System-Backup (.zip) oder Legacy-Backup (.db) auswählen.</article>
 {% endif %}
 {% if reset_ok %}
-<article class="contrast"><strong>Daten-Reset ausgeführt.</strong> Alle Buchungen und Abrechnungen wurden gelöscht. Nutzer, Gruppen und Artikel sind unverändert.</article>
+<article class="contrast"><strong>System Reset ausgeführt.</strong> Alle Buchungen und Abrechnungen wurden gelöscht. Nutzer, Gruppen und Artikel bleiben erhalten.</article>
 {% endif %}
 {% if archive_deleted %}
 <article class="contrast"><strong>Archiv gelöscht.</strong></article>
@@ -84,10 +92,11 @@
 </article>
 
 <article class="k-panel">
-  <h2 style="margin-top:0;font-size:1.1rem">Daten-Reset (Buchhaltung)</h2>
+  <h2 style="margin-top:0;font-size:1.1rem">System Reset</h2>
   <p class="secondary">
-    Löscht <strong>alle Daten und Zahlen</strong> außer <strong>Nutzer, Gruppen und Artikel</strong> bleiben erhalten.
-    Kontostände und Statistik sind danach leer. Nicht rückgängig machbar.
+    Setzt das System wieder auf einen sauberen Ausgangszustand zurück:
+    <strong>alle Buchungen, offenen Posten, Abrechnungen und daraus abgeleiteten Kontostände</strong> werden gelöscht.
+    <strong>Nutzer, Gruppen und Artikel</strong> bleiben erhalten. Dieser Schritt ist <strong>endgültig</strong> und kann nicht rückgängig gemacht werden.
   </p>
   {% if not master_configured %}
   <p class="secondary">Master-Passwort nicht gesetzt — Reset deaktiviert.</p>
@@ -98,10 +107,10 @@
     <label class="admin-received-confirm" style="margin-top:1rem;">
       <input type="checkbox" name="confirm_reset" value="1" required />
       <span class="admin-received-confirm__box" aria-hidden="true"></span>
-      <span class="admin-received-confirm__text">Ich will alle Buchungen und Abrechnungen unwiderruflich löschen.</span>
+      <span class="admin-received-confirm__text">Ich will den System Reset ausführen und alle Buchungen sowie Abrechnungen unwiderruflich löschen.</span>
     </label>
     <footer style="margin-top:1rem;">
-      <button type="submit" class="secondary">Daten-Reset ausführen</button>
+      <button type="submit" class="secondary">System Reset ausführen</button>
     </footer>
   </form>
   {% endif %}

@@ -1,0 +1,69 @@
+{% extends "admin/shell.html" %}
+{% block admin_page %}
+<a href="/admin" class="admin-back">← Admin-Übersicht</a>
+
+{% if saved %}
+<article class="contrast"><strong>Gespeichert.</strong> Die Systemzeiten wurden aktualisiert.</article>
+{% endif %}
+{% if error %}
+<article class="contrast" style="border-color:#b33"><strong>Ungültige Eingabe.</strong> Bitte ganze Sekundenwerte eingeben.</article>
+{% endif %}
+
+<article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">Systemzeiten</h2>
+  <form method="post" action="/admin/system-settings" class="system-settings-grid">
+    <label>
+      Admin Auto-Logout (Sekunden)
+      <input
+        type="number"
+        min="5"
+        max="3600"
+        step="1"
+        name="admin_logout_seconds"
+        value="{{ timeouts['admin_logout_seconds'] }}"
+        required
+        inputmode="numeric"
+      />
+    </label>
+
+    <label>
+      Kiosk: Preisliste bei Inaktivität (Sekunden)
+      <input
+        type="number"
+        min="5"
+        max="3600"
+        step="1"
+        name="kiosk_preisliste_seconds"
+        value="{{ timeouts['kiosk_preisliste_seconds'] }}"
+        required
+        inputmode="numeric"
+      />
+    </label>
+
+    <label>
+      Kiosk: Rücksprung zur Startansicht (Sekunden)
+      <input
+        type="number"
+        min="5"
+        max="3600"
+        step="1"
+        name="kiosk_home_seconds"
+        value="{{ timeouts['kiosk_home_seconds'] }}"
+        required
+        inputmode="numeric"
+      />
+    </label>
+
+    <p class="secondary system-settings-grid__full" style="margin-top:0;">
+      Der Rücksprung zur Startansicht gilt für die Nutzer-/Buchungsansicht. Die Preisliste selbst
+      bleibt weiterhin per Tipp auf den freien Bereich sofort verlassbar.
+    </p>
+
+    <p class="secondary system-settings-grid__full" style="margin-top:0;">
+      System-Backups werden zusätzlich automatisch einmal pro Woche erstellt und im Backup-Archiv gespeichert.
+    </p>
+
+    <button type="submit">Zeiten speichern</button>
+  </form>
+</article>
+{% endblock %}
