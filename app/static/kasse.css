@@ -1235,6 +1235,35 @@ form:not(.inline) label {
   border-radius: var(--kas-radius);
 }
 
+.k-top-ten-head {
+  margin-top: 0.35rem;
+  margin-bottom: 0.55rem;
+}
+
+.k-top-ten-head__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 4vw, 1.8rem);
+  letter-spacing: 0.01em;
+}
+
+.k-top-ten-head__lead {
+  margin: 0.35rem 0 0;
+  color: var(--kas-muted);
+}
+
+.k-top-ten-table-wrap {
+  border-top: 3px solid var(--kas-accent);
+}
+
+.k-top-ten-table th:nth-child(1),
+.k-top-ten-table td:nth-child(1) {
+  width: 3.2rem;
+}
+
+.k-top-ten-table td:nth-child(2) {
+  font-weight: 700;
+}
+
 /* Formulare in hellen Panels (Kiosk + Admin-Basis) */
 .k-panel input,
 .k-panel select,
