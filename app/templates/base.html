@@ -270,6 +270,18 @@
       }
 
       (function () {
+        document.addEventListener("click", function (event) {
+          const target = event.target;
+          const backLink = target && typeof target.closest === "function"
+            ? target.closest("a.js-history-back")
+            : null;
+          if (!backLink) return;
+          if (window.history.length > 1) {
+            event.preventDefault();
+            window.history.back();
+          }
+        });
+
         const repoLink = document.getElementById("site-repo-link");
         const modal = document.getElementById("site-repo-qr-modal");
         const closeBtn = document.getElementById("site-repo-qr-close");

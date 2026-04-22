@@ -1,7 +1,7 @@
 {% extends "admin/shell.html" %}
 {% block body_class %}app-admin app-admin--detail{% endblock %}
 {% block admin_page %}
-<a href="/admin" class="admin-back">← Admin-Übersicht</a>
+<a href="/admin" class="admin-back js-history-back">← Zurück</a>
 
 {% if request.query_params.get('err') == 'no_open' %}
 <article class="contrast">Für diesen Nutzer gibt es keine offenen Buchungen.</article>
