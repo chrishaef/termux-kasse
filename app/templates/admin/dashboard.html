@@ -26,6 +26,39 @@
     </div>
   </div>
 </div>
+<div class="admin-dash-telemetry" aria-label="Systemstatus">
+  <div class="admin-stat">
+    <span class="admin-stat__label">Letztes Update</span>
+    <span class="admin-stat__value">{{ request.state.last_sync_at_label }}</span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Version</span>
+    <span class="admin-stat__value">{{ request.state.version_label }}</span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Systemstart</span>
+    <span class="admin-stat__value">{{ request.state.system_started_label }}</span>
+  </div>
+</div>
+<div class="admin-dash-telemetry" aria-label="Betriebstelemetrie">
+  <div class="admin-stat">
+    <span class="admin-stat__label">Letztes Auto-Backup</span>
+    <span class="admin-stat__value">{{ telemetry_extra['auto_backup_label'] }}</span>
+    <span class="admin-stat__label">Nächstes Backup {{ telemetry_extra['auto_backup_next_label'] }}</span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Buchungen heute</span>
+    <span class="admin-stat__value">{{ telemetry_extra['today_entries_count'] }}</span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Umsatz heute</span>
+    <span class="admin-stat__value">{{ telemetry_extra['today_total_cents']|eur }}</span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Freier Speicher</span>
+    <span class="admin-stat__value">{{ telemetry_extra['disk_free_label'] }}</span>
+  </div>
+</div>
 <script>
   (function () {
     const el = document.getElementById("admin-settled-total");

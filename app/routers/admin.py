@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import json
 import re
+import shutil
 import sqlite3
 import time
 import zipfile
@@ -223,10 +224,49 @@ def admin_dashboard(request: Request) -> Response:
             "products": db.fetch_one(conn, "SELECT COUNT(*) AS c FROM products", ())["c"],
         }
         finance = ledger_service.finance_overview(conn)
+        today_row = db.fetch_one(
+            conn,
+            """
+            SELECT
+                COUNT(*) AS entries_count,
+                COALESCE(SUM(amount_cents), 0) AS total_cents
+            FROM ledger_entries
+            WHERE date(created_at, 'localtime') = date('now', 'localtime')
+            """,
+            (),
+        )
+        last_auto_backup_at = backup_service.get_last_auto_backup_at(conn)
+
+    today_entries_count = int(today_row["entries_count"]) if today_row else 0
+    today_total_cents = int(today_row["total_cents"]) if today_row else 0
+    if last_auto_backup_at:
+        next_due = last_auto_backup_at + timedelta(days=backup_service.AUTO_BACKUP_INTERVAL_DAYS)
+        remaining_days = max(0, (next_due.date() - datetime.now().date()).days)
+        auto_backup_label = last_auto_backup_at.strftime("%d.%m.%Y %H:%M")
+        auto_backup_next_label = f"in {remaining_days} Tag{'en' if remaining_days != 1 else ''}"
+    else:
+        auto_backup_label = "noch nicht erfolgt"
+        auto_backup_next_label = "sofort fällig"
+
+    usage = shutil.disk_usage(str(data_dir()))
+    free_gb = usage.free / (1024**3)
+    disk_free_label = f"{free_gb:.1f} GB"
+
     return TEMPLATES.TemplateResponse(
         request,
         "admin/dashboard.html",
-        {"title": "Admin", "stats": stats, "finance": finance},
+        {
+            "title": "Admin",
+            "stats": stats,
+            "finance": finance,
+            "telemetry_extra": {
+                "auto_backup_label": auto_backup_label,
+                "auto_backup_next_label": auto_backup_next_label,
+                "today_entries_count": today_entries_count,
+                "today_total_cents": today_total_cents,
+                "disk_free_label": disk_free_label,
+            },
+        },
     )
 
 

@@ -25,6 +25,7 @@ from app.db import init_db
 from app.routers import admin, kiosk
 
 REPO_URL = "https://github.com/chrishaef/termux-kasse"
+APP_STARTED_AT = datetime.now()
 
 
 def _git_version_label(root: Path) -> str:
@@ -45,18 +46,15 @@ def _git_version_label(root: Path) -> str:
         return "unbekannt"
 
 
-def _last_sync_label() -> str:
-    root = Path(__file__).resolve().parent.parent
+def _last_sync_at(root: Path) -> datetime | None:
     sync_file = root / ".last_sync"
     git_dir = root / ".git"
-    version = _git_version_label(root)
     try:
         if sync_file.exists():
             txt = sync_file.read_text(encoding="utf-8").strip()
             if txt:
                 try:
-                    ts = datetime.strptime(txt, "%Y-%m-%d %H:%M:%S")
-                    return f"{version} - {ts.strftime('%d%m%y')}"
+                    return datetime.strptime(txt, "%Y-%m-%d %H:%M:%S")
                 except ValueError:
                     pass
         candidates = [
@@ -69,11 +67,19 @@ def _last_sync_label() -> str:
         existing = [p for p in candidates if p.exists()]
         if existing:
             newest = max(existing, key=lambda p: p.stat().st_mtime)
-            ts = datetime.fromtimestamp(newest.stat().st_mtime)
-            return f"{version} - {ts.strftime('%d%m%y')}"
+            return datetime.fromtimestamp(newest.stat().st_mtime)
     except Exception:
-        pass
-    return f"{version} - unbekannt"
+        return None
+    return None
+
+
+def _sync_labels() -> tuple[str, str, str]:
+    root = Path(__file__).resolve().parent.parent
+    version = _git_version_label(root)
+    ts = _last_sync_at(root)
+    if ts is None:
+        return version, f"{version} - unbekannt", "unbekannt"
+    return version, f"{version} - {ts.strftime('%d%m%y')}", ts.strftime("%d.%m.%Y %H:%M")
 
 
 @asynccontextmanager
@@ -91,7 +97,11 @@ async def attach_kiosk_notice(request: Request, call_next):
         request.state.kiosk_notice = kiosk_notice.get_display_text()
     except Exception:
         request.state.kiosk_notice = kiosk_notice.DEFAULT_KIOSK_NOTICE
-    request.state.last_sync_label = _last_sync_label()
+    version_label, last_sync_label, last_sync_at_label = _sync_labels()
+    request.state.version_label = version_label
+    request.state.last_sync_label = last_sync_label
+    request.state.last_sync_at_label = last_sync_at_label
+    request.state.system_started_label = APP_STARTED_AT.strftime("%d.%m.%Y %H:%M")
     request.state.repo_url = REPO_URL
     return await call_next(request)
 

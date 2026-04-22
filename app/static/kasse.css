@@ -1083,6 +1083,13 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   max-width: 100%;
 }
 
+.admin-dash-telemetry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
 .admin-stat {
   background: var(--kas-surface);
   color: var(--kas-text);
