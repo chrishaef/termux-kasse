@@ -1166,8 +1166,16 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   margin: 0;
 }
 
+.admin-cards__item--wide {
+  grid-column: span 2;
+}
+
+.admin-cards__item--table .table-wrap {
+  margin: 0;
+}
+
 .admin-system-table-wrap {
-  max-width: 700px;
+  width: 100%;
 }
 
 .admin-system-table td {
@@ -1183,6 +1191,12 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   width: 6rem;
   font-weight: 700;
   color: #0a0f0a;
+}
+
+@media (max-width: 700px) {
+  .admin-cards__item--wide {
+    grid-column: span 1;
+  }
 }
 
 .admin-card {
