@@ -1,8 +1,8 @@
 # Termux-Shopkasse
 
-Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — die App spricht im Betrieb keine externen Dienste an; Styles und Skripte kommen aus dem Projekt (`/static`), Internet ist nur für Installation und Updates nötig.
+Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — Buchungen, Kontostände und Abrechnungen laufen lokal; Styles und Skripte kommen aus dem Projekt (`/static`). Internet wird nur für Installation, Updates und den optionalen Online-/Versionscheck genutzt.
 
-**Aktuelle Version:** **1.2.0** (Git-Tag [`v1.2.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.2.0)) — GitHub-Release: [anlegen](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.2.0) (einmal `gh auth login` oder im Browser veröffentlichen).
+**Aktuelle Version:** **1.2.1** (Git-Tag [`v1.2.1`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.2.1)) — GitHub-Release: [anlegen](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.2.1) (einmal `gh auth login` oder im Browser veröffentlichen).
 
 ---
 
@@ -28,17 +28,17 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 | Bereich | Kurzbeschreibung |
 |--------|-------------------|
 | **Kiosk** | Gruppe wählen → Nutzer → Kontostand, letzte Abrechnung, Artikel mit einem Tipp buchen (Klicksound + visuelles Feedback) |
-| **Kiosk Extra** | Top-Ten-Seite, Preisliste, automatischer Preisliste-Bildschirmschoner bei Inaktivität |
+| **Kiosk Extra** | Top-Ten-Seite (umschaltbar nach Buchungen oder Zahlungen), Preisliste, automatischer Preisliste-Bildschirmschoner bei Inaktivität |
 | **Warnstufen** | 3 konfigurierbare Schwellen mit individuellen Texten und Sounds pro Stufe (einmalig beim Erreichen der nächsten Stufe) |
 | **Admin** | Login, Gruppen, Nutzer, Artikel inkl. Sortierung und Bearbeiten, Kiosk-Nachricht |
 | **Abrechnung** | Geführter Ablauf: Gruppe/Nutzer wählen → offene Posten prüfen → Zahlungseingang bestätigen → Konten begleichen, **PDF** und **XLSX** exportieren |
-| **Jahresabschluss** | Admin unter Abrechnungen: Archiv **PDF**, **XLSX** und **ZIP** nach `data/jahresabschluss/`; löscht nur **beglichene** Abrechnungen inkl. zugehöriger Buchungszeilen (**offene Posten und Kontostände bleiben**). Erfordert **Master-Passwort** |
+| **Jahresabschluss** | Admin unter Abrechnungen: erstellt **PDF**, **XLSX** und **ZIP** im Archiv `data/jahresabschluss/` (immer nur der neueste Abschluss bleibt gespeichert); löscht nur **beglichene** Abrechnungen inkl. zugehöriger Buchungszeilen (**offene Posten und Kontostände bleiben**). Erfordert **Master-Passwort** |
 | **Statistik** | Zeitraum- und Gruppenfilter, Toplisten/Auswertung, Export als **PDF** und **XLSX** |
-| **Backup** | Datenbank **exportieren/importieren**; zusätzlich **Daten-Reset** (Master-Passwort): alle Buchungen und Abrechnungen löschen, **Nutzer, Gruppen und Artikel** bleiben |
+| **Backup** | Datenbank **exportieren/importieren**; zusätzlich **System Reset** (Master-Passwort): alle Buchungen und Abrechnungen löschen, **Nutzer, Gruppen und Artikel** bleiben |
 
 ### Shop und Kiosk im Detail
 
-Die **Shopkasse** ist eine **Vertrauenskasse auf Kontobasis**: Es gibt keine Warenkorb-Session und keinen Bezahlvorgang am Gerät — stattdessen bucht das Mitglied am Kiosk einen Artikel, und der Betrag wird als **Buchung** auf dem **persönlichen Konto** verbucht. Alles läuft in **SQLite**; im laufenden Betrieb werden keine externen Dienste angerufen.
+Die **Shopkasse** ist eine **Vertrauenskasse auf Kontobasis**: Es gibt keine Warenkorb-Session und keinen Bezahlvorgang am Gerät — stattdessen bucht das Mitglied am Kiosk einen Artikel, und der Betrag wird als **Buchung** auf dem **persönlichen Konto** verbucht. Die Kernfunktionen (Buchung, Saldo, Abrechnung) laufen vollständig lokal in **SQLite**.
 
 **Buchungen, offene Posten, Saldo**
 
@@ -61,7 +61,12 @@ Die **Shopkasse** ist eine **Vertrauenskasse auf Kontobasis**: Es gibt keine War
 
 **Top Ten** (`/top-ten`)
 
-- Zeigt die **zehn Nutzer** mit den meisten **Buchungen über die gesamte Laufzeit** der Datenbank (alle Buchungen, auch bereits abgerechnete). Bei gleicher Trefferzahl entscheidet das **kumulierte Buchungsvolumen**, danach der Name.
+- Die Seite bietet zwei Ansichten: **„Nach Buchungen“** und **„Nach Zahlungen“**.
+- Beide Ansichten zeigen immer die **Top 10** über die gesamte Laufzeit (auch bereits abgerechnete Buchungen).
+- In der Tabelle stehen bewusst nur **Rang, Nutzer und Gruppe** (keine Mengen- oder Euro-Spalten), damit die Anzeige am Kiosk kompakt bleibt.
+- Sortierung:
+  - **Nach Buchungen**: zuerst Anzahl Buchungen, dann Umsatz, dann Name.
+  - **Nach Zahlungen**: zuerst Umsatz, dann Anzahl Buchungen, dann Name.
 
 **Preisliste und automatischer Wechsel bei Untätigkeit**
 
@@ -130,12 +135,13 @@ Unter **`/admin/settlements/year-end`** (von der Abrechnungsübersicht aus errei
 1. **Snapshot** (`year_end_snapshot`): Kennzahlen **unmittelbar vor** der Löschung — globale Zähler und Summen für alle / offene / abgerechnete Buchungen und für Abrechnungen; **Nutzer-Tabelle** mit offenen Beträgen, Anzahl Abrechnungen, Summen und Lebenszeit-Buchungsstatistik; **Artikelübersicht** über die **gesamte** Historie (ohne Datumsfilter, für den Archivbericht).
 2. Daraus werden **PDF** und **XLSX** generiert.
 3. Beide Dateien werden im Ordner **`jahresabschluss/`** unter dem Datenverzeichnis abgelegt (`data/jahresabschluss/` oder `KASSE_DATA_DIR/jahresabschluss/`), Dateiname z. B. `Jahresabschluss_<ISO-Zeitstempel>.pdf` / `.xlsx`.
-4. Gleichzeitig wird ein **ZIP** (enthält dieselben PDF- und XLSX-Dateien) erzeugt: ein Exemplar landet **ebenfalls** im Archivordner, **und** dasselbe ZIP wird **als Browser-Download** ausgeliefert — so habt ihr das Archiv sowohl auf dem Server-Gerät als auch lokal beim ausführenden Bediener.
+4. Gleichzeitig wird ein **ZIP** (enthält dieselben PDF- und XLSX-Dateien) erzeugt und im Archivordner gespeichert.
 5. Anschließend **`purge_settled_ledger_and_settlements`**: SQL löscht alle `ledger_entries` mit gesetzter `settlement_id` sowie **alle** Zeilen in **`settlements`**. Zeilen mit `settlement_id IS NULL` (offene Käufe) werden **nicht** angerührt.
+6. Vor dem Schreiben eines neuen Jahresabschlusses wird das Archiv bereinigt, sodass dort jeweils nur der **aktuellste** Abschluss liegt.
 
 **Abgrenzung**
 
-- **Jahresabschluss** ≠ **Daten-Reset** (`/admin/backup`): Der Reset (ebenfalls Master-Passwort) entfernt **alle** Buchungen und Abrechnungen inklusive **offener** Posten — Kontostände werden null, Stammdaten bleiben. Der Jahresabschluss **kürzt nur die Historie beglichener** Vorgänge.
+- **Jahresabschluss** ≠ **System Reset** (`/admin/backup`): Der Reset (ebenfalls Master-Passwort) entfernt **alle** Buchungen und Abrechnungen inklusive **offener** Posten — Kontostände werden null, Stammdaten bleiben. Der Jahresabschluss **kürzt nur die Historie beglichener** Vorgänge.
 
 ---
 
@@ -339,8 +345,8 @@ Wenn aus dem LAN nichts antwortet: **Firewall** auf dem Gerät, VPN oder Router 
 | **Session-Secret** | Datei **`.secret_key`** im Projektroot (von Git ignoriert) oder Umgebungsvariable **`KASSE_SECRET_KEY`** |
 | **Master-Passwort** | Datei **`.admin_master_password`** im Projektroot (Inhalt = Passwort, Standard `master`) oder alternativer Dateipfad via **`KASSE_MASTER_PASSWORD_FILE`** |
 | **Backup (Datei)** | Ordner `data/` kopieren oder nur `kasse.db` sichern — idealerweise bei **gestopptem** Server (`bash stop.sh`) |
-| **Backup (Admin-UI)** | Unter `/admin/backup`: Backup erstellen (wird im Archiv gespeichert), Import mit Vorschau, Archivansicht mit Download/Loeschen, Daten-Reset |
-| **Jahresabschluss-Archive** | Ordner **`jahresabschluss/`** unter `KASSE_DATA_DIR` (neben `kasse.db`): gespeicherte PDF-, XLSX- und ZIP-Dateien pro Abschluss |
+| **Backup (Admin-UI)** | Unter `/admin/backup`: Backup erstellen (wird im Archiv gespeichert), Import mit Vorschau, Archivansicht mit Download/Loeschen, System Reset |
+| **Jahresabschluss-Archive** | Ordner **`jahresabschluss/`** unter `KASSE_DATA_DIR` (neben `kasse.db`): gespeicherte PDF-, XLSX- und ZIP-Dateien des zuletzt erzeugten Jahresabschlusses |
 | **System-Backup-Archiv** | Ordner **`system_backups/`** unter `KASSE_DATA_DIR` |
 
 ---
@@ -354,10 +360,10 @@ Nach dem Login (`/admin`):
 - **Statistik** (`/admin/statistics`): Zeitraum + Nutzergruppe filtern, Toplisten sehen, PDF/XLSX herunterladen  
 - **Warnstufen** (`/admin/debt-thresholds`): Schwellen und Meldungstexte für Kiosk-Warnungen pflegen  
 - **Kiosk-Nachricht** (`/admin/news`): Text oben auf allen Kiosk-Seiten; leer speichern stellt den Standardhinweis wieder her  
-- **Backup** (`/admin/backup`): Backup erstellen (Archiv), Import mit Vorschau, Archivliste, optional **Daten-Reset** (Master-Passwort)  
+- **Backup & Recovery & Reset** (`/admin/backup`): Backup erstellen (Archiv), Import mit Vorschau, Archivliste, optional **System Reset** (Master-Passwort)  
 - **System-Update** (`/admin/system-update`): Online-/Versionscheck, Start nur mit Master-Passwort, Update-Neustart mit Warteseite und separater Log-Ergebnisseite
 
-Hinweis: **Kontostände** ergeben sich nur aus Buchungen; eine manuelle Saldo-Korrektur im Nutzer-Edit gibt es nicht (dazu Daten-Reset oder Jahresabschluss-Archiv nutzen).
+Hinweis: **Kontostände** ergeben sich nur aus Buchungen; eine manuelle Saldo-Korrektur im Nutzer-Edit gibt es nicht (dafür System Reset oder Jahresabschluss-Archiv nutzen).
 
 ---
 
@@ -454,13 +460,13 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ### Versionierung und Releases
 
-- Aktueller Git-Tag: **v1.2.0** — Übersicht: [Tag v1.2.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.2.0).  
-- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.2.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.2.0) öffnen, Titel z. B. `Termux-Shopkasse 1.2.0`, Beschreibung einfügen, *Publish release*.  
+- Aktueller Git-Tag: **v1.2.1** — Übersicht: [Tag v1.2.1](https://github.com/chrishaef/termux-kasse/releases/tag/v1.2.1).  
+- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.2.1](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.2.1) öffnen, Titel z. B. `Termux-Shopkasse 1.2.1`, Beschreibung einfügen, *Publish release*.  
 - **GitHub CLI** (einmalig `gh auth login`):  
-  `gh release create v1.2.0 --title "Termux-Shopkasse 1.2.0" --generate-notes`
+  `gh release create v1.2.1 --title "Termux-Shopkasse 1.2.1" --generate-notes`
 - Änderungsübersicht im Repo: [`CHANGELOG.md`](./CHANGELOG.md)
 
-**v1.2.0** (Kurzüberblick): Dashboard-Systemstatus mit Version/Commit-Status, `update / reboot`-Trigger im Headerbereich, Sicherheitsabfrage per Master-Passwort, Update-Vorbereitung mit Online-/Versionscheck sowie eigene Log-Seiten vor/nach dem Neustart.
+**v1.2.1** (Kurzüberblick): README/Funktionsbeschreibung an den aktuellen Ist-Stand angepasst (Top-10-Modi, System-Reset-Begriffe, Jahresabschluss-Archivverhalten, präzisere Offline/Online-Erklärung).
 
 ---
 
