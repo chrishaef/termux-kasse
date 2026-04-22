@@ -250,7 +250,8 @@ def admin_dashboard(request: Request) -> Response:
 
     usage = shutil.disk_usage(str(data_dir()))
     free_gb = usage.free / (1024**3)
-    disk_free_label = f"{free_gb:.1f} GB"
+    used_gb = usage.used / (1024**3)
+    disk_free_used_label = f"{free_gb:.1f} GB frei / {used_gb:.1f} GB belegt"
 
     return TEMPLATES.TemplateResponse(
         request,
@@ -264,7 +265,7 @@ def admin_dashboard(request: Request) -> Response:
                 "auto_backup_next_label": auto_backup_next_label,
                 "today_entries_count": today_entries_count,
                 "today_total_cents": today_total_cents,
-                "disk_free_label": disk_free_label,
+                "disk_free_used_label": disk_free_used_label,
             },
         },
     )
