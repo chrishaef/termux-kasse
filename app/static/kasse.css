@@ -281,6 +281,14 @@ body {
   max-width: 1380px;
 }
 
+.app-admin--detail .site-header {
+  display: none;
+}
+
+.app-admin--detail .site-main {
+  padding-top: 0.65rem;
+}
+
 .site-footer-note {
   margin-top: auto;
   padding: 0.75rem 0 1rem;

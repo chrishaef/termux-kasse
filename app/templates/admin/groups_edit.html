@@ -1,10 +1,7 @@
 {% extends "admin/shell.html" %}
+{% block body_class %}app-admin app-admin--detail{% endblock %}
 {% block admin_page %}
-<header class="page-head">
-  <p class="page-head__eyebrow">Stammdaten</p>
-  <h1 class="page-head__title">Gruppe bearbeiten</h1>
-</header>
-<a href="/admin/groups" class="admin-back">← Zurück zu Nutzergruppen</a>
+<a href="/admin" class="admin-back">← Admin-Übersicht</a>
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.1rem">Name ändern</h2>
   <form method="post" action="/admin/groups/{{ group['id'] }}/edit">

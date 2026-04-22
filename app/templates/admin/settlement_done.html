@@ -1,12 +1,10 @@
 {% extends "admin/shell.html" %}
+{% block body_class %}app-admin app-admin--detail{% endblock %}
 {% block admin_page %}
-<header class="page-head">
-  <p class="page-head__eyebrow">Abrechnung</p>
-  <h1 class="page-head__title">PDF wird geladen</h1>
-  <p class="page-head__lead">Nach dem Download geht es automatisch zurück zur Übersicht.</p>
-</header>
+<a href="/admin" class="admin-back">← Admin-Übersicht</a>
 
 <article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">PDF wird geladen</h2>
   <p>Falls der Download nicht startet, nutzen Sie diesen Link:</p>
   <p><a href="/admin/settlements/{{ settlement_id }}/pdf" role="button">PDF jetzt herunterladen</a></p>
   <p class="secondary">Sie werden in wenigen Sekunden zur Abrechnungsübersicht weitergeleitet.</p>

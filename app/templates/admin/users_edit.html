@@ -1,10 +1,7 @@
 {% extends "admin/shell.html" %}
+{% block body_class %}app-admin app-admin--detail{% endblock %}
 {% block admin_page %}
-<header class="page-head">
-  <p class="page-head__eyebrow">Stammdaten</p>
-  <h1 class="page-head__title">Nutzer bearbeiten</h1>
-</header>
-<a href="/admin/users" class="admin-back">← Zurück zur Nutzerübersicht</a>
+<a href="/admin" class="admin-back">← Admin-Übersicht</a>
 
 <article class="k-panel">
   <form method="post" action="/admin/users/{{ user['id'] }}/edit" id="user-edit-form">

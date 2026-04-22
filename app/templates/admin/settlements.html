@@ -1,10 +1,6 @@
 {% extends "admin/shell.html" %}
+{% block body_class %}app-admin app-admin--detail{% endblock %}
 {% block admin_page %}
-<header class="page-head">
-  <p class="page-head__eyebrow">Buchhaltung</p>
-  <h1 class="page-head__title">Abrechnungen</h1>
-  <p class="page-head__lead">Neue Abrechnungen laufen über den geführten Ablauf (Nutzer wählen → Betrag prüfen → Quittung → PDF).</p>
-</header>
 <a href="/admin" class="admin-back">← Admin-Übersicht</a>
 
 {% if request.query_params.get('err') == 'no_open' %}

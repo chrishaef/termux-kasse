@@ -1,11 +1,7 @@
 {% extends "admin/shell.html" %}
+{% block body_class %}app-admin app-admin--detail{% endblock %}
 {% block admin_page %}
-<header class="page-head">
-  <p class="page-head__eyebrow">Abrechnung · Schritt 2</p>
-  <h1 class="page-head__title">Kontrolle &amp; Quittung</h1>
-  <p class="page-head__lead">{{ user['group_name'] }} — <strong>{{ user['name'] }}</strong></p>
-</header>
-<a href="/admin/settlements/start" class="admin-back">← Anderen Nutzer wählen</a>
+<a href="/admin" class="admin-back">← Admin-Übersicht</a>
 
 {% if request.query_params.get('err') == 'noconfirm' %}
 <article class="contrast">Bitte aktivieren Sie die Checkbox, wenn Sie den Betrag erhalten haben.</article>
