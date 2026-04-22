@@ -334,7 +334,7 @@ body {
   border-bottom-color: rgba(255, 247, 208, 0.72);
 }
 
-.site-footer-note__online-badge {
+.site-online-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
