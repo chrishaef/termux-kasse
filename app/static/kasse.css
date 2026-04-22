@@ -1166,51 +1166,23 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   margin: 0;
 }
 
-.admin-cards__item--wide {
-  grid-column: span 2;
+.admin-system-table-wrap {
+  max-width: 700px;
 }
 
-.admin-card--meta {
-  display: block;
-  grid-template-rows: none;
-  align-items: initial;
-  justify-items: initial;
-  padding: 0.55rem 0.7rem;
-  overflow: hidden;
-  text-align: left;
-}
-
-.admin-card-meta-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: auto;
-  border: 0;
-  background: transparent;
-}
-
-.admin-card-meta-table td {
-  padding: 0.08rem 0;
-  font-size: 0.72rem;
-  line-height: 1.15;
+.admin-system-table td {
+  font-size: 0.78rem;
+  line-height: 1.2;
   color: #0f140f;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: left;
-  vertical-align: middle;
   border: 0;
+  padding-top: 0.28rem;
+  padding-bottom: 0.28rem;
 }
 
-.admin-card-meta-table td:first-child {
-  width: 4.6rem;
+.admin-system-table td:first-child {
+  width: 6rem;
   font-weight: 700;
   color: #0a0f0a;
-}
-
-@media (max-width: 700px) {
-  .admin-cards__item--wide {
-    grid-column: span 1;
-  }
 }
 
 .admin-card {
