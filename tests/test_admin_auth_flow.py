@@ -86,7 +86,7 @@ def test_admin_dashboard_shows_system_update_button() -> None:
         assert r.status_code == 200
         assert 'href="/admin/system-update"' in r.text
         assert "admin-version-state--action" in r.text
-        assert ">update</a>" in r.text
+        assert ">update / reboot</a>" in r.text
 
 
 def test_admin_system_update_page_is_available() -> None:

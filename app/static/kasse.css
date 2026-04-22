@@ -1246,7 +1246,10 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   width: auto;
   min-height: 0;
   margin: 0;
-  padding: 0.02rem 0.3rem;
+  padding: 0.09rem 0.44rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.15;
   border: 0;
   cursor: pointer;
   background: #1f4b6f;
