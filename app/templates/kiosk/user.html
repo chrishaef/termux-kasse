@@ -1,19 +1,17 @@
 {% extends "base.html" %}
 {% block trust %}{% endblock %}
-{% block site_header_center %}
-<a href="/g/{{ user['group_id'] }}" class="site-header__midlink">{{ user['group_name'] }}</a>
-{% endblock %}
 {% block content %}
 <header class="page-head k-user-head">
   <div class="k-user-head__row">
     <div class="k-user-head__main">
-      <p class="page-head__eyebrow">{{ user['group_name'] }}</p>
       <h1 class="page-head__title">{{ user['name'] }}</h1>
-      <p class="page-head__lead">Artikel buchen</p>
     </div>
-    <div class="k-user-head__balance" aria-label="Kontostand">
-      <p class="k-user-head__balance-label">Kontostand</p>
-      <p class="k-user-head__balance-value{% if display_balance_cents < 0 %} k-user-head__balance-value--debt{% elif display_balance_cents > 0 %} k-user-head__balance-value--credit{% endif %}">{% if display_balance_cents > 0 %}+{% endif %}{{ display_balance_cents|eur }}</p>
+    <div class="k-user-head__status">
+      <a href="/g/{{ user['group_id'] }}" role="button" class="secondary k-user-head__group-back">{{ user['group_name'] }}</a>
+      <div class="k-user-head__balance" aria-label="Kontostand">
+        <p class="k-user-head__balance-label">Kontostand</p>
+        <p class="k-user-head__balance-value{% if display_balance_cents < 0 %} k-user-head__balance-value--debt{% elif display_balance_cents > 0 %} k-user-head__balance-value--credit{% endif %}">{% if display_balance_cents > 0 %}+{% endif %}{{ display_balance_cents|eur }}</p>
+      </div>
     </div>
     <aside class="k-user-head__last" aria-label="Letzte Abrechnung">
       <h2 class="k-user-head__last-title">Letzte Abrechnung</h2>

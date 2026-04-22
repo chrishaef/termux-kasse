@@ -1,15 +1,13 @@
 {% extends "admin/shell.html" %}
 {% block admin_page %}
-<header class="page-head">
-  <p class="page-head__eyebrow">Kiosk</p>
-  <h1 class="page-head__title">Nachricht im Kiosk</h1>
-  <p class="page-head__lead">Der Text erscheint oben auf allen Kiosk-Seiten (unter der Navigation), sichtbar für alle.</p>
-</header>
 <a href="/admin" class="admin-back js-history-back">← Zurück</a>
 {% if saved %}
 <article class="contrast">Gespeichert.</article>
 {% endif %}
 <article class="k-panel">
+  <p class="secondary" style="margin-top:0;margin-bottom:0.6rem;font-size:0.92rem">
+    Kurze Info, die im Kiosk oberhalb der Inhalte angezeigt wird.
+  </p>
   <form method="post" action="/admin/news">
     <label for="msg">Nachricht</label>
     <textarea id="msg" name="message" rows="5" placeholder="Leer lassen zum Ausblenden der Meldung …">{{ stored_notice }}</textarea>
