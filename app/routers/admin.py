@@ -75,6 +75,49 @@ def _trigger_background_update() -> None:
         )
 
 
+def _system_update_precheck() -> dict[str, str | bool]:
+    root = Path(__file__).resolve().parent.parent.parent
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=1.5,
+        )
+        installed = (head.stdout or "").strip() or "unbekannt"
+    except Exception:
+        installed = "unbekannt"
+
+    online = False
+    latest = "unbekannt"
+    try:
+        remote = subprocess.run(
+            ["git", "ls-remote", "origin", "refs/heads/main"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=2.5,
+        )
+        line = (remote.stdout or "").strip()
+        sha = line.split()[0] if line else ""
+        if remote.returncode == 0 and sha:
+            online = True
+            latest = sha[:7]
+    except Exception:
+        online = False
+        latest = "unbekannt"
+
+    return {
+        "online": online,
+        "online_label": "Ja" if online else "Nein",
+        "installed": installed,
+        "latest": latest,
+    }
+
+
 def _parse_price_eur_to_cents(raw: str) -> int:
     s = raw.strip().replace(",", ".")
     if not re.fullmatch(r"\d+(\.\d{1,2})?", s):
@@ -291,24 +334,77 @@ def admin_dashboard(request: Request) -> Response:
 
 
 @router.post("/system-update")
-def admin_system_update_start(request: Request) -> Response:
+def admin_system_update_start(request: Request, master_password: str = Form("")) -> Response:
     if (r := _redirect_login(request)):
         return r
+    master_password = (master_password or "").strip()
+    precheck = _system_update_precheck()
+    if read_master_password() is None:
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "err": "nomaster",
+                "started": False,
+            },
+            status_code=400,
+        )
+    if not admin_auth.is_master_password(master_password):
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "err": "master",
+                "started": False,
+            },
+            status_code=400,
+        )
     try:
         _trigger_background_update()
-        return JSONResponse({"ok": True})
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "started": True,
+                "err": None,
+            },
+        )
     except Exception:
-        return JSONResponse({"ok": False}, status_code=500)
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "err": "start",
+                "started": False,
+            },
+            status_code=500,
+        )
 
 
 @router.get("/system-update", response_class=HTMLResponse)
 def admin_system_update_page(request: Request) -> Response:
     if (r := _redirect_login(request)):
         return r
+    precheck = _system_update_precheck()
+    master_ok = bool(read_master_password())
     return TEMPLATES.TemplateResponse(
         request,
         "admin/system_update.html",
-        {"title": "System-Update"},
+        {
+            "title": "System-Update",
+            "precheck": precheck,
+            "master_configured": master_ok,
+            "err": None,
+            "started": False,
+        },
     )
 
 

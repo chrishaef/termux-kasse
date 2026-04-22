@@ -2,42 +2,51 @@
 {% block admin_page %}
 <a href="/admin" class="admin-back js-history-back">← Zurück</a>
 <article class="k-panel">
+  {% if started %}
   <h2>Update und Neustart laufen</h2>
   <p>
-    Das System startet jetzt den Update-Prozess im Hintergrund. Danach wird die Admin-Seite automatisch neu geladen.
+    Der Update-Prozess wurde gestartet. Danach wird die Admin-Seite automatisch neu geladen.
   </p>
+  <p>Verbleibende Zeit: <strong id="update-countdown">35</strong>s</p>
+  <p class="secondary">Bitte warten, bis der Server neu verfügbar ist.</p>
+  {% else %}
+  <h2>System-Update vorbereiten</h2>
+  <p>Online-Check: <strong>{{ precheck["online_label"] }}</strong></p>
+  <p>Installiert: <strong>{{ request.state.version_commit_label }}</strong></p>
+  <p>Neueste verfügbare Version: <strong>{{ precheck["latest"] }}</strong></p>
   <p>
-    Verbleibende Zeit: <strong id="update-countdown">35</strong>s
+    Beim Start werden Update und Neustart ausgelöst (`run.sh`: Pull, Abhängigkeiten aktualisieren, Server stoppen und neu starten).
   </p>
-  <p id="update-status" class="secondary">Update wird gestartet ...</p>
+
+  {% if err == "nomaster" %}
+  <article class="contrast">Kein Master-Passwort konfiguriert.</article>
+  {% elif err == "master" %}
+  <article class="contrast">Master-Passwort ist falsch.</article>
+  {% elif err == "start" %}
+  <article class="contrast">Update konnte nicht gestartet werden.</article>
+  {% endif %}
+
+  <form method="post" action="/admin/system-update">
+    <label for="master-password-confirm">Master-Passwort</label>
+    <input id="master-password-confirm" name="master_password" type="password" required autocomplete="current-password" />
+    <button type="submit">Update und Neustart starten</button>
+  </form>
+  {% endif %}
 </article>
+{% if started %}
 <script>
   (function () {
     const countdownEl = document.getElementById("update-countdown");
-    const statusEl = document.getElementById("update-status");
     let secondsLeft = 35;
-
-    fetch("/admin/system-update", {
-      method: "POST",
-      headers: { "x-requested-with": "fetch" }
-    })
-      .then(function (res) {
-        if (!res.ok) throw new Error("update-start-failed");
-        statusEl.textContent = "Update gestartet. Bitte warten, bis der Server neu verfügbar ist.";
-      })
-      .catch(function () {
-        statusEl.textContent = "Update konnte nicht gestartet werden.";
-      })
-      .finally(function () {
-        const timer = window.setInterval(function () {
-          secondsLeft -= 1;
-          countdownEl.textContent = String(Math.max(0, secondsLeft));
-          if (secondsLeft <= 0) {
-            window.clearInterval(timer);
-            window.location.href = "/admin";
-          }
-        }, 1000);
-      });
+    const timer = window.setInterval(function () {
+      secondsLeft -= 1;
+      countdownEl.textContent = String(Math.max(0, secondsLeft));
+      if (secondsLeft <= 0) {
+        window.clearInterval(timer);
+        window.location.href = "/admin";
+      }
+    }, 1000);
   })();
 </script>
+{% endif %}
 {% endblock %}

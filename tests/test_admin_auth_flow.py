@@ -94,8 +94,11 @@ def test_admin_system_update_page_is_available() -> None:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         r = client.get("/admin/system-update")
         assert r.status_code == 200
-        assert "Update und Neustart laufen" in r.text
-        assert 'fetch("/admin/system-update"' in r.text
+        assert "System-Update vorbereiten" in r.text
+        assert "Online-Check:" in r.text
+        assert "Installiert:" in r.text
+        assert "Neueste verfügbare Version:" in r.text
+        assert 'name="master_password"' in r.text
 
 
 def test_admin_system_update_post_triggers_background_runner(monkeypatch) -> None:
@@ -105,9 +108,21 @@ def test_admin_system_update_post_triggers_background_runner(monkeypatch) -> Non
         calls.append("called")
 
     monkeypatch.setattr(admin_router, "_trigger_background_update", fake_trigger)
+    monkeypatch.setattr(admin_router, "read_master_password", lambda: "master")
+    monkeypatch.setattr(admin_router.admin_auth, "is_master_password", lambda raw: raw == "master")
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
-        r = client.post("/admin/system-update", follow_redirects=False)
+        r = client.post("/admin/system-update", data={"master_password": "master"}, follow_redirects=False)
         assert r.status_code == 200
-        assert r.json() == {"ok": True}
+        assert "Update und Neustart laufen" in r.text
     assert calls == ["called"]
+
+
+def test_admin_system_update_post_rejects_wrong_master_password(monkeypatch) -> None:
+    monkeypatch.setattr(admin_router, "read_master_password", lambda: "master")
+    monkeypatch.setattr(admin_router.admin_auth, "is_master_password", lambda _raw: False)
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.post("/admin/system-update", data={"master_password": "wrong"}, follow_redirects=False)
+        assert r.status_code == 400
+        assert "Master-Passwort ist falsch." in r.text
