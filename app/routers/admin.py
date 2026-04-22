@@ -360,7 +360,7 @@ def admin_dashboard(request: Request) -> Response:
             """,
             (),
         )
-        last_auto_backup_at = backup_service.get_last_auto_backup_at(conn)
+        last_auto_backup_at = backup_service.get_last_existing_auto_backup_at()
 
     today_entries_count = int(today_row["entries_count"]) if today_row else 0
     today_total_cents = int(today_row["total_cents"]) if today_row else 0
@@ -582,9 +582,7 @@ def admin_backup_get(request: Request) -> Response:
     mp = read_master_password()
     master_ok = bool(mp and str(mp).strip())
     archive = _backup_archive_list()
-    last_auto_backup_at = None
-    with db.get_connection() as conn:
-        last_auto_backup_at = backup_service.get_last_auto_backup_at(conn)
+    last_auto_backup_at = backup_service.get_last_existing_auto_backup_at()
     return TEMPLATES.TemplateResponse(
         request,
         "admin/backup.html",

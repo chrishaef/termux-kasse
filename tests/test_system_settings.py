@@ -117,3 +117,25 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
         assert "adminLogoutSeconds: 25" in admin_page.text
         assert "kioskPreislisteSeconds: 75" in admin_page.text
         assert "kioskHomeSeconds: 45" in admin_page.text
+
+
+def test_last_auto_backup_is_none_when_auto_backup_files_are_deleted(tmp_path) -> None:
+    with TestClient(app) as client:
+        first = client.get("/")
+        assert first.status_code == 200
+
+        with db.get_connection() as conn:
+            stored_before = backup_service.get_last_auto_backup_at(conn)
+            assert stored_before is not None
+        existing_before = backup_service.get_last_existing_auto_backup_at()
+        assert existing_before is not None
+
+        archive_dir = tmp_path / "data" / "system_backups"
+        for path in archive_dir.glob("*.zip"):
+            path.unlink(missing_ok=True)
+
+        with db.get_connection() as conn:
+            stored_after = backup_service.get_last_auto_backup_at(conn)
+            assert stored_after is not None
+        existing_after = backup_service.get_last_existing_auto_backup_at()
+        assert existing_after is None

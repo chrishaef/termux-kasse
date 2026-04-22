@@ -91,6 +91,27 @@ def prune_expired_auto_backups(now: datetime | None = None) -> None:
             pass
 
 
+def _latest_auto_backup_at_from_archive() -> datetime | None:
+    latest: datetime | None = None
+    for item in backup_archive_list():
+        path = backup_archive_dir() / str(item["name"])
+        if not path.is_file():
+            continue
+        manifest = _read_backup_manifest(path)
+        if not manifest or not bool(manifest.get("automatic")):
+            continue
+        created_raw = str(manifest.get("created_at") or "").strip()
+        if not created_raw:
+            continue
+        try:
+            created_at = datetime.fromisoformat(created_raw)
+        except ValueError:
+            continue
+        if latest is None or created_at > latest:
+            latest = created_at
+    return latest
+
+
 def _build_backup_manifest(db_file: Path, exports_dir: Path, created_at: str, *, automatic: bool) -> dict:
     export_files = [path.name for path in sorted(exports_dir.glob("*")) if path.is_file()]
     return {
@@ -143,6 +164,10 @@ def create_system_backup_archive(created_at: datetime | None = None, *, automati
         prune_expired_auto_backups(created)
     backup_archive_prune()
     return out
+
+
+def get_last_existing_auto_backup_at() -> datetime | None:
+    return _latest_auto_backup_at_from_archive()
 
 
 def get_last_auto_backup_at(conn: sqlite3.Connection) -> datetime | None:
