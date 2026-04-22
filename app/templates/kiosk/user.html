@@ -4,10 +4,12 @@
 <header class="page-head k-user-head">
   <div class="k-user-head__row">
     <div class="k-user-head__main">
-      <h1 class="page-head__title">{{ user['name'] }}</h1>
+      <div class="k-user-head__title-row">
+        <h1 class="page-head__title">{{ user['name'] }}</h1>
+        <a href="/g/{{ user['group_id'] }}" class="k-user-head__inline-back">← Zurück</a>
+      </div>
     </div>
     <div class="k-user-head__status">
-      <a href="/g/{{ user['group_id'] }}" role="button" class="secondary k-user-head__group-back">{{ user['group_name'] }}</a>
       <div class="k-user-head__balance" aria-label="Kontostand">
         <p class="k-user-head__balance-label">Kontostand</p>
         <p class="k-user-head__balance-value{% if display_balance_cents < 0 %} k-user-head__balance-value--debt{% elif display_balance_cents > 0 %} k-user-head__balance-value--credit{% endif %}">{% if display_balance_cents > 0 %}+{% endif %}{{ display_balance_cents|eur }}</p>
