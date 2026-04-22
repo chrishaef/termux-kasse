@@ -13,13 +13,12 @@
 </article>
 <div class="table-wrap">
   <table role="grid">
-    <thead><tr><th>Name</th><th class="num">Preis</th><th>Aktiv</th><th class="th-sort">Sort.</th><th class="th-actions">Aktionen</th></tr></thead>
+    <thead><tr><th>Name</th><th class="num">Preis</th><th class="th-sort">Sort.</th><th class="th-actions">Aktionen</th></tr></thead>
     <tbody>
       {% for p in products %}
       <tr>
         <td>{{ p['name'] }}</td>
         <td class="num">{{ p['price_cents']|eur }}</td>
-        <td>{{ 'ja' if p['active'] else 'nein' }}</td>
         <td class="td-sort">
           <div class="td-sort__inner">
             <form method="post" action="/admin/products/{{ p['id'] }}/sort" class="form-inline-action">
@@ -36,7 +35,7 @@
           <div class="td-actions__inner">
             <a href="/admin/products/{{ p['id'] }}/edit" class="admin-btn-sm admin-btn-edit">Bearbeiten</a>
             <form method="post" action="/admin/products/{{ p['id'] }}/toggle" class="form-inline-action">
-              <button type="submit" class="secondary admin-btn-sm">Aktiv</button>
+              <button type="submit" class="secondary admin-btn-sm">{{ 'Aktiv' if p['active'] else 'Inaktiv' }}</button>
             </form>
             <form method="post" action="/admin/products/{{ p['id'] }}/delete" class="form-inline-action" onsubmit="return confirm('Löschen?');">
               <button type="submit" class="secondary admin-btn-sm admin-btn-danger">Löschen</button>
