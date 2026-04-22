@@ -1240,6 +1240,7 @@ form:not(.inline) label {
   gap: 0.6rem;
   margin: 0.4rem 0 0.65rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .k-top-ten-switch > a[role="button"] {
@@ -1255,6 +1256,9 @@ form:not(.inline) label {
 
 .k-top-ten-table-wrap {
   border-top: 3px solid var(--kas-accent);
+  max-width: 46rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .k-top-ten-table th:nth-child(1),
