@@ -2,7 +2,7 @@
 
 Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — die App spricht im Betrieb keine externen Dienste an; Styles und Skripte kommen aus dem Projekt (`/static`), Internet ist nur für Installation und Updates nötig.
 
-**Aktuelle Version:** **1.1.0** (Git-Tag [`v1.1.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.1.0)) — GitHub-Release: [anlegen](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.1.0) (einmal `gh auth login` oder im Browser veröffentlichen).
+**Aktuelle Version:** **1.2.0** (Git-Tag [`v1.2.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.2.0)) — GitHub-Release: [anlegen](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.2.0) (einmal `gh auth login` oder im Browser veröffentlichen).
 
 ---
 
@@ -398,12 +398,12 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ### Versionierung und Releases
 
-- Aktueller Git-Tag: **v1.1.0** — Übersicht: [Tag v1.1.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.1.0).  
-- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.1.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.1.0) öffnen, Titel z. B. `Termux-Shopkasse 1.1.0`, Beschreibung einfügen, *Publish release*.  
+- Aktueller Git-Tag: **v1.2.0** — Übersicht: [Tag v1.2.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.2.0).  
+- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.2.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.2.0) öffnen, Titel z. B. `Termux-Shopkasse 1.2.0`, Beschreibung einfügen, *Publish release*.  
 - **GitHub CLI** (einmalig `gh auth login`):  
-  `gh release create v1.1.0 --title "Termux-Shopkasse 1.1.0" --generate-notes`
+  `gh release create v1.2.0 --title "Termux-Shopkasse 1.2.0" --generate-notes`
 
-**v1.1.0** (Kurzüberblick): Ein-Script-Betrieb mit `run.sh`, sauberes Stop-Script `stop.sh`, Android-Autostart per `setup_boot.sh`/Termux:Boot, Backup-Archivansicht und kompaktere Backup-UI.
+**v1.2.0** (Kurzüberblick): Dashboard-Systemstatus mit Version/Commit-Status, `update / reboot`-Trigger mit Sicherheitsabfrage per Master-Passwort, Update-Vorbereitungsseite mit Online-/Versionscheck und automatischem Neustart-Countdown.
 
 ---
 
