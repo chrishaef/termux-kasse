@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import re
 import shutil
 import sqlite3
@@ -57,26 +58,76 @@ def _redirect_login(request: Request) -> Optional[RedirectResponse]:
     return None
 
 
+def _update_pid_path() -> Path:
+    root = Path(__file__).resolve().parent.parent.parent
+    return root / "update-trigger.pid"
+
+
+def _is_update_running() -> bool:
+    pid_path = _update_pid_path()
+    try:
+        raw = pid_path.read_text(encoding="utf-8").strip()
+        pid = int(raw)
+    except Exception:
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        try:
+            pid_path.unlink(missing_ok=True)
+        except Exception:
+            pass
+        return False
+    except PermissionError:
+        return True
+    except Exception:
+        return False
+
+
+def _current_branch(root: Path) -> str:
+    try:
+        branch = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=1.5,
+        )
+        name = (branch.stdout or "").strip()
+        if name and name != "HEAD":
+            return name
+    except Exception:
+        pass
+    return "main"
+
+
 def _trigger_background_update() -> None:
     root = Path(__file__).resolve().parent.parent.parent
     run_script = root / "run.sh"
     if not run_script.exists():
         raise FileNotFoundError("run.sh nicht gefunden")
+    if _is_update_running():
+        raise RuntimeError("Update läuft bereits")
     log_path = root / "update-trigger.log"
+    pid_path = _update_pid_path()
     with log_path.open("a", encoding="utf-8") as log_file:
         log_file.write(f"\n=== Update ausgelöst: {datetime.now().isoformat()} ===\n")
         log_file.flush()
-        subprocess.Popen(
+        proc = subprocess.Popen(
             ["bash", str(run_script)],
             cwd=str(root),
             stdout=log_file,
             stderr=subprocess.STDOUT,
             start_new_session=True,
         )
+        pid_path.write_text(str(proc.pid), encoding="utf-8")
 
 
 def _system_update_precheck() -> dict[str, str | bool]:
     root = Path(__file__).resolve().parent.parent.parent
+    branch = _current_branch(root)
     installed_version = "unbekannt"
     installed_commit = "unbekannt"
     installed_head_full = ""
@@ -137,7 +188,7 @@ def _system_update_precheck() -> dict[str, str | bool]:
             latest_version = best_version
 
         remote = subprocess.run(
-            ["git", "ls-remote", "origin", "refs/heads/main"],
+            ["git", "ls-remote", "origin", f"refs/heads/{branch}"],
             cwd=str(root),
             capture_output=True,
             text=True,
@@ -161,6 +212,7 @@ def _system_update_precheck() -> dict[str, str | bool]:
         "online": online,
         "online_label": "Ja" if online else "Nein",
         "online_badge": "online" if online else "offline",
+        "branch": branch,
         "installed_version_commit": f"{installed_version} ({installed_commit})",
         "latest_version_commit": f"{latest_version} ({latest_commit})",
         "update_available": update_available,
@@ -402,7 +454,22 @@ def admin_system_update_start(request: Request, master_password: str = Form(""))
         return r
     master_password = (master_password or "").strip()
     precheck = _system_update_precheck()
+    update_running = _is_update_running()
     update_log_lines = _read_update_log_snippet()
+    if update_running:
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "update_log_lines": update_log_lines,
+                "err": "running",
+                "started": False,
+                "update_running": True,
+            },
+            status_code=409,
+        )
     if read_master_password() is None:
         return TEMPLATES.TemplateResponse(
             request,
@@ -413,6 +480,7 @@ def admin_system_update_start(request: Request, master_password: str = Form(""))
                 "update_log_lines": update_log_lines,
                 "err": "nomaster",
                 "started": False,
+                "update_running": False,
             },
             status_code=400,
         )
@@ -426,6 +494,7 @@ def admin_system_update_start(request: Request, master_password: str = Form(""))
                 "update_log_lines": update_log_lines,
                 "err": "master",
                 "started": False,
+                "update_running": False,
             },
             status_code=400,
         )
@@ -440,6 +509,7 @@ def admin_system_update_start(request: Request, master_password: str = Form(""))
                 "update_log_lines": update_log_lines,
                 "started": True,
                 "err": None,
+                "update_running": True,
             },
         )
     except Exception:
@@ -452,6 +522,7 @@ def admin_system_update_start(request: Request, master_password: str = Form(""))
                 "update_log_lines": update_log_lines,
                 "err": "start",
                 "started": False,
+                "update_running": _is_update_running(),
             },
             status_code=500,
         )
@@ -463,6 +534,7 @@ def admin_system_update_page(request: Request) -> Response:
         return r
     precheck = _system_update_precheck()
     master_ok = bool(read_master_password())
+    update_running = _is_update_running()
     update_log_lines = _read_update_log_snippet()
     return TEMPLATES.TemplateResponse(
         request,
@@ -474,6 +546,7 @@ def admin_system_update_page(request: Request) -> Response:
             "master_configured": master_ok,
             "err": None,
             "started": False,
+            "update_running": update_running,
         },
     )
 

@@ -155,6 +155,7 @@ def test_admin_system_update_page_shows_restart_button_without_update(monkeypatc
             "online": True,
             "online_label": "Ja",
             "online_badge": "online",
+            "branch": "main",
             "installed_version_commit": "1.1.0 (abc1234)",
             "latest_version_commit": "1.1.0 (abc1234)",
             "update_available": False,
@@ -175,6 +176,7 @@ def test_admin_system_update_page_shows_offline_hint(monkeypatch) -> None:
             "online": False,
             "online_label": "Nein",
             "online_badge": "offline",
+            "branch": "main",
             "installed_version_commit": "1.1.0 (abc1234)",
             "latest_version_commit": "unbekannt (unbekannt)",
             "update_available": False,
@@ -197,3 +199,14 @@ def test_admin_system_update_post_rejects_wrong_master_password(monkeypatch) -> 
         r = client.post("/admin/system-update", data={"master_password": "wrong"}, follow_redirects=False)
         assert r.status_code == 400
         assert "Master-Passwort ist falsch." in r.text
+
+
+def test_admin_system_update_post_rejects_when_update_already_running(monkeypatch) -> None:
+    monkeypatch.setattr(admin_router, "_is_update_running", lambda: True)
+    monkeypatch.setattr(admin_router, "read_master_password", lambda: "master")
+    monkeypatch.setattr(admin_router.admin_auth, "is_master_password", lambda _raw: True)
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.post("/admin/system-update", data={"master_password": "master"}, follow_redirects=False)
+        assert r.status_code == 409
+        assert "läuft bereits" in r.text

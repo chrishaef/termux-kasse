@@ -17,6 +17,7 @@
       {{ "online" if precheck["online"] else "offline" }}
     </span>
   </p>
+  <p>Branch: <strong>{{ precheck["branch"] }}</strong></p>
   <p>Installiert: <strong>{{ precheck["installed_version_commit"] }}</strong></p>
   <p>Neueste verfügbare Version: <strong>{{ precheck["latest_version_commit"] }}</strong></p>
   {% if not precheck["online"] %}
@@ -31,14 +32,16 @@
   <article class="contrast">Kein Master-Passwort konfiguriert.</article>
   {% elif err == "master" %}
   <article class="contrast">Master-Passwort ist falsch.</article>
+  {% elif err == "running" %}
+  <article class="contrast">Ein Update-/Neustart-Prozess läuft bereits. Bitte warten, bis er abgeschlossen ist.</article>
   {% elif err == "start" %}
   <article class="contrast">Update konnte nicht gestartet werden.</article>
   {% endif %}
 
   <form method="post" action="/admin/system-update">
     <label for="master-password-confirm">Master-Passwort</label>
-    <input id="master-password-confirm" name="master_password" type="password" required autocomplete="current-password" />
-    <button id="system-update-submit" type="submit">{{ "Update & Neustart starten" if precheck["update_available"] else "Neustart starten" }}</button>
+    <input id="master-password-confirm" name="master_password" type="password" required autocomplete="current-password" {% if update_running %}disabled{% endif %} />
+    <button id="system-update-submit" type="submit" {% if update_running %}disabled{% endif %}>{{ "Update & Neustart starten" if precheck["update_available"] else "Neustart starten" }}</button>
   </form>
   {% endif %}
 
