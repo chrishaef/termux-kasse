@@ -288,7 +288,18 @@
             ? target.closest("a.js-history-back")
             : null;
           if (!backLink) return;
-          if (window.history.length > 1) {
+          if (window.history.length <= 1) return;
+          let canUseHistoryBack = false;
+          try {
+            if (document.referrer) {
+              const ref = new URL(document.referrer, window.location.origin);
+              const sameOrigin = ref.origin === window.location.origin;
+              const differentPath = ref.pathname !== window.location.pathname;
+              // If previous entry is only the same page (e.g. PRG /?saved=1), prefer href fallback.
+              canUseHistoryBack = sameOrigin && differentPath;
+            }
+          } catch (_e) {}
+          if (canUseHistoryBack) {
             event.preventDefault();
             window.history.back();
           }

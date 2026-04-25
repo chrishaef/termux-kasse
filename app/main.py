@@ -72,6 +72,59 @@ def _git_commit_short(root: Path) -> str:
         return "unbekannt"
 
 
+def _parse_semver(text: str) -> tuple[int, int, int] | None:
+    m = re.fullmatch(r"[vV]?(\d+)\.(\d+)\.(\d+)", (text or "").strip())
+    if not m:
+        return None
+    return int(m.group(1)), int(m.group(2)), int(m.group(3))
+
+
+def _latest_local_release_version(root: Path) -> tuple[int, int, int] | None:
+    try:
+        out = subprocess.run(
+            ["git", "tag", "--sort=-v:refname"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=1.5,
+        )
+        for line in (out.stdout or "").splitlines():
+            parsed = _parse_semver(line.strip())
+            if parsed is not None:
+                return parsed
+    except Exception:
+        return None
+    return None
+
+
+def _latest_remote_release_version(root: Path) -> tuple[int, int, int] | None:
+    try:
+        out = subprocess.run(
+            ["git", "ls-remote", "--tags", "--refs", "origin"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=2.0,
+        )
+        best: tuple[int, int, int] | None = None
+        for raw_line in (out.stdout or "").splitlines():
+            parts = raw_line.strip().split()
+            if len(parts) != 2:
+                continue
+            ref = parts[1]
+            tag_name = ref.rsplit("/", 1)[-1]
+            parsed = _parse_semver(tag_name)
+            if parsed is None:
+                continue
+            if best is None or parsed > best:
+                best = parsed
+        return best
+    except Exception:
+        return None
+
+
 def _commit_freshness_label(root: Path) -> str:
     global _freshness_cache_checked_at
     global _freshness_cache_label
@@ -103,7 +156,19 @@ def _commit_freshness_label(root: Path) -> str:
             _freshness_cache_label = "unknown"
             _freshness_cache_online = False
         else:
-            _freshness_cache_label = "latest" if head_sha == remote_sha else "outdated"
+            if head_sha == remote_sha:
+                _freshness_cache_label = "latest"
+            else:
+                local_release = _latest_local_release_version(root)
+                remote_release = _latest_remote_release_version(root)
+                if (
+                    local_release is not None
+                    and remote_release is not None
+                    and remote_release > local_release
+                ):
+                    _freshness_cache_label = "outdated"
+                else:
+                    _freshness_cache_label = "new-commit"
             _freshness_cache_online = True
     except Exception:
         _freshness_cache_label = "unknown"

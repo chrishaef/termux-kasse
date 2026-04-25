@@ -20,12 +20,17 @@
   <p>Branch: <strong>{{ precheck["branch"] }}</strong></p>
   <p>Installiert: <strong>{{ precheck["installed_version_commit"] }}</strong></p>
   <p>Neueste verfügbare Version: <strong>{{ precheck["latest_version_commit"] }}</strong></p>
+  <p class="secondary">
+    <strong>Hinweis:</strong> Eine <strong>Version/Release</strong> ist ein offizieller Tag (z.&nbsp;B. v1.2.1).
+    Ein <strong>Commit</strong> ist eine einzelne Code-Änderung innerhalb eines Branches.
+    Ein Update kann daher auch ohne neue Version verfügbar sein (nur neue Commits).
+  </p>
   {% if not precheck["online"] %}
   <p>Es besteht keine Internetverbindung. Ein Versionscheck konnte nicht durchgeführt werden, daher kann aktuell nur ein Neustart ausgeführt werden.</p>
   {% elif precheck["update_available"] %}
-  <p><strong>Es ist ein Update verfügbar.</strong> Beim Start werden neue Änderungen geladen und anschließend wird der Server neu gestartet.</p>
+  <p><strong>Es ist ein Update verfügbar.</strong> Beim Start werden neue Commits geladen und anschließend wird der Server neu gestartet. Falls darunter ein neuer Release-Tag liegt, wird auch die Version erhöht.</p>
   {% else %}
-  <p>Das System ist bereits auf dem aktuellen Stand. Es kann ein reiner Neustart ausgeführt werden.</p>
+  <p>Das System ist bereits auf dem aktuellen Branch-Stand. Es kann ein reiner Neustart ausgeführt werden.</p>
   {% endif %}
 
   {% if err == "nomaster" %}
