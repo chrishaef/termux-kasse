@@ -1757,10 +1757,6 @@ body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar_
     grid-template-columns: 1fr;
   }
 
-  body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio__row {
-    grid-template-columns: 1fr;
-  }
-
   body.app-admin .k-panel form.system-settings-grid {
     grid-template-columns: 1fr;
   }
