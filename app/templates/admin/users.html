@@ -3,6 +3,15 @@
 {% block admin_page %}
 <div class="k-toolbar" style="align-items:center">
   <a href="/admin" class="admin-back js-history-back" style="margin:0">← Zurück</a>
+  <form method="get" action="/admin/users" style="margin-left:0.75rem;display:inline-flex;align-items:center;gap:0.45rem">
+    <label for="users-group-filter" style="margin:0;font-size:0.85rem">Gruppe</label>
+    <select id="users-group-filter" name="group_id" onchange="this.form.submit()" style="margin:0;min-width:11rem">
+      <option value="">Alle</option>
+      {% for g in groups %}
+      <option value="{{ g['id'] }}"{% if selected_group_id == g['id'] %} selected{% endif %}>{{ g['name'] }}</option>
+      {% endfor %}
+    </select>
+  </form>
   <a href="#new-user-form" role="button" class="secondary" style="margin-left:auto">Neuer Nutzer</a>
 </div>
 <div class="table-wrap">

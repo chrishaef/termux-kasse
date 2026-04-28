@@ -38,6 +38,25 @@ def test_admin_users_overview_shows_balances_and_totals() -> None:
         assert "4,00 €" in r.text
 
 
+def test_admin_users_can_be_filtered_by_group() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "G1"})
+        client.post("/admin/groups", data={"name": "G2"})
+        with db.get_connection() as conn:
+            groups = conn.execute("SELECT id, name FROM user_groups ORDER BY name").fetchall()
+            g1 = next(int(r[0]) for r in groups if str(r[1]) == "G1")
+            g2 = next(int(r[0]) for r in groups if str(r[1]) == "G2")
+        client.post("/admin/users", data={"name": "Anna", "group_id": str(g1)})
+        client.post("/admin/users", data={"name": "Ben", "group_id": str(g2)})
+
+        r = client.get(f"/admin/users?group_id={g1}")
+        assert r.status_code == 200
+        assert "Anna" in r.text
+        assert "Ben" not in r.text
+        assert f'<option value="{g1}" selected>' in r.text
+
+
 def test_admin_user_edit_name_and_group_keeps_ledger() -> None:
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)

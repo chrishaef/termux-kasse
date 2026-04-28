@@ -1107,15 +1107,25 @@ def admin_groups_delete(request: Request, group_id: int) -> RedirectResponse:
 
 
 @router.get("/users", response_class=HTMLResponse)
-def admin_users(request: Request) -> Response:
+def admin_users(request: Request, group_id: str | None = Query(default=None)) -> Response:
     if (r := _redirect_login(request)):
         return r
+    selected_group_id: int | None = None
+    try:
+        if group_id is not None and str(group_id).strip() != "":
+            gid = int(str(group_id).strip())
+            if gid > 0:
+                selected_group_id = gid
+    except ValueError:
+        selected_group_id = None
     with db.get_connection() as conn:
         users = ledger_service.users_admin_overview(conn)
         groups = db.fetch_all(
             conn,
             "SELECT id, name FROM user_groups ORDER BY sort_order, name COLLATE NOCASE",
         )
+        if selected_group_id is not None:
+            users = [u for u in users if int(u["group_id"]) == selected_group_id]
         overview_totals = {
             "open_balance_cents": sum(int(u["open_balance_cents"]) for u in users),
             "open_entries_count": sum(int(u["open_entries_count"]) for u in users),
@@ -1130,6 +1140,7 @@ def admin_users(request: Request) -> Response:
             "users": users,
             "groups": groups,
             "overview_totals": overview_totals,
+            "selected_group_id": selected_group_id,
         },
     )
 
