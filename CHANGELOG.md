@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.3.0 - 2026-04-28
+
+- Added robust PDF layout handling with safer page breaks and repeated headers across multi-page sections.
+- Improved statistics PDF output: dedicated per-user tables, product order aligned to shop order, and clearer user detail labels.
+- Unified monetary formatting in PDFs to `12,34 €` and aligned amount column captions to `€`.
+- Updated admin UX: user list group filter, moved create forms below lists for groups/products, and toolbar quick actions.
+- Refined update telemetry and guidance (`outdated` vs. `new-commit`) including clearer release/commit explanation texts.
+- Improved warning threshold handling with configurable warning sound volume percentages and updated admin form layout.
+
 ## v1.2.1 - 2026-04-22
 
 - Corrected README function descriptions to match current behavior exactly.
