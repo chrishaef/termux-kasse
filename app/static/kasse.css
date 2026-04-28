@@ -1681,20 +1681,18 @@ body.app-admin .k-panel form.debt-thresholds-grid button[type="submit"] {
 
 body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 9.5rem;
-  gap: 0.45rem 0.8rem;
-  align-items: end;
-}
-
-body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio__head {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #344039;
+  gap: 0.45rem;
 }
 
 body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio label {
   margin: 0;
+}
+
+body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 12rem;
+  gap: 0.45rem 0.8rem;
+  align-items: end;
 }
 
 body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio__msg {
@@ -1759,12 +1757,8 @@ body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar_
     grid-template-columns: 1fr;
   }
 
-  body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio {
+  body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio__row {
     grid-template-columns: 1fr;
-  }
-
-  body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio__head {
-    display: none;
   }
 
   body.app-admin .k-panel form.system-settings-grid {
