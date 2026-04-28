@@ -985,6 +985,33 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   display: inline-block;
   background: transparent;
   filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.35));
+  transform-origin: center;
+  animation: saverLogoFloat 6s ease-in-out infinite;
+  transition: transform 220ms ease, filter 220ms ease;
+}
+
+.k-saver-logo:hover {
+  transform: translateY(-4px) scale(1.02);
+  filter:
+    drop-shadow(0 14px 26px rgba(0, 0, 0, 0.38))
+    drop-shadow(0 0 18px rgba(232, 188, 46, 0.22));
+}
+
+@keyframes saverLogoFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .k-saver-logo {
+    animation: none;
+    transition: none;
+  }
 }
 
 @media (max-width: 800px) {
