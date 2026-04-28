@@ -666,6 +666,35 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   color: var(--kas-accent-bright);
 }
 
+.k-toolbar .admin-users-filter-form {
+  margin-left: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.k-toolbar .admin-users-filter-form label {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--kas-page-fg);
+}
+
+.k-toolbar .admin-users-filter-form select {
+  margin: 0;
+  min-width: 11rem;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.75rem;
+  color: var(--kas-page-fg);
+  border-color: var(--kas-control-border);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--kas-radius-button);
+  font-weight: 700;
+}
+
+.k-toolbar .admin-users-filter-form select:hover {
+  border-color: var(--kas-accent);
+}
+
 /* Nutzerkopf: links Gruppe/Name, Mitte Kontostand, rechts letzte Abrechnung (eine Zeile) */
 .page-head.k-user-head {
   margin-bottom: 1rem;
