@@ -1,6 +1,9 @@
 {% extends "admin/shell.html" %}
 {% block admin_page %}
-<a href="/admin" class="admin-back js-history-back">← Zurück</a>
+<div class="k-toolbar" style="align-items:center">
+  <a href="/admin" class="admin-back js-history-back" style="margin:0">← Zurück</a>
+  <a href="#new-group-form" role="button" class="secondary" style="margin-left:auto">Neue Gruppe</a>
+</div>
 <div class="table-wrap">
   <table role="grid" class="admin-table-groups">
     <thead><tr><th>Name</th><th class="th-actions">Aktionen</th></tr></thead>
@@ -29,7 +32,7 @@
     </tbody>
   </table>
 </div>
-<article class="k-panel">
+<article class="k-panel" id="new-group-form">
   <h2 style="margin-top:0;font-size:1.1rem">Neue Gruppe</h2>
   <form method="post" action="/admin/groups">
     <label>Name <input type="text" name="name" required placeholder="z. B. Büro 1" /></label>
