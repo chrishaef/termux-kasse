@@ -1907,7 +1907,11 @@ def admin_statistics_pdf(
                 uid = int(u["id"])
                 o = overview_by_user_id.get(uid, {})
                 counts = per_user_counts.get(uid, {})
-                summary_parts = [f"{label}: {counts[label]}" for label in label_order if counts.get(label, 0) > 0]
+                article_items = [
+                    {"label": label, "quantity": int(counts[label])}
+                    for label in label_order
+                    if counts.get(label, 0) > 0
+                ]
                 all_group_users.append(
                     {
                         "name": str(u["name"]),
@@ -1916,7 +1920,7 @@ def admin_statistics_pdf(
                         "settled_total_cents": int(o.get("settled_total_cents", 0)),
                         "settlements_count": int(o.get("settlements_count", 0)),
                         "article_count_total": int(per_user_total.get(uid, 0)),
-                        "purchases_summary": " · ".join(summary_parts) if summary_parts else "—",
+                        "article_items": article_items,
                     }
                 )
         product_rows = ledger_service.period_product_stats(conn, period_start, period_end, gid)

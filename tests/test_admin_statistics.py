@@ -120,4 +120,7 @@ def test_statistics_pdf_includes_all_users_payload_for_selected_group(monkeypatc
         row_by_name = {str(r.get("name")): r for r in rows}
         assert int(row_by_name["Ben"].get("article_count_total", 0)) == 2
         assert int(row_by_name["Anna"].get("article_count_total", 0)) == 0
-        assert "Cola: 2" in str(row_by_name["Ben"].get("purchases_summary", ""))
+        items = list(row_by_name["Ben"].get("article_items", []))
+        assert items
+        assert str(items[0].get("label")) == "Cola"
+        assert int(items[0].get("quantity", 0)) == 2

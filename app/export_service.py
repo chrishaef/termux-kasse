@@ -43,7 +43,12 @@ def _pdf_draw_report_header(
         pdf.cell(0, 5.5, _pdf_cell_text(subtitle, 140), 0, 1)
     pdf.set_draw_color(184, 168, 120)
     y = float(pdf.get_y()) + 0.6
-    pdf.line(float(pdf.l_margin), y, float(pdf.w) - float(pdf.r_margin), y)
+    line_start = float(pdf.l_margin)
+    # Keep the decorative line clear of the top-right logo area.
+    line_end = float(pdf.w) - float(pdf.r_margin) - float(logo_width_mm) - 4.0
+    if line_end <= line_start + 20.0:
+        line_end = float(pdf.w) - float(pdf.r_margin)
+    pdf.line(line_start, y, line_end, y)
     pdf.ln(3)
 
 
@@ -227,44 +232,63 @@ def build_statistics_pdf_bytes(
             pdf.cell(w, 5.5, _pdf_cell_text(c, m), 1, 1 if i == len(w_users) - 1 else 0)
 
     if group_name and all_group_users:
-        _pdf_add_page_if_needed(pdf, 14.0)
+        _pdf_add_page_if_needed(pdf, 18.0)
         pdf.ln(4)
         pdf.set_font("Helvetica", "B", 10)
         pdf.cell(0, 6, _pdf_cell_text("Alle Nutzer der gewaehlten Gruppe", 56), 0, 1)
-        w_all = (34, 24, 18, 24, 16, 18)
-        headers_all = (
-            "Nutzer",
-            "Offener Saldo",
-            "Offene Buch.",
-            "Abgerechnet",
-            "# Abrechn.",
-            "Artikel ges.",
-        )
-        pdf.set_font("Helvetica", "B", 8)
-        for i, (txt, w) in enumerate(zip(headers_all, w_all)):
-            pdf.cell(w, 6, _pdf_cell_text(txt, 24), 1, 1 if i == len(w_all) - 1 else 0)
-        pdf.set_font("Helvetica", "", 8)
         for row in all_group_users:
-            if _pdf_add_page_if_needed(pdf, 12.0):
-                pdf.set_font("Helvetica", "B", 9)
-                pdf.cell(0, 6, _pdf_cell_text("Alle Nutzer der gewaehlten Gruppe - Fortsetzung", 66), 0, 1)
-                pdf.set_font("Helvetica", "B", 8)
-                for i, (txt, w) in enumerate(zip(headers_all, w_all)):
-                    pdf.cell(w, 6, _pdf_cell_text(txt, 24), 1, 1 if i == len(w_all) - 1 else 0)
-                pdf.set_font("Helvetica", "", 8)
-            cells = [
-                str(row["name"]),
+            article_items = cast(list[dict[str, Any]], row.get("article_items") or [])
+            min_needed = 22.0 + (5.2 * max(1, len(article_items)))
+            if _pdf_add_page_if_needed(pdf, min_needed):
+                pdf.set_font("Helvetica", "B", 10)
+                pdf.cell(0, 6, _pdf_cell_text("Alle Nutzer der gewaehlten Gruppe - Fortsetzung", 72), 0, 1)
+
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.cell(0, 6, _pdf_cell_text(str(row["name"]), 42), 0, 1)
+            # Wider label columns so headings are not visually clipped.
+            meta_w = (42, 18, 42, 18, 42, 18)
+            meta_cells = (
+                "Offener Saldo",
                 f'{int(row["open_balance_cents"]) / 100:.2f}',
+                "Offene Buch.",
                 str(int(row["open_entries_count"])),
-                f'{int(row["settled_total_cents"]) / 100:.2f}',
-                str(int(row["settlements_count"])),
+                "Artikel ges.",
                 str(int(row.get("article_count_total", 0))),
-            ]
-            maxl = (18, 12, 8, 12, 8, 8)
-            for i, (c, w, m) in enumerate(zip(cells, w_all, maxl)):
-                pdf.cell(w, 5.5, _pdf_cell_text(c, m), 1, 1 if i == len(w_all) - 1 else 0)
-            summary = str(row.get("purchases_summary") or "—")
-            pdf.cell(sum(w_all), 5.2, _pdf_cell_text(f"Artikel je Sorte: {summary}", 120), 1, 1)
+            )
+            pdf.set_font("Helvetica", "B", 8)
+            for i, (c, w) in enumerate(zip(meta_cells, meta_w)):
+                pdf.cell(w, 6, _pdf_cell_text(c, 24), 1, 1 if i == len(meta_w) - 1 else 0)
+            meta2_cells = (
+                "Abgerechnet",
+                f'{int(row["settled_total_cents"]) / 100:.2f}',
+                "# Abrechn.",
+                str(int(row["settlements_count"])),
+                "",
+                "",
+            )
+            for i, (c, w) in enumerate(zip(meta2_cells, meta_w)):
+                pdf.cell(w, 6, _pdf_cell_text(c, 24), 1, 1 if i == len(meta_w) - 1 else 0)
+
+            pdf.set_font("Helvetica", "B", 8)
+            pdf.cell(132, 6, _pdf_cell_text("Artikel", 30), 1, 0)
+            pdf.cell(24, 6, _pdf_cell_text("Anzahl", 12), 1, 1)
+            pdf.set_font("Helvetica", "", 8)
+            if not article_items:
+                pdf.cell(156, 5.2, _pdf_cell_text("—", 10), 1, 1)
+            else:
+                for item in article_items:
+                    label = str(item.get("label") or "Unbekannt")
+                    qty = int(item.get("quantity") or 0)
+                    if _pdf_add_page_if_needed(pdf, 6.0):
+                        pdf.set_font("Helvetica", "B", 9)
+                        pdf.cell(0, 6, _pdf_cell_text(str(row["name"]) + " - Fortsetzung", 54), 0, 1)
+                        pdf.set_font("Helvetica", "B", 8)
+                        pdf.cell(132, 6, _pdf_cell_text("Artikel", 30), 1, 0)
+                        pdf.cell(24, 6, _pdf_cell_text("Anzahl", 12), 1, 1)
+                        pdf.set_font("Helvetica", "", 8)
+                    pdf.cell(132, 5.2, _pdf_cell_text(label, 70), 1, 0)
+                    pdf.cell(24, 5.2, _pdf_cell_text(str(qty), 8), 1, 1)
+            pdf.ln(1.5)
 
     _pdf_add_page_if_needed(pdf, 14.0)
     pdf.ln(4)
