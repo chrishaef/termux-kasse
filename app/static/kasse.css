@@ -1679,6 +1679,16 @@ body.app-admin .k-panel form.debt-thresholds-grid button[type="submit"] {
   grid-column: 1 / -1;
 }
 
+body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 12rem;
+  gap: 0.55rem 0.9rem;
+}
+
+body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-row label {
+  margin: 0;
+}
+
 body.app-admin .k-panel form.system-settings-grid .system-settings-grid__full,
 body.app-admin .k-panel form.system-settings-grid p,
 body.app-admin .k-panel form.system-settings-grid button[type="submit"] {
@@ -1730,6 +1740,10 @@ body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar_
 
 @media (max-width: 760px) {
   body.app-admin .k-panel form.debt-thresholds-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-row {
     grid-template-columns: 1fr;
   }
 
