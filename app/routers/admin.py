@@ -1874,7 +1874,13 @@ def admin_statistics_pdf(
                 (gid,),
             )
             sql = """
-                SELECT le.user_id, le.product_id, p.name AS product_name, le.description, COUNT(*) AS quantity
+                SELECT
+                    le.user_id,
+                    le.product_id,
+                    p.sort_order AS product_sort_order,
+                    p.name AS product_name,
+                    le.description,
+                    COUNT(*) AS quantity
                 FROM ledger_entries le
                 JOIN users u ON u.id = le.user_id
                 LEFT JOIN products p ON p.id = le.product_id
@@ -1888,21 +1894,31 @@ def admin_statistics_pdf(
                 sql += " AND datetime(le.created_at) <= datetime(?)"
                 params.append(period_end)
             sql += """
-                GROUP BY le.user_id, le.product_id, p.name, le.description
+                GROUP BY le.user_id, le.product_id, p.sort_order, p.name, le.description
             """
             product_count_rows = db.fetch_all(conn, sql, params)
-            label_totals: dict[str, int] = {}
+            label_order_map: dict[str, tuple[int, int, str]] = {}
             per_user_counts: dict[int, dict[str, int]] = {}
             per_user_total: dict[int, int] = {}
             for r in product_count_rows:
                 uid = int(r["user_id"])
                 qty = int(r["quantity"])
                 label = str((r["product_name"] or "").strip() or (r["description"] or "").strip() or "Unbekannt")
-                label_totals[label] = label_totals.get(label, 0) + qty
+                pid = r["product_id"]
+                if pid is not None:
+                    raw_sort = r["product_sort_order"]
+                    sort_order = int(raw_sort) if raw_sort is not None else 10**9
+                    order_key = (0, sort_order, label.casefold())
+                else:
+                    # Manuelle Buchungen ohne Produkt-ID hinter Shop-Artikeln einordnen.
+                    order_key = (1, 10**9, label.casefold())
+                prev_key = label_order_map.get(label)
+                if prev_key is None or order_key < prev_key:
+                    label_order_map[label] = order_key
                 counts = per_user_counts.setdefault(uid, {})
                 counts[label] = counts.get(label, 0) + qty
                 per_user_total[uid] = per_user_total.get(uid, 0) + qty
-            label_order = sorted(label_totals.keys(), key=lambda x: (-label_totals[x], x.casefold()))
+            label_order = sorted(label_order_map.keys(), key=lambda x: label_order_map[x])
             for u in users_in_group:
                 uid = int(u["id"])
                 o = overview_by_user_id.get(uid, {})

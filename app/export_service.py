@@ -14,17 +14,22 @@ if TYPE_CHECKING:
 from app.dates import format_date_de
 
 
-def _try_add_pdf_logo(pdf: FPDF, width_mm: float = 26.0, y_mm: float = 10.0) -> None:
-    """Platziert das WSG-Logo oben rechts auf der aktuellen PDF-Seite."""
+def _try_add_pdf_logo(pdf: FPDF, width_mm: float = 26.0, y_mm: float = 10.0) -> float | None:
+    """Platziert das WSG-Logo oben rechts auf der aktuellen PDF-Seite.
+
+    Returns bottom y-position (mm) of reserved logo area, or None if logo wasn't drawn.
+    """
     try:
         logo = Path(__file__).resolve().parent / "static" / "wsg-logo.png"
         if not logo.exists():
-            return
+            return None
         x_mm = float(pdf.w) - float(pdf.r_margin) - width_mm
         pdf.image(str(logo), x=x_mm, y=y_mm, w=width_mm)
+        # Reserve a conservative square area to avoid overlapping table content.
+        return y_mm + width_mm
     except Exception:
         # PDF-Erzeugung darf nicht am Logo scheitern.
-        return
+        return None
 
 
 def _pdf_draw_report_header(
@@ -35,7 +40,7 @@ def _pdf_draw_report_header(
     logo_width_mm: float = 24.0,
 ) -> None:
     """Einheitlicher Kopf für alle PDF-Berichte."""
-    _try_add_pdf_logo(pdf, width_mm=logo_width_mm, y_mm=10.0)
+    logo_bottom = _try_add_pdf_logo(pdf, width_mm=logo_width_mm, y_mm=10.0)
     pdf.set_font("Helvetica", "B", 15)
     pdf.cell(0, 8, _pdf_cell_text(title, 96), 0, 1)
     if subtitle:
@@ -50,6 +55,7 @@ def _pdf_draw_report_header(
         line_end = float(pdf.w) - float(pdf.r_margin)
     pdf.line(line_start, y, line_end, y)
     pdf.ln(3)
+    # Content can continue directly below header text; tables should reserve right-side width themselves.
 
 
 def _pdf_add_page_if_needed(pdf: FPDF, needed_height_mm: float) -> bool:
@@ -71,9 +77,16 @@ def _received_quittance_label(header: sqlite3.Row) -> str | None:
 def _pdf_cell_text(s: str, max_len: int) -> str:
     """PyFPDF 1.x nutzt Latin-1-Kernschriften — Umlaute ok, Rest ersetzt."""
     t = str(s).replace("\r", " ").replace("\n", " ")
+    # PyFPDF core fonts don't handle Unicode Euro directly; use WinAnsi codepoint.
+    t = t.replace("€", chr(128))
     if len(t) > max_len:
         t = t[: max_len - 3] + "..."
     return t.encode("latin-1", errors="replace").decode("latin-1")
+
+
+def _eur_from_cents(value_cents: int | float) -> str:
+    eur = f"{float(value_cents) / 100:.2f}".replace(".", ",")
+    return f"{eur} €"
 
 
 def build_xlsx_bytes(
@@ -129,7 +142,7 @@ def build_pdf_bytes(
         ("Nutzer", str(header["user_name"])),
         ("Gruppe", str(header["group_name"])),
         ("Erstellt", format_date_de(header["created_at"])),
-        ("Summe EUR", f'{int(header["total_cents"]) / 100:.2f}'),
+        ("Summe", _eur_from_cents(int(header["total_cents"]))),
     ]
     if header["note"]:
         meta.append(("Notiz", str(header["note"])))
@@ -137,17 +150,17 @@ def build_pdf_bytes(
     if rq is not None:
         meta.append(("Zahlungseingang bestätigt", rq))
 
-    label_w, val_w = 48, 122
+    label_w, val_w = 42, 106
     for label, val in meta:
         pdf.set_font("Helvetica", "B", 9)
         pdf.cell(label_w, 6, _pdf_cell_text(label, 40), 1, 0)
         pdf.set_font("Helvetica", "", 9)
-        pdf.cell(val_w, 6, _pdf_cell_text(val, 120), 1, 1)
+        pdf.cell(val_w, 6, _pdf_cell_text(val, 96), 1, 1)
 
     pdf.ln(4)
     wcols = (16, 94, 30, 30)
     pdf.set_font("Helvetica", "B", 8)
-    headers = ("Anz.", "Bezeichnung", "Einzel", "Summe")
+    headers = ("Anz.", "Bezeichnung", "Einzel (€)", "Summe (€)")
     for i, (txt, w) in enumerate(zip(headers, wcols)):
         pdf.cell(w, 6, _pdf_cell_text(txt, 20), 1, 1 if i == len(wcols) - 1 else 0)
     pdf.set_font("Helvetica", "", 8)
@@ -155,10 +168,10 @@ def build_pdf_bytes(
         cells = [
             str(int(r["quantity"])),
             str(r["label"]),
-            f'{int(r["unit_cents"]) / 100:.2f}',
-            f'{int(r["total_cents"]) / 100:.2f}',
+            _eur_from_cents(int(r["unit_cents"])),
+            _eur_from_cents(int(r["total_cents"])),
         ]
-        maxl = (10, 60, 12, 12)
+        maxl = (10, 60, 16, 16)
         for i, (c, w, m) in enumerate(zip(cells, wcols, maxl)):
             pdf.cell(w, 5.5, _pdf_cell_text(c, m), 1, 1 if i == len(wcols) - 1 else 0)
 
@@ -191,19 +204,19 @@ def build_statistics_pdf_bytes(
     meta = [
         ("Buchungen", str(int(totals["entries_count"]))),
         ("Nutzer mit Buchungen", str(int(totals["users_count"]))),
-        ("Gesamtumsatz EUR", f'{int(totals["total_cents"]) / 100:.2f}'),
+        ("Gesamtumsatz", _eur_from_cents(int(totals["total_cents"]))),
     ]
     for label, val in meta:
         pdf.set_font("Helvetica", "B", 9)
-        pdf.cell(52, 6, _pdf_cell_text(label, 36), 1, 0)
+        pdf.cell(46, 6, _pdf_cell_text(label, 34), 1, 0)
         pdf.set_font("Helvetica", "", 9)
-        pdf.cell(110, 6, _pdf_cell_text(val, 50), 1, 1)
+        pdf.cell(96, 6, _pdf_cell_text(val, 42), 1, 1)
 
     pdf.ln(4)
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(0, 6, _pdf_cell_text("Nutzer-Topliste (inkl. Artikelmix)", 48), 0, 1)
     w_users = (10, 26, 28, 76, 14, 28)
-    headers_u = ("#", "Gruppe", "Nutzer", "Artikel", "Anz.", "EUR")
+    headers_u = ("#", "Gruppe", "Nutzer", "Artikel", "Anz.", "Summe (€)")
 
     def _draw_users_header() -> None:
         pdf.set_font("Helvetica", "B", 8)
@@ -225,9 +238,9 @@ def build_statistics_pdf_bytes(
             str(r["user_name"]),
             str(r.get("purchases_summary", "")),
             str(int(r["entries_count"])),
-            f'{int(r["total_cents"]) / 100:.2f}',
+            _eur_from_cents(int(r["total_cents"])),
         ]
-        maxl = (3, 13, 14, 42, 5, 12)
+        maxl = (3, 13, 14, 42, 5, 16)
         for i, (c, w, m) in enumerate(zip(cells, w_users, maxl)):
             pdf.cell(w, 5.5, _pdf_cell_text(c, m), 1, 1 if i == len(w_users) - 1 else 0)
 
@@ -249,8 +262,8 @@ def build_statistics_pdf_bytes(
             meta_w = (42, 18, 42, 18, 42, 18)
             meta_cells = (
                 "Offener Saldo",
-                f'{int(row["open_balance_cents"]) / 100:.2f}',
-                "Offene Buch.",
+                _eur_from_cents(int(row["open_balance_cents"])),
+                "Offene Buchungen",
                 str(int(row["open_entries_count"])),
                 "Artikel ges.",
                 str(int(row.get("article_count_total", 0))),
@@ -260,8 +273,8 @@ def build_statistics_pdf_bytes(
                 pdf.cell(w, 6, _pdf_cell_text(c, 24), 1, 1 if i == len(meta_w) - 1 else 0)
             meta2_cells = (
                 "Abgerechnet",
-                f'{int(row["settled_total_cents"]) / 100:.2f}',
-                "# Abrechn.",
+                _eur_from_cents(int(row["settled_total_cents"])),
+                "# Abrechnungen",
                 str(int(row["settlements_count"])),
                 "",
                 "",
@@ -295,7 +308,7 @@ def build_statistics_pdf_bytes(
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(0, 6, _pdf_cell_text("Artikel (zusammengefasst)", 42), 0, 1)
     w_prod = (16, 90, 28, 28)
-    headers_p = ("Anz.", "Bezeichnung", "Einzel", "Summe")
+    headers_p = ("Anz.", "Bezeichnung", "Einzel (€)", "Summe (€)")
 
     def _draw_products_header() -> None:
         pdf.set_font("Helvetica", "B", 8)
@@ -314,8 +327,8 @@ def build_statistics_pdf_bytes(
         cells = [
             str(int(r["quantity"])),
             str(r["label"]),
-            f'{int(r["unit_cents"]) / 100:.2f}',
-            f'{int(r["total_cents"]) / 100:.2f}',
+            _eur_from_cents(int(r["unit_cents"])),
+            _eur_from_cents(int(r["total_cents"])),
         ]
         for i, (c, w) in enumerate(zip(cells, w_prod)):
             pdf.cell(w, 5.5, _pdf_cell_text(c, 42), 1, 1 if i == len(w_prod) - 1 else 0)
@@ -410,27 +423,27 @@ def build_year_end_pdf_bytes(snapshot: dict[str, Any]) -> bytes:
 
     meta = [
         ("Buchungszeilen gesamt", str(int(totals["ledger_entries_all"]))),
-        ("Summe aller Buchungen EUR", f'{int(totals["ledger_sum_all_cents"]) / 100:.2f}'),
+        ("Summe aller Buchungen", _eur_from_cents(int(totals["ledger_sum_all_cents"]))),
         ("Offene Buchungszeilen", str(int(totals["open_lines_count"]))),
-        ("Offene Salden netto EUR", f'{int(totals["open_balance_net_cents"]) / 100:.2f}'),
+        ("Offene Salden netto", _eur_from_cents(int(totals["open_balance_net_cents"]))),
         ("Abgeschlossene Buchungszeilen", str(int(totals["settled_lines_count"]))),
-        ("Summe abgeschlossene Buchungen EUR", f'{int(totals["settled_lines_sum_cents"]) / 100:.2f}'),
+        ("Summe abgeschlossene Buchungen", _eur_from_cents(int(totals["settled_lines_sum_cents"]))),
         ("Anzahl Abrechnungen", str(int(totals["settlements_count"]))),
-        ("Summe Abrechnungen EUR", f'{int(totals["settlements_sum_cents"]) / 100:.2f}'),
+        ("Summe Abrechnungen", _eur_from_cents(int(totals["settlements_sum_cents"]))),
         ("Nutzer (alle)", str(int(totals["users_count"]))),
     ]
-    label_w, val_w = 78, 185
+    label_w, val_w = 72, 146
     for label, val in meta:
         pdf.set_font("Helvetica", "B", 9)
         pdf.cell(label_w, 5.5, _pdf_cell_text(label, 50), 1, 0)
         pdf.set_font("Helvetica", "", 9)
-        pdf.cell(val_w, 5.5, _pdf_cell_text(val, 80), 1, 1)
+        pdf.cell(val_w, 5.5, _pdf_cell_text(val, 64), 1, 1)
 
     pdf.ln(4)
     pdf.set_font("Helvetica", "B", 11)
     pdf.cell(0, 6, _pdf_cell_text("Alle Nutzer (Stand vor Bereinigung)", 64), 0, 1)
     w_u = (38, 42, 28, 22, 22, 30, 22, 32)
-    headers_u = ("Gruppe", "Nutzer", "Offener Saldo", "Offene Buch.", "# Abrechn.", "Summe Abbr.", "Buch. ges.", "Summe Buch.")
+    headers_u = ("Gruppe", "Nutzer", "Offener Saldo (€)", "Offene Buch.", "# Abrechn.", "Summe Abbr. (€)", "Buch. ges.", "Summe Buch. (€)")
 
     def _draw_year_end_users_header() -> None:
         pdf.set_font("Helvetica", "B", 7)
@@ -447,12 +460,12 @@ def build_year_end_pdf_bytes(snapshot: dict[str, Any]) -> bytes:
         cells = [
             str(u["group_name"]),
             str(u["user_name"]),
-            f'{int(u["open_balance_cents"]) / 100:.2f}',
+            _eur_from_cents(int(u["open_balance_cents"])),
             str(int(u["open_entries_count"])),
             str(int(u["settlements_count"])),
-            f'{int(u["settlements_sum_cents"]) / 100:.2f}',
+            _eur_from_cents(int(u["settlements_sum_cents"])),
             str(int(u["ledger_all_count"])),
-            f'{int(u["ledger_all_sum_cents"]) / 100:.2f}',
+            _eur_from_cents(int(u["ledger_all_sum_cents"])),
         ]
         maxl = (18, 20, 12, 6, 6, 12, 6, 12)
         for i, (c, w, m) in enumerate(zip(cells, w_u, maxl)):
@@ -462,7 +475,7 @@ def build_year_end_pdf_bytes(snapshot: dict[str, Any]) -> bytes:
     pdf.set_font("Helvetica", "B", 11)
     pdf.cell(0, 6, _pdf_cell_text("Artikel (gesamter Zeitraum, aggregiert)", 56), 0, 1)
     w_p = (18, 120, 32, 32)
-    headers_p = ("Anz.", "Bezeichnung", "Einzel", "Summe")
+    headers_p = ("Anz.", "Bezeichnung", "Einzel (€)", "Summe (€)")
 
     def _draw_year_end_products_header() -> None:
         pdf.set_font("Helvetica", "B", 8)
@@ -481,8 +494,8 @@ def build_year_end_pdf_bytes(snapshot: dict[str, Any]) -> bytes:
         cells = [
             str(int(r["quantity"])),
             str(r["label"]),
-            f'{int(r["unit_cents"]) / 100:.2f}',
-            f'{int(r["total_cents"]) / 100:.2f}',
+            _eur_from_cents(int(r["unit_cents"])),
+            _eur_from_cents(int(r["total_cents"])),
         ]
         maxl = (8, 70, 12, 12)
         for i, (c, w, m) in enumerate(zip(cells, w_p, maxl)):
@@ -500,14 +513,14 @@ def build_year_end_pdf_bytes(snapshot: dict[str, Any]) -> bytes:
         title = f"{up['user_name']} ({up['group_name']}) - {int(up['entries_count'])} Buchungen"
         pdf.cell(0, 6, _pdf_cell_text(title, 96), 0, 1)
         pdf.set_font("Helvetica", "", 8)
-        paid_eur = f"{int(up.get('paid_cents', 0)) / 100:.2f}"
-        open_eur = f"{int(up.get('open_cents', 0)) / 100:.2f}"
-        total_eur = f"{int(up.get('total_cents', 0)) / 100:.2f}"
+        paid_eur = _eur_from_cents(int(up.get("paid_cents", 0)))
+        open_eur = _eur_from_cents(int(up.get("open_cents", 0)))
+        total_eur = _eur_from_cents(int(up.get("total_cents", 0)))
         pdf.cell(
             0,
             5.5,
             _pdf_cell_text(
-                f"Gebucht/Gezahlt EUR: {paid_eur}   Offen EUR: {open_eur}   Gesamt EUR: {total_eur}",
+                f"Gebucht/Gezahlt: {paid_eur}   Offen: {open_eur}   Gesamt: {total_eur}",
                 120,
             ),
             0,
