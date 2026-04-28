@@ -3,14 +3,6 @@
 <div class="k-toolbar">
   <a href="/admin" class="admin-back js-history-back" style="margin:0">← Zurück</a>
 </div>
-<article class="k-panel">
-  <h2 style="margin-top:0;font-size:1.1rem">Neuer Artikel</h2>
-  <form method="post" action="/admin/products">
-    <label>Name <input type="text" name="name" required placeholder="Schokoriegel" /></label>
-    <label>Preis (EUR) <input type="text" name="price_eur" required placeholder="0,80" /></label>
-    <button type="submit">Anlegen</button>
-  </form>
-</article>
 <div class="table-wrap">
   <table role="grid" class="admin-products-table">
     <thead><tr><th>Name</th><th class="num">Preis</th><th class="th-sort">Sort.</th><th class="th-actions">Aktionen</th></tr></thead>
@@ -52,6 +44,14 @@
     </tbody>
   </table>
 </div>
+<article class="k-panel">
+  <h2 style="margin-top:0;font-size:1.1rem">Neuer Artikel</h2>
+  <form method="post" action="/admin/products">
+    <label>Name <input type="text" name="name" required placeholder="Schokoriegel" /></label>
+    <label>Preis (EUR) <input type="text" name="price_eur" required placeholder="0,80" /></label>
+    <button type="submit">Anlegen</button>
+  </form>
+</article>
 <script>
   (function () {
     const forms = document.querySelectorAll(".js-product-toggle-form");
