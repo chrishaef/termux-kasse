@@ -1655,7 +1655,7 @@ body.app-admin .k-panel .admin-received-confirm__text {
 
 body.app-admin .k-panel form.debt-thresholds-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) 8.5rem;
   gap: 0.55rem 0.9rem;
 }
 
@@ -1677,22 +1677,6 @@ body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-grid__full,
 body.app-admin .k-panel form.debt-thresholds-grid p,
 body.app-admin .k-panel form.debt-thresholds-grid button[type="submit"] {
   grid-column: 1 / -1;
-}
-
-body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio {
-  display: grid;
-  gap: 0.45rem;
-}
-
-body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio label {
-  margin: 0;
-}
-
-body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio__row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 12rem;
-  gap: 0.45rem 0.8rem;
-  align-items: end;
 }
 
 body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio__msg {
