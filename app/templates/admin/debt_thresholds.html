@@ -29,9 +29,13 @@
     <label class="debt-thresholds-grid__full">Nachricht Stufe 3
       <input type="text" name="message_3" value="{{ m3 }}" maxlength="220" />
     </label>
+    <label>Lautstärke Sound Stufe 1 (%) <input type="number" min="0" max="100" step="1" name="volume_1_percent" value="{{ v1 }}" required inputmode="numeric" /></label>
+    <label>Lautstärke Sound Stufe 2 (%) <input type="number" min="0" max="100" step="1" name="volume_2_percent" value="{{ v2 }}" required inputmode="numeric" /></label>
+    <label>Lautstärke Sound Stufe 3 (%) <input type="number" min="0" max="100" step="1" name="volume_3_percent" value="{{ v3 }}" required inputmode="numeric" /></label>
     <p class="secondary" style="margin:0.5rem 0 0.75rem;font-size:0.9rem">
       Aktuell gespeichert (Betrag): {{ t1|eur }} · {{ t2|eur }} · {{ t3|eur }}<br />
-      Aktuell gespeichert (Tage): {{ d1_days }} · {{ d2_days }} · {{ d3_days }}
+      Aktuell gespeichert (Tage): {{ d1_days }} · {{ d2_days }} · {{ d3_days }}<br />
+      Lautstärke Warnsounds (%): {{ v1 }} · {{ v2 }} · {{ v3 }}
     </p>
     <button type="submit">Speichern</button>
   </form>

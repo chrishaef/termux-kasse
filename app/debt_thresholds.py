@@ -15,6 +15,9 @@ KEY_D3 = "debt_age_threshold_3_days"
 KEY_M1 = "debt_threshold_1_message"
 KEY_M2 = "debt_threshold_2_message"
 KEY_M3 = "debt_threshold_3_message"
+KEY_V1 = "debt_warn_volume_1_percent"
+KEY_V2 = "debt_warn_volume_2_percent"
+KEY_V3 = "debt_warn_volume_3_percent"
 
 # Standard: 5 € / 15 € / 30 € offener Saldo (intern positiv = Schuld)
 DEFAULT_T1 = 500
@@ -26,6 +29,9 @@ DEFAULT_D3 = 45
 DEFAULT_M1 = "NaNaNa - wird wohl zeit zu zahlen"
 DEFAULT_M2 = "Die Kasse knurrt: Hoeherer Ausstand - bald mal zahlen ?"
 DEFAULT_M3 = "Die Kasse wird klamm: ZAHLE ZAHLEN ZAHLEN!!!"
+DEFAULT_V1 = 75
+DEFAULT_V2 = 85
+DEFAULT_V3 = 95
 
 
 def _normalize_triple(t1: int, t2: int, t3: int) -> tuple[int, int, int]:
@@ -33,6 +39,10 @@ def _normalize_triple(t1: int, t2: int, t3: int) -> tuple[int, int, int]:
     b = max(b, a + 1)
     c = max(c, b + 1)
     return (a, b, c)
+
+
+def _normalize_volume_percent(v: int) -> int:
+    return max(0, min(100, int(v)))
 
 
 def _read_cents(conn: sqlite3.Connection, key: str) -> int | None:
@@ -66,6 +76,17 @@ def get_threshold_messages(conn: sqlite3.Connection) -> tuple[str, str, str]:
     m2 = _read_text(conn, KEY_M2) or DEFAULT_M2
     m3 = _read_text(conn, KEY_M3) or DEFAULT_M3
     return (m1, m2, m3)
+
+
+def get_warn_volumes_percent(conn: sqlite3.Connection) -> tuple[int, int, int]:
+    v1 = _read_cents(conn, KEY_V1)
+    v2 = _read_cents(conn, KEY_V2)
+    v3 = _read_cents(conn, KEY_V3)
+    return (
+        _normalize_volume_percent(DEFAULT_V1 if v1 is None else v1),
+        _normalize_volume_percent(DEFAULT_V2 if v2 is None else v2),
+        _normalize_volume_percent(DEFAULT_V3 if v3 is None else v3),
+    )
 
 
 def get_age_thresholds(conn: sqlite3.Connection) -> tuple[int, int, int]:
@@ -119,6 +140,28 @@ def save_threshold_messages(
             ON CONFLICT(key) DO UPDATE SET value = excluded.value
             """,
             (key, val),
+        )
+    return out
+
+
+def save_warn_volumes_percent(
+    conn: sqlite3.Connection,
+    v1: int,
+    v2: int,
+    v3: int,
+) -> tuple[int, int, int]:
+    out = (
+        _normalize_volume_percent(v1),
+        _normalize_volume_percent(v2),
+        _normalize_volume_percent(v3),
+    )
+    for key, val in ((KEY_V1, out[0]), (KEY_V2, out[1]), (KEY_V3, out[2])):
+        conn.execute(
+            """
+            INSERT INTO app_settings (key, value) VALUES (?, ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value
+            """,
+            (key, str(val)),
         )
     return out
 

@@ -942,6 +942,7 @@ def admin_debt_thresholds_get(request: Request) -> Response:
         t1, t2, t3 = debt_thresholds.get_thresholds(conn)
         d1, d2, d3 = debt_thresholds.get_age_thresholds(conn)
         m1, m2, m3 = debt_thresholds.get_threshold_messages(conn)
+        v1, v2, v3 = debt_thresholds.get_warn_volumes_percent(conn)
     return TEMPLATES.TemplateResponse(
         request,
         "admin/debt_thresholds.html",
@@ -959,6 +960,9 @@ def admin_debt_thresholds_get(request: Request) -> Response:
             "m1": m1,
             "m2": m2,
             "m3": m3,
+            "v1": v1,
+            "v2": v2,
+            "v3": v3,
             "saved": request.query_params.get("saved") == "1",
             "error": request.query_params.get("err") == "invalid",
         },
@@ -977,6 +981,9 @@ def admin_debt_thresholds_post(
     message_1: str = Form(""),
     message_2: str = Form(""),
     message_3: str = Form(""),
+    volume_1_percent: str = Form(""),
+    volume_2_percent: str = Form(""),
+    volume_3_percent: str = Form(""),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
@@ -987,6 +994,9 @@ def admin_debt_thresholds_post(
         da = int((age_threshold_a_days or "").strip())
         dbb = int((age_threshold_b_days or "").strip())
         dc = int((age_threshold_c_days or "").strip())
+        v1 = int((volume_1_percent or "").strip())
+        v2 = int((volume_2_percent or "").strip())
+        v3 = int((volume_3_percent or "").strip())
     except ValueError:
         return RedirectResponse("/admin/debt-thresholds?err=invalid", status_code=303)
     with db.get_connection() as conn:
@@ -999,6 +1009,7 @@ def admin_debt_thresholds_post(
             message_2.strip() or current_m2,
             message_3.strip() or current_m3,
         )
+        debt_thresholds.save_warn_volumes_percent(conn, v1, v2, v3)
     return RedirectResponse("/admin/debt-thresholds?saved=1", status_code=303)
 
 

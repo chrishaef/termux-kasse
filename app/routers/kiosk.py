@@ -98,6 +98,7 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
         t1, t2, t3 = debt_thresholds.get_thresholds(conn)
         d1, d2, d3 = debt_thresholds.get_age_thresholds(conn)
         m1, m2, m3 = debt_thresholds.get_threshold_messages(conn)
+        v1, v2, v3 = debt_thresholds.get_warn_volumes_percent(conn)
         age_days = oldest_open_age_days(conn, user_id)
         debt_reminder_level = debt_thresholds.reminder_level(balance, t1, t2, t3, age_days, d1, d2, d3)
         debt_message = ""
@@ -129,6 +130,9 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
             "debt_threshold_1": t1,
             "debt_threshold_2": t2,
             "debt_threshold_3": t3,
+            "warn_volume_1": v1 / 100.0,
+            "warn_volume_2": v2 / 100.0,
+            "warn_volume_3": v3 / 100.0,
             "last_settlement": last_s,
             "products": products,
             "title": u["name"],

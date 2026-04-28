@@ -60,6 +60,19 @@
       2: document.getElementById("warn-sound-2"),
       3: document.getElementById("warn-sound-3"),
     };
+    const warnVolumes = {
+      1: {{ warn_volume_1 }},
+      2: {{ warn_volume_2 }},
+      3: {{ warn_volume_3 }},
+    };
+    Object.keys(warnSounds).forEach(function (key) {
+      const level = parseInt(key, 10);
+      const sound = warnSounds[level];
+      if (!sound) return;
+      const raw = Number(warnVolumes[level]);
+      const vol = Number.isFinite(raw) ? Math.max(0, Math.min(1, raw)) : 1;
+      sound.volume = vol;
+    });
     const currentWarnLevel = {{ debt_reminder_level }};
     const currentBalance = {{ balance_cents }};
     const thresholds = [{{ debt_threshold_1 }}, {{ debt_threshold_2 }}, {{ debt_threshold_3 }}];
