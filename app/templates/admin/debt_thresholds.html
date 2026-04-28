@@ -20,27 +20,28 @@
     <label>Warnstufe 2 (Tage offen) <input type="number" min="1" step="1" name="age_threshold_b_days" value="{{ d2_days }}" required inputmode="numeric" /></label>
     <label>Warnstufe 3 (Euro) <input type="text" name="threshold_c_eur" value="{{ t3_eur }}" required inputmode="decimal" autocomplete="off" /></label>
     <label>Warnstufe 3 (Tage offen) <input type="number" min="1" step="1" name="age_threshold_c_days" value="{{ d3_days }}" required inputmode="numeric" /></label>
-    <div class="debt-thresholds-grid__full debt-thresholds-row">
-      <label>Nachricht Stufe 1
+    <div class="debt-thresholds-grid__full debt-thresholds-audio">
+      <div class="debt-thresholds-audio__head">Warnstufen-Text</div>
+      <div class="debt-thresholds-audio__head">Lautstärke (%)</div>
+
+      <label class="debt-thresholds-audio__msg">Stufe 1
         <input type="text" name="message_1" value="{{ m1 }}" maxlength="220" />
       </label>
-      <label>Lautstärke Sound Stufe 1 (%)
+      <label class="debt-thresholds-audio__vol">
         <input type="number" min="0" max="100" step="1" name="volume_1_percent" value="{{ v1 }}" required inputmode="numeric" />
       </label>
-    </div>
-    <div class="debt-thresholds-grid__full debt-thresholds-row">
-      <label>Nachricht Stufe 2
+
+      <label class="debt-thresholds-audio__msg">Stufe 2
         <input type="text" name="message_2" value="{{ m2 }}" maxlength="220" />
       </label>
-      <label>Lautstärke Sound Stufe 2 (%)
+      <label class="debt-thresholds-audio__vol">
         <input type="number" min="0" max="100" step="1" name="volume_2_percent" value="{{ v2 }}" required inputmode="numeric" />
       </label>
-    </div>
-    <div class="debt-thresholds-grid__full debt-thresholds-row">
-      <label>Nachricht Stufe 3
+
+      <label class="debt-thresholds-audio__msg">Stufe 3
         <input type="text" name="message_3" value="{{ m3 }}" maxlength="220" />
       </label>
-      <label>Lautstärke Sound Stufe 3 (%)
+      <label class="debt-thresholds-audio__vol">
         <input type="number" min="0" max="100" step="1" name="volume_3_percent" value="{{ v3 }}" required inputmode="numeric" />
       </label>
     </div>
