@@ -11,7 +11,7 @@ import time
 import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 from urllib.parse import quote
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
@@ -1855,9 +1855,79 @@ def admin_statistics_pdf(
             dict(r)
             for r in ledger_service.period_user_toplist(conn, period_start, period_end, gid)
         ]
+        all_group_users: list[dict[str, Any]] = []
+        if gid is not None:
+            overview_rows = [
+                dict(r)
+                for r in ledger_service.users_admin_overview(conn)
+                if int(r["group_id"]) == gid
+            ]
+            overview_by_user_id = {int(r["id"]): r for r in overview_rows}
+            users_in_group = db.fetch_all(
+                conn,
+                """
+                SELECT u.id, u.name
+                FROM users u
+                WHERE u.group_id = ?
+                ORDER BY u.sort_order, u.name COLLATE NOCASE
+                """,
+                (gid,),
+            )
+            sql = """
+                SELECT le.user_id, le.product_id, p.name AS product_name, le.description, COUNT(*) AS quantity
+                FROM ledger_entries le
+                JOIN users u ON u.id = le.user_id
+                LEFT JOIN products p ON p.id = le.product_id
+                WHERE u.group_id = ?
+            """
+            params: list[Any] = [gid]
+            if period_start:
+                sql += " AND datetime(le.created_at) >= datetime(?)"
+                params.append(period_start)
+            if period_end:
+                sql += " AND datetime(le.created_at) <= datetime(?)"
+                params.append(period_end)
+            sql += """
+                GROUP BY le.user_id, le.product_id, p.name, le.description
+            """
+            product_count_rows = db.fetch_all(conn, sql, params)
+            label_totals: dict[str, int] = {}
+            per_user_counts: dict[int, dict[str, int]] = {}
+            per_user_total: dict[int, int] = {}
+            for r in product_count_rows:
+                uid = int(r["user_id"])
+                qty = int(r["quantity"])
+                label = str((r["product_name"] or "").strip() or (r["description"] or "").strip() or "Unbekannt")
+                label_totals[label] = label_totals.get(label, 0) + qty
+                counts = per_user_counts.setdefault(uid, {})
+                counts[label] = counts.get(label, 0) + qty
+                per_user_total[uid] = per_user_total.get(uid, 0) + qty
+            label_order = sorted(label_totals.keys(), key=lambda x: (-label_totals[x], x.casefold()))
+            for u in users_in_group:
+                uid = int(u["id"])
+                o = overview_by_user_id.get(uid, {})
+                counts = per_user_counts.get(uid, {})
+                summary_parts = [f"{label}: {counts[label]}" for label in label_order if counts.get(label, 0) > 0]
+                all_group_users.append(
+                    {
+                        "name": str(u["name"]),
+                        "open_balance_cents": int(o.get("open_balance_cents", 0)),
+                        "open_entries_count": int(o.get("open_entries_count", 0)),
+                        "settled_total_cents": int(o.get("settled_total_cents", 0)),
+                        "settlements_count": int(o.get("settlements_count", 0)),
+                        "article_count_total": int(per_user_total.get(uid, 0)),
+                        "purchases_summary": " · ".join(summary_parts) if summary_parts else "—",
+                    }
+                )
         product_rows = ledger_service.period_product_stats(conn, period_start, period_end, gid)
     data = build_statistics_pdf_bytes(
-        period_start, period_end, selected_group_name, totals, user_rows, product_rows
+        period_start,
+        period_end,
+        selected_group_name,
+        totals,
+        user_rows,
+        product_rows,
+        all_group_users,
     )
     stem = "Statistik_Zeitraum"
     return Response(

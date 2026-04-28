@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from app import db
 from app.ledger_service import add_purchase
 from app.main import app
+from app.routers import admin as admin_router
 
 
 def _seed_stats_data(client: TestClient) -> None:
@@ -84,3 +85,39 @@ def test_admin_statistics_page_pdf_and_xlsx() -> None:
         )
         disp_xlsx = xlsx.headers.get("content-disposition", "")
         assert "Statistik_Zeitraum" in disp_xlsx
+
+
+def test_statistics_pdf_includes_all_users_payload_for_selected_group(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_build_statistics_pdf_bytes(
+        period_start: str | None,
+        period_end: str | None,
+        group_name: str | None,
+        totals: dict[str, int],
+        user_rows: list[dict[str, object]],
+        product_rows: list[dict[str, object]],
+        all_group_users: list[dict[str, object]] | None = None,
+    ) -> bytes:
+        captured["group_name"] = group_name
+        captured["all_group_users"] = all_group_users or []
+        return b"%PDF-1.4\n%fake\n"
+
+    monkeypatch.setattr(admin_router, "build_statistics_pdf_bytes", fake_build_statistics_pdf_bytes)
+    with TestClient(app) as client:
+        _seed_stats_data(client)
+        with db.get_connection() as conn:
+            gid_1 = int(
+                conn.execute("SELECT id FROM user_groups WHERE name = 'G1'").fetchone()[0]
+            )
+        r = client.get(f"/admin/statistics/pdf?start=2026-04-12&end=2026-04-15&group_id={gid_1}")
+        assert r.status_code == 200
+        assert r.headers["content-type"] == "application/pdf"
+        rows = list(captured.get("all_group_users", []))
+        names = {str(row.get("name")) for row in rows}
+        assert captured.get("group_name") == "G1"
+        assert names == {"Anna", "Ben"}
+        row_by_name = {str(r.get("name")): r for r in rows}
+        assert int(row_by_name["Ben"].get("article_count_total", 0)) == 2
+        assert int(row_by_name["Anna"].get("article_count_total", 0)) == 0
+        assert "Cola: 2" in str(row_by_name["Ben"].get("purchases_summary", ""))
