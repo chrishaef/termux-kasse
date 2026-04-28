@@ -14,38 +14,51 @@
     Es gilt jeweils die höhere Stufe.
   </p>
   <form method="post" action="/admin/debt-thresholds" class="debt-thresholds-grid">
-    <label>Warnstufe 1 (Euro) <input type="text" name="threshold_a_eur" value="{{ t1_eur }}" required inputmode="decimal" autocomplete="off" /></label>
-    <label>Warnstufe 1 (Tage offen) <input type="number" min="1" step="1" name="age_threshold_a_days" value="{{ d1_days }}" required inputmode="numeric" /></label>
-    <label>Warnstufe 2 (Euro) <input type="text" name="threshold_b_eur" value="{{ t2_eur }}" required inputmode="decimal" autocomplete="off" /></label>
-    <label>Warnstufe 2 (Tage offen) <input type="number" min="1" step="1" name="age_threshold_b_days" value="{{ d2_days }}" required inputmode="numeric" /></label>
-    <label>Warnstufe 3 (Euro) <input type="text" name="threshold_c_eur" value="{{ t3_eur }}" required inputmode="decimal" autocomplete="off" /></label>
-    <label>Warnstufe 3 (Tage offen) <input type="number" min="1" step="1" name="age_threshold_c_days" value="{{ d3_days }}" required inputmode="numeric" /></label>
-    <div class="debt-thresholds-grid__full debt-thresholds-inline-row">
-      <label class="debt-thresholds-audio__msg">Warnstufe 1 Text
-        <input type="text" name="message_1" value="{{ m1 }}" maxlength="220" />
-      </label>
-      <label class="debt-thresholds-audio__vol">Warnstufe 1 Lautstärke (%)
-        <input type="number" min="0" max="100" step="1" name="volume_1_percent" value="{{ v1 }}" required inputmode="numeric" />
-      </label>
+    <div class="debt-thresholds-grid__full debt-tabs" role="tablist" aria-label="Warnstufen Einstellungen">
+      <button type="button" class="debt-tabs__btn debt-tabs__btn--active" data-tab-target="debt-tab-thresholds" role="tab" aria-selected="true">Warnstufen</button>
+      <button type="button" class="debt-tabs__btn" data-tab-target="debt-tab-messages" role="tab" aria-selected="false">Warntexte</button>
+      <button type="button" class="debt-tabs__btn" data-tab-target="debt-tab-audio" role="tab" aria-selected="false">Audio-Warnung</button>
     </div>
 
-    <div class="debt-thresholds-grid__full debt-thresholds-inline-row">
-      <label class="debt-thresholds-audio__msg">Warnstufe 2 Text
-        <input type="text" name="message_2" value="{{ m2 }}" maxlength="220" />
-      </label>
-      <label class="debt-thresholds-audio__vol">Warnstufe 2 Lautstärke (%)
-        <input type="number" min="0" max="100" step="1" name="volume_2_percent" value="{{ v2 }}" required inputmode="numeric" />
-      </label>
-    </div>
+    <section id="debt-tab-thresholds" class="debt-tab-panel debt-tab-panel--active debt-thresholds-grid__full" role="tabpanel" aria-label="Warnstufen">
+      <div class="debt-thresholds-tab-grid">
+        <label>Warnstufe 1 (Euro) <input type="text" name="threshold_a_eur" value="{{ t1_eur }}" required inputmode="decimal" autocomplete="off" /></label>
+        <label>Warnstufe 1 (Tage offen) <input type="number" min="1" step="1" name="age_threshold_a_days" value="{{ d1_days }}" required inputmode="numeric" /></label>
+        <label>Warnstufe 2 (Euro) <input type="text" name="threshold_b_eur" value="{{ t2_eur }}" required inputmode="decimal" autocomplete="off" /></label>
+        <label>Warnstufe 2 (Tage offen) <input type="number" min="1" step="1" name="age_threshold_b_days" value="{{ d2_days }}" required inputmode="numeric" /></label>
+        <label>Warnstufe 3 (Euro) <input type="text" name="threshold_c_eur" value="{{ t3_eur }}" required inputmode="decimal" autocomplete="off" /></label>
+        <label>Warnstufe 3 (Tage offen) <input type="number" min="1" step="1" name="age_threshold_c_days" value="{{ d3_days }}" required inputmode="numeric" /></label>
+      </div>
+    </section>
 
-    <div class="debt-thresholds-grid__full debt-thresholds-inline-row">
-      <label class="debt-thresholds-audio__msg">Warnstufe 3 Text
-        <input type="text" name="message_3" value="{{ m3 }}" maxlength="220" />
-      </label>
-      <label class="debt-thresholds-audio__vol">Warnstufe 3 Lautstärke (%)
-        <input type="number" min="0" max="100" step="1" name="volume_3_percent" value="{{ v3 }}" required inputmode="numeric" />
-      </label>
-    </div>
+    <section id="debt-tab-messages" class="debt-tab-panel debt-thresholds-grid__full" role="tabpanel" aria-label="Warntexte" hidden>
+      <div class="debt-thresholds-tab-single">
+        <label>Warnstufe 1 Text
+          <input type="text" name="message_1" value="{{ m1 }}" maxlength="220" />
+        </label>
+        <label>Warnstufe 2 Text
+          <input type="text" name="message_2" value="{{ m2 }}" maxlength="220" />
+        </label>
+        <label>Warnstufe 3 Text
+          <input type="text" name="message_3" value="{{ m3 }}" maxlength="220" />
+        </label>
+      </div>
+    </section>
+
+    <section id="debt-tab-audio" class="debt-tab-panel debt-thresholds-grid__full" role="tabpanel" aria-label="Audio-Warnung" hidden>
+      <div class="debt-thresholds-tab-audio">
+        <label>Warnstufe 1 Lautstärke (%)
+          <input type="number" min="0" max="100" step="1" name="volume_1_percent" value="{{ v1 }}" required inputmode="numeric" />
+        </label>
+        <label>Warnstufe 2 Lautstärke (%)
+          <input type="number" min="0" max="100" step="1" name="volume_2_percent" value="{{ v2 }}" required inputmode="numeric" />
+        </label>
+        <label>Warnstufe 3 Lautstärke (%)
+          <input type="number" min="0" max="100" step="1" name="volume_3_percent" value="{{ v3 }}" required inputmode="numeric" />
+        </label>
+      </div>
+    </section>
+
     <p class="secondary" style="margin:0.5rem 0 0.75rem;font-size:0.9rem">
       Aktuell gespeichert (Betrag): {{ t1|eur }} · {{ t2|eur }} · {{ t3|eur }}<br />
       Aktuell gespeichert (Tage): {{ d1_days }} · {{ d2_days }} · {{ d3_days }}<br />
@@ -54,4 +67,32 @@
     <button type="submit">Speichern</button>
   </form>
 </article>
+<script>
+  (function () {
+    const tabButtons = Array.from(document.querySelectorAll(".debt-tabs__btn"));
+    const panels = Array.from(document.querySelectorAll(".debt-tab-panel"));
+    if (!tabButtons.length || !panels.length) return;
+
+    const activateTab = function (targetId) {
+      tabButtons.forEach(function (btn) {
+        const active = btn.getAttribute("data-tab-target") === targetId;
+        btn.classList.toggle("debt-tabs__btn--active", active);
+        btn.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      panels.forEach(function (panel) {
+        const active = panel.id === targetId;
+        panel.classList.toggle("debt-tab-panel--active", active);
+        panel.hidden = !active;
+      });
+    };
+
+    tabButtons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const targetId = btn.getAttribute("data-tab-target");
+        if (!targetId) return;
+        activateTab(targetId);
+      });
+    });
+  })();
+</script>
 {% endblock %}

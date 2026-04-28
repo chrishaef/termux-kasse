@@ -1655,7 +1655,7 @@ body.app-admin .k-panel .admin-received-confirm__text {
 
 body.app-admin .k-panel form.debt-thresholds-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 8.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.55rem 0.9rem;
 }
 
@@ -1679,19 +1679,54 @@ body.app-admin .k-panel form.debt-thresholds-grid button[type="submit"] {
   grid-column: 1 / -1;
 }
 
-body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio__msg {
-  min-width: 0;
+body.app-admin .k-panel .debt-tabs {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
 }
 
-body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-audio__vol input {
-  text-align: right;
+body.app-admin .k-panel .debt-tabs__btn {
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #8f8872;
+  border-radius: var(--kas-radius-button);
+  background: #f4efe4;
+  color: #1a1a12;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-body.app-admin .k-panel form.debt-thresholds-grid .debt-thresholds-inline-row {
+body.app-admin .k-panel .debt-tabs__btn--active {
+  border-color: var(--kas-accent-hover);
+  background: linear-gradient(180deg, #ffe39a 0%, #f2be3e 100%);
+  color: #1a1a12;
+}
+
+body.app-admin .k-panel .debt-tab-panel {
+  margin-top: 0.1rem;
+}
+
+body.app-admin .k-panel .debt-thresholds-tab-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 8.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.55rem 0.9rem;
-  align-items: end;
+}
+
+body.app-admin .k-panel .debt-thresholds-tab-single {
+  display: grid;
+  gap: 0.55rem;
+}
+
+body.app-admin .k-panel .debt-thresholds-tab-audio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem 0.9rem;
+}
+
+body.app-admin .k-panel .debt-thresholds-tab-audio input {
+  text-align: right;
 }
 
 body.app-admin .k-panel form.system-settings-grid .system-settings-grid__full,
@@ -1745,6 +1780,11 @@ body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar_
 
 @media (max-width: 760px) {
   body.app-admin .k-panel form.debt-thresholds-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.app-admin .k-panel .debt-thresholds-tab-grid,
+  body.app-admin .k-panel .debt-thresholds-tab-audio {
     grid-template-columns: 1fr;
   }
 
