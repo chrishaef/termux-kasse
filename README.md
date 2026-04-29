@@ -4,6 +4,8 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 
 **Aktuelle Version:** **1.3.0** (Git-Tag [`v1.3.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.3.0)) — GitHub-Release: [anlegen](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.3.0) (einmal `gh auth login` oder im Browser veröffentlichen).
 
+**Zugehörige Android-Kiosk-App:** [`chrishaef/kiosk-app`](https://github.com/chrishaef/kiosk-app) (WebView-Wrapper, Vollbild/Kiosk-Steuerung, PIN/Admin-Menü).
+
 ---
 
 ## Inhalt
