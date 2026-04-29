@@ -13,13 +13,14 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 3. [Installation auf Android (Termux)](#installation-auf-android-termux)  
 4. [Start und Betrieb (`run.sh`)](#start-und-betrieb-runsh)  
 5. [Android-Autostart (Termux:Boot)](#android-autostart-termuxboot)  
-6. [Netzwerk (LAN vs. nur Gerät)](#netzwerk-lan-vs-nur-gerät)  
-7. [Daten, Backup, Umgebungsvariablen](#daten-backup-umgebungsvariablen)  
-8. [Admin-Bereich](#admin-bereich)  
-9. [Systemstatus, Online-Erkennung und Update-Flow](#systemstatus-online-erkennung-und-update-flow)  
-10. [Entwicklung (Windows / Linux / macOS)](#entwicklung-windows--linux--macos)  
-11. [Repository und Releases bei GitHub](#repository-und-releases-bei-github)  
-12. [Lizenz / Hinweise](#lizenz--hinweise)
+6. [Schnelle Inbetriebnahme auf Android-Tablet (Kiosk)](#schnelle-inbetriebnahme-auf-android-tablet-kiosk)  
+7. [Netzwerk (LAN vs. nur Gerät)](#netzwerk-lan-vs-nur-gerät)  
+8. [Daten, Backup, Umgebungsvariablen](#daten-backup-umgebungsvariablen)  
+9. [Admin-Bereich](#admin-bereich)  
+10. [Systemstatus, Online-Erkennung und Update-Flow](#systemstatus-online-erkennung-und-update-flow)  
+11. [Entwicklung (Windows / Linux / macOS)](#entwicklung-windows--linux--macos)  
+12. [Repository und Releases bei GitHub](#repository-und-releases-bei-github)  
+13. [Lizenz / Hinweise](#lizenz--hinweise)
 
 ---
 
@@ -171,13 +172,13 @@ pkg update && pkg upgrade -y
 
 ### 2. Git und Python (für Klonen und Server)
 
-Entweder **manuell**:
+Installiere die Basis-Tools zuerst manuell:
 
 ```bash
 pkg install -y git python
 ```
 
-oder danach direkt mit **`bash run.sh`** starten — das Skript erkennt Termux und installiert fehlende Pakete bei Bedarf selbst.
+`run.sh` kommt **erst nach dem Klonen** zum Einsatz, weil es im Projektordner liegt.
 
 ### 3. Privates GitHub-Repository klonen
 
@@ -310,6 +311,90 @@ Das erstellt automatisch:
 - Akku-Optimierung fuer **Termux** und **Termux:Boot** deaktivieren
 - Hintergrundstart/Autostart erlauben (je nach Hersteller unterschiedlich)
 - Tablet neu starten und `server.log` pruefen
+
+---
+
+## Schnelle Inbetriebnahme auf Android-Tablet (Kiosk)
+
+Dieser Ablauf ist fuer ein **neues oder zurueckgesetztes Tablet** gedacht und fuehrt bis zum stabilen Kiosk-Betrieb.
+
+### Quickstart (Copy/Paste)
+
+```bash
+pkg update && pkg upgrade -y
+pkg install -y git python
+cd ~
+git clone https://github.com/DEIN_USER/DEIN_REPO.git termux-kasse
+cd ~/termux-kasse
+bash run.sh
+```
+
+Danach ist der Shop lokal unter `http://127.0.0.1:8000` erreichbar.
+
+### 1) Erstinbetriebnahme (Schritt fuer Schritt)
+
+1. **Termux installieren** (F-Droid empfohlen) und oeffnen.
+2. **Termux aktualisieren**:
+
+```bash
+pkg update && pkg upgrade -y
+```
+
+3. **Git + Python installieren**:
+
+```bash
+pkg install -y git python
+```
+
+4. **Repository klonen**:
+
+```bash
+cd ~
+git clone https://github.com/DEIN_USER/DEIN_REPO.git termux-kasse
+cd ~/termux-kasse
+```
+
+5. **Erststart mit Installation + Start ueber `run.sh`**:
+
+```bash
+bash run.sh
+```
+
+`run.sh` installiert beim ersten Lauf ggf. fehlende Python-Abhaengigkeiten und startet danach den Server.
+
+6. **Funktion pruefen**:
+   - lokal: `http://127.0.0.1:8000`
+   - optional im LAN: `http://<tablet-ip>:8000`
+
+7. **Kiosk-App einrichten** (falls genutzt):
+   - App installieren/starten
+   - unten rechts 5 Sekunden druecken -> Admin-Menue
+   - **Server-Adresse aendern** auf `http://127.0.0.1:8000` (oder LAN-IP)
+   - **Verbindung testen** und **Speichern**
+
+### 2) Autostart einrichten (Termux:Boot)
+
+1. **Termux:Boot installieren** (F-Droid) und einmal oeffnen.
+2. Im Projektordner:
+
+```bash
+cd ~/termux-kasse
+bash setup_boot.sh
+```
+
+3. Android-Einstellungen setzen:
+   - Akku-Optimierung fuer **Termux** und **Termux:Boot** deaktivieren
+   - Hintergrundstart/Autostart erlauben
+4. Tablet neu starten und pruefen:
+   - startet `run.sh` automatisch (Log: `~/termux-kasse/server.log`)?
+   - ist der Shop danach unter `http://127.0.0.1:8000` erreichbar?
+
+### 3) Betrieb im Alltag
+
+- Starten (falls nicht per Boot aktiv): `bash run.sh`
+- Stoppen: `bash stop.sh`
+- Admin: `http://127.0.0.1:8000/admin/login`
+- Backups regelmaessig in `/admin/backup` erstellen
 
 ---
 

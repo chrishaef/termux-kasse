@@ -11,6 +11,34 @@
     <label>Preis (EUR)
       <input type="text" name="price_eur" value="{{ price_eur }}" required inputmode="decimal" autocomplete="off" />
     </label>
+    <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.35rem">
+      <input
+        type="checkbox"
+        name="show_in_pricelist"
+        value="1"
+        {% if product['show_in_pricelist'] %}checked{% endif %}
+      />
+      <span>In Preisliste anzeigen</span>
+    </label>
+    {% if groups and groups|length > 0 %}
+    <fieldset style="margin-top:0.6rem">
+      <legend style="font-weight:700">Sichtbar für Gruppen</legend>
+      <small class="secondary">Abgewählte Gruppen sehen den Artikel im Kiosk nicht.</small>
+      <div style="margin-top:0.4rem;display:grid;gap:0.3rem">
+        {% for g in groups %}
+        <label style="display:flex;align-items:center;gap:0.45rem;margin:0">
+          <input
+            type="checkbox"
+            name="visible_group_ids"
+            value="{{ g['id'] }}"
+            {% if g['id'] not in hidden_group_ids %}checked{% endif %}
+          />
+          <span>{{ g['name'] }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {% endif %}
     <button type="submit">Speichern</button>
   </form>
 </article>

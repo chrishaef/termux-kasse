@@ -52,3 +52,34 @@ def test_admin_products_toggle_returns_json_for_fetch_requests() -> None:
         with db.get_connection() as conn:
             active = int(conn.execute("SELECT active FROM products WHERE id = ?", (pid,)).fetchone()[0])
         assert active == 0
+
+
+def test_product_visibility_can_be_configured_per_group() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "G1"})
+        client.post("/admin/groups", data={"name": "G2"})
+        with db.get_connection() as conn:
+            groups = conn.execute("SELECT id, name FROM user_groups ORDER BY name").fetchall()
+            gid1 = int(groups[0][0])
+            gid2 = int(groups[1][0])
+
+        client.post("/admin/products", data={"name": "Sonder", "price_eur": "1.50"})
+        with db.get_connection() as conn:
+            pid = int(conn.execute("SELECT id FROM products WHERE name = 'Sonder'").fetchone()[0])
+
+        save = client.post(
+            f"/admin/products/{pid}/edit",
+            data={"name": "Sonder", "price_eur": "1.50", "visible_group_ids": str(gid1)},
+            follow_redirects=False,
+        )
+        assert save.status_code == 303
+        assert save.headers["location"] == "/admin/products"
+
+        with db.get_connection() as conn:
+            hidden = conn.execute(
+                "SELECT group_id FROM product_group_hidden WHERE product_id = ? ORDER BY group_id",
+                (pid,),
+            ).fetchall()
+            hidden_ids = [int(r[0]) for r in hidden]
+        assert hidden_ids == [gid2]

@@ -47,6 +47,7 @@ def kiosk_preisliste(request: Request) -> HTMLResponse:
             SELECT name, price_cents
             FROM products
             WHERE active = 1
+              AND show_in_pricelist = 1
             ORDER BY sort_order, name COLLATE NOCASE
             """,
         )
@@ -112,11 +113,16 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
         products = db.fetch_all(
             conn,
             """
-            SELECT id, name, price_cents
-            FROM products
-            WHERE active = 1
-            ORDER BY sort_order, name COLLATE NOCASE
+            SELECT p.id, p.name, p.price_cents
+            FROM products p
+            LEFT JOIN product_group_hidden pgh
+                ON pgh.product_id = p.id
+                AND pgh.group_id = ?
+            WHERE p.active = 1
+              AND pgh.product_id IS NULL
+            ORDER BY p.sort_order, p.name COLLATE NOCASE
             """,
+            (int(u["group_id"]),),
         )
     return TEMPLATES.TemplateResponse(
         request,
@@ -153,10 +159,17 @@ def kiosk_add(
         p = db.fetch_one(
             conn,
             """
-            SELECT id, name, price_cents, active
-            FROM products WHERE id = ? AND active = 1
+            SELECT p.id, p.name, p.price_cents, p.active
+            FROM users u
+            JOIN products p ON p.id = ?
+            LEFT JOIN product_group_hidden pgh
+                ON pgh.product_id = p.id
+                AND pgh.group_id = u.group_id
+            WHERE u.id = ?
+              AND p.active = 1
+              AND pgh.product_id IS NULL
             """,
-            (product_id,),
+            (product_id, user_id),
         )
         if not p:
             raise HTTPException(status_code=400, detail="Artikel ungültig")

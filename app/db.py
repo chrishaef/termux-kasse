@@ -51,7 +51,14 @@ def init_db() -> None:
                 name TEXT NOT NULL,
                 price_cents INTEGER NOT NULL,
                 active INTEGER NOT NULL DEFAULT 1,
+                show_in_pricelist INTEGER NOT NULL DEFAULT 1,
                 sort_order INTEGER NOT NULL DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS product_group_hidden (
+                product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                group_id INTEGER NOT NULL REFERENCES user_groups(id) ON DELETE CASCADE,
+                PRIMARY KEY (product_id, group_id)
             );
 
             CREATE TABLE IF NOT EXISTS settlements (
@@ -124,10 +131,11 @@ def _migrate_products_remove_categories(conn: sqlite3.Connection) -> None:
                         name TEXT NOT NULL,
                         price_cents INTEGER NOT NULL,
                         active INTEGER NOT NULL DEFAULT 1,
+                        show_in_pricelist INTEGER NOT NULL DEFAULT 1,
                         sort_order INTEGER NOT NULL DEFAULT 0
                     );
-                    INSERT INTO products__flat (id, name, price_cents, active, sort_order)
-                        SELECT id, name, price_cents, active,
+                    INSERT INTO products__flat (id, name, price_cents, active, show_in_pricelist, sort_order)
+                        SELECT id, name, price_cents, active, 1,
                             COALESCE(sort_order, 0) FROM products;
                     DROP TABLE products;
                     ALTER TABLE products__flat RENAME TO products;
@@ -150,6 +158,11 @@ def _migrate_schema(conn: sqlite3.Connection) -> None:
             pdf_filename TEXT NOT NULL,
             xlsx_filename TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS product_group_hidden (
+            product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+            group_id INTEGER NOT NULL REFERENCES user_groups(id) ON DELETE CASCADE,
+            PRIMARY KEY (product_id, group_id)
+        );
         """
     )
     sinfo = conn.execute("PRAGMA table_info(settlements)").fetchall()
@@ -160,6 +173,7 @@ def _migrate_schema(conn: sqlite3.Connection) -> None:
                 "ALTER TABLE settlements ADD COLUMN received_confirmed INTEGER NOT NULL DEFAULT 1"
             )
     _migrate_sort_order_columns(conn)
+    _migrate_products_pricelist_visibility(conn)
     _migrate_products_remove_categories(conn)
 
 
@@ -174,6 +188,17 @@ def _migrate_sort_order_columns(conn: sqlite3.Connection) -> None:
                 f"ALTER TABLE {table} ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0"
             )
     _backfill_sort_orders(conn)
+
+
+def _migrate_products_pricelist_visibility(conn: sqlite3.Connection) -> None:
+    info = conn.execute("PRAGMA table_info(products)").fetchall()
+    if not info:
+        return
+    cols = {r[1] for r in info}
+    if "show_in_pricelist" not in cols:
+        conn.execute(
+            "ALTER TABLE products ADD COLUMN show_in_pricelist INTEGER NOT NULL DEFAULT 1"
+        )
 
 
 def _backfill_sort_orders(conn: sqlite3.Connection) -> None:

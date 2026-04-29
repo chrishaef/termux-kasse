@@ -110,6 +110,25 @@ def test_kiosk_preisliste_shows_products() -> None:
         assert "Neu in v1.2.0" in r.text
 
 
+def test_kiosk_preisliste_hides_products_with_pricelist_flag_off() -> None:
+    with TestClient(app) as c:
+        c.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        c.post("/admin/products", data={"name": "NurKiosk", "price_eur": "1.30"})
+        with db.get_connection() as conn:
+            pid = int(conn.execute("SELECT id FROM products WHERE name='NurKiosk'").fetchone()[0])
+        c.post(
+            f"/admin/products/{pid}/edit",
+            data={
+                "name": "NurKiosk",
+                "price_eur": "1.30",
+            },
+            follow_redirects=False,
+        )
+        r = c.get("/preisliste")
+        assert r.status_code == 200
+        assert "NurKiosk" not in r.text
+
+
 def test_kiosk_user_shows_credit_with_plus_and_green_class() -> None:
     with TestClient(app) as c:
         c.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
@@ -141,6 +160,47 @@ def test_kiosk_flappy_easter_egg_route() -> None:
         r = c.get("/egg/flappy")
         assert r.status_code == 200
         assert "flappy-canvas" in r.text
+
+
+def test_kiosk_user_shows_only_products_visible_for_users_group() -> None:
+    with TestClient(app) as c:
+        c.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        c.post("/admin/groups", data={"name": "G1"})
+        c.post("/admin/groups", data={"name": "G2"})
+        with db.get_connection() as conn:
+            groups = conn.execute("SELECT id, name FROM user_groups ORDER BY name").fetchall()
+            gid1 = int(groups[0][0])
+            gid2 = int(groups[1][0])
+        c.post("/admin/users", data={"name": "U1", "group_id": str(gid1)})
+        c.post("/admin/products", data={"name": "Standard", "price_eur": "1.00"})
+        c.post("/admin/products", data={"name": "Spezial", "price_eur": "2.00"})
+
+        with db.get_connection() as conn:
+            uid = int(conn.execute("SELECT id FROM users WHERE name='U1'").fetchone()[0])
+            pid_special = int(conn.execute("SELECT id FROM products WHERE name='Spezial'").fetchone()[0])
+            conn.execute(
+                "INSERT INTO product_group_hidden (product_id, group_id) VALUES (?, ?)",
+                (pid_special, gid1),
+            )
+
+        r = c.get(f"/u/{uid}")
+        assert r.status_code == 200
+        assert "Standard" in r.text
+        assert "Spezial" not in r.text
+
+        add_hidden = c.post(f"/u/{uid}/add", data={"product_id": str(pid_special)}, follow_redirects=False)
+        assert add_hidden.status_code == 400
+
+        with db.get_connection() as conn:
+            conn.execute("DELETE FROM product_group_hidden WHERE product_id = ? AND group_id = ?", (pid_special, gid1))
+            conn.execute(
+                "INSERT INTO product_group_hidden (product_id, group_id) VALUES (?, ?)",
+                (pid_special, gid2),
+            )
+
+        add_visible = c.post(f"/u/{uid}/add", data={"product_id": str(pid_special)}, follow_redirects=False)
+        assert add_visible.status_code == 303
+        assert add_visible.headers["location"].endswith(f"/u/{uid}")
 
 
 def test_repo_qr_svg_route() -> None:

@@ -1288,7 +1288,7 @@ def admin_products(request: Request) -> Response:
         products = db.fetch_all(
             conn,
             """
-            SELECT id, name, price_cents, active
+            SELECT id, name, price_cents, active, show_in_pricelist
             FROM products
             ORDER BY sort_order, name COLLATE NOCASE
             """,
@@ -1318,7 +1318,7 @@ def admin_products_create(
     with db.get_connection() as conn:
         so = sort_order_util.next_sort_order(conn, "products")
         conn.execute(
-            "INSERT INTO products (name, price_cents, active, sort_order) VALUES (?, ?, 1, ?)",
+            "INSERT INTO products (name, price_cents, active, show_in_pricelist, sort_order) VALUES (?, ?, 1, 1, ?)",
             (name, cents, so),
         )
     return RedirectResponse("/admin/products", status_code=303)
@@ -1331,11 +1331,21 @@ def admin_products_edit_form(request: Request, product_id: int) -> Response:
     with db.get_connection() as conn:
         product = db.fetch_one(
             conn,
-            "SELECT id, name, price_cents, active FROM products WHERE id = ?",
+            "SELECT id, name, price_cents, active, show_in_pricelist FROM products WHERE id = ?",
             (product_id,),
         )
         if not product:
             raise HTTPException(status_code=404)
+        groups = db.fetch_all(
+            conn,
+            "SELECT id, name FROM user_groups ORDER BY sort_order, name COLLATE NOCASE",
+        )
+        hidden_rows = db.fetch_all(
+            conn,
+            "SELECT group_id FROM product_group_hidden WHERE product_id = ?",
+            (product_id,),
+        )
+        hidden_group_ids = {int(r["group_id"]) for r in hidden_rows}
     return TEMPLATES.TemplateResponse(
         request,
         "admin/products_edit.html",
@@ -1343,6 +1353,8 @@ def admin_products_edit_form(request: Request, product_id: int) -> Response:
             "title": "Artikel bearbeiten",
             "product": product,
             "price_eur": _eur_field_from_cents(int(product["price_cents"])),
+            "groups": groups,
+            "hidden_group_ids": hidden_group_ids,
         },
     )
 
@@ -1353,6 +1365,8 @@ def admin_products_edit_save(
     product_id: int,
     name: str = Form(...),
     price_eur: str = Form(...),
+    show_in_pricelist: str | None = Form(default=None),
+    visible_group_ids: list[int] = Form(default=[]),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
@@ -1367,10 +1381,20 @@ def admin_products_edit_save(
         row = db.fetch_one(conn, "SELECT id FROM products WHERE id = ?", (product_id,))
         if not row:
             raise HTTPException(status_code=404)
+        groups = db.fetch_all(conn, "SELECT id FROM user_groups")
+        all_group_ids = {int(g["id"]) for g in groups}
+        selected_visible = {int(gid) for gid in visible_group_ids}
+        hidden_group_ids = sorted(all_group_ids - selected_visible)
         conn.execute(
-            "UPDATE products SET name = ?, price_cents = ? WHERE id = ?",
-            (name, cents, product_id),
+            "UPDATE products SET name = ?, price_cents = ?, show_in_pricelist = ? WHERE id = ?",
+            (name, cents, 1 if show_in_pricelist else 0, product_id),
         )
+        conn.execute("DELETE FROM product_group_hidden WHERE product_id = ?", (product_id,))
+        for group_id in hidden_group_ids:
+            conn.execute(
+                "INSERT INTO product_group_hidden (product_id, group_id) VALUES (?, ?)",
+                (product_id, int(group_id)),
+            )
     return RedirectResponse("/admin/products", status_code=303)
 
 
