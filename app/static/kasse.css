@@ -1703,6 +1703,21 @@ body.app-admin .k-panel .admin-received-confirm input[type="checkbox"]:checked +
   opacity: 1;
 }
 
+/* Product visibility checkboxes: keep native checkmark clearly visible. */
+body.app-admin .k-panel .product-visibility input[type="checkbox"],
+body.app-admin .k-panel label > input[type="checkbox"][name="show_in_pricelist"] {
+  appearance: auto;
+  -webkit-appearance: checkbox;
+  width: 1.22rem;
+  height: 1.22rem;
+  margin: 0;
+  accent-color: var(--kas-accent);
+  border: 1px solid #7f8a83;
+  background: #fff;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
 body.app-admin .k-panel .admin-received-confirm__text {
   flex: 1 1 auto;
   min-width: 0;

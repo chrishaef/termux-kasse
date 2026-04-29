@@ -175,6 +175,7 @@ def _migrate_schema(conn: sqlite3.Connection) -> None:
     _migrate_sort_order_columns(conn)
     _migrate_products_pricelist_visibility(conn)
     _migrate_products_remove_categories(conn)
+    _backfill_product_visibility_defaults_once(conn)
 
 
 def _migrate_sort_order_columns(conn: sqlite3.Connection) -> None:
@@ -199,6 +200,25 @@ def _migrate_products_pricelist_visibility(conn: sqlite3.Connection) -> None:
         conn.execute(
             "ALTER TABLE products ADD COLUMN show_in_pricelist INTEGER NOT NULL DEFAULT 1"
         )
+
+
+def _backfill_product_visibility_defaults_once(conn: sqlite3.Connection) -> None:
+    marker = conn.execute(
+        "SELECT value FROM app_settings WHERE key = 'product_visibility_backfill_v1_done'"
+    ).fetchone()
+    if marker and str(marker[0]) == "1":
+        return
+    # One-time safety backfill for existing installations:
+    # legacy products stay visible in pricelist and for all groups by default.
+    conn.execute("UPDATE products SET show_in_pricelist = 1")
+    conn.execute("DELETE FROM product_group_hidden")
+    conn.execute(
+        """
+        INSERT INTO app_settings (key, value)
+        VALUES ('product_visibility_backfill_v1_done', '1')
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+        """
+    )
 
 
 def _backfill_sort_orders(conn: sqlite3.Connection) -> None:

@@ -21,8 +21,7 @@
       <span>In Preisliste anzeigen</span>
     </label>
     {% if groups and groups|length > 0 %}
-    <fieldset style="margin-top:0.6rem">
-      <legend style="font-weight:700">Sichtbar für Gruppen</legend>
+    <fieldset class="product-visibility" style="margin-top:0.6rem">
       <small class="secondary">Abgewählte Gruppen sehen den Artikel im Kiosk nicht.</small>
       <div style="margin-top:0.4rem;display:grid;gap:0.3rem">
         {% for g in groups %}
