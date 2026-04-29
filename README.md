@@ -2,7 +2,7 @@
 
 Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — Buchungen, Kontostände und Abrechnungen laufen lokal; Styles und Skripte kommen aus dem Projekt (`/static`). Internet wird nur für Installation, Updates und den optionalen Online-/Versionscheck genutzt.
 
-**Aktuelle Version:** **1.3.0** (Git-Tag [`v1.3.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.3.0)) — GitHub-Release: [anlegen](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.3.0) (einmal `gh auth login` oder im Browser veröffentlichen).
+**Aktuelle Version:** **1.4.0** (Git-Tag [`v1.4.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.0)) — GitHub-Release: [anlegen](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.4.0) (einmal `gh auth login` oder im Browser veröffentlichen).
 
 **Zugehörige Android-Kiosk-App:** [`chrishaef/kiosk-app`](https://github.com/chrishaef/kiosk-app) (WebView-Wrapper, Vollbild/Kiosk-Steuerung, PIN/Admin-Menü).
 
@@ -547,13 +547,13 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ### Versionierung und Releases
 
-- Aktueller Git-Tag: **v1.3.0** — Übersicht: [Tag v1.3.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.3.0).  
-- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.3.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.3.0) öffnen, Titel z. B. `Termux-Shopkasse 1.3.0`, Beschreibung einfügen, *Publish release*.  
+- Aktueller Git-Tag: **v1.4.0** — Übersicht: [Tag v1.4.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.0).
+- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.4.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.4.0) öffnen, Titel z. B. `Termux-Shopkasse 1.4.0`, Beschreibung einfügen, *Publish release*.
 - **GitHub CLI** (einmalig `gh auth login`):  
-  `gh release create v1.3.0 --title "Termux-Shopkasse 1.3.0" --generate-notes`
+  `gh release create v1.4.0 --title "Termux-Shopkasse 1.4.0" --generate-notes`
 - Änderungsübersicht im Repo: [`CHANGELOG.md`](./CHANGELOG.md)
 
-**v1.3.0** (Kurzüberblick): PDF-Berichte mit konsistentem Euro-Format (`12,34 €`) überarbeitet, Statistik-PDF je Nutzer klarer strukturiert (eigene Tabellen) und Admin/Kiosk-Abläufe sowie Update-Hinweise in der Oberfläche verbessert.
+**v1.4.0** (Kurzüberblick): Artikel-Sichtbarkeit pro Gruppe und getrennte Preisliste-Steuerung ergänzt, Master-Passwort-Datei auf `.master_pwd` vereinheitlicht und Android-/Kiosk-Dokumentation inkl. Repo-Verlinkung erweitert.
 
 ---
 

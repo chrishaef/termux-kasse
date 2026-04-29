@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.4.0 - 2026-04-29
+
+- Added per-product group visibility controls in admin so products can be shown only to selected user groups on kiosk booking pages.
+- Added per-product `show in pricelist` option to decouple pricelist visibility from kiosk booking visibility.
+- Improved product edit UX with clearer wording, reliable back-navigation from product list to admin dashboard, and clearer checkbox rendering.
+- Hardened master-password file handling by moving default to `.master_pwd`, adding `.master_pwd.example`, and auto-initializing missing master password file via `run.sh`.
+- Updated docs with Android kiosk setup quickstart and cross-links between backend (`termux-kasse`) and Android app (`kiosk-app`) repositories.
+
 ## v1.3.0 - 2026-04-28
 
 - Added robust PDF layout handling with safer page breaks and repeated headers across multi-page sections.

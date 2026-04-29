@@ -37,7 +37,7 @@ def test_kiosk_home() -> None:
         assert 'id="site-repo-link"' in r.text
         assert "Version:" in r.text
         assert 'src="/repo/qr.svg"' in r.text
-        assert "Neu in v1.2.0" in r.text
+        assert "Neu in v1.4.0" in r.text
 
 
 def test_kiosk_top_ten_shows_active_users() -> None:
@@ -107,7 +107,7 @@ def test_kiosk_preisliste_shows_products() -> None:
         assert "Wasser" in r.text
         assert 'id="site-repo-link"' in r.text
         assert 'src="/repo/qr.svg"' in r.text
-        assert "Neu in v1.2.0" in r.text
+        assert "Neu in v1.4.0" in r.text
 
 
 def test_kiosk_preisliste_hides_products_with_pricelist_flag_off() -> None:
