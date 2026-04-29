@@ -4,16 +4,10 @@
 <a href="/admin" class="admin-back js-history-back">← Zurück</a>
 
 <article class="k-panel">
-  <h2 style="margin-top:0;font-size:1.1rem">PDF wird geladen</h2>
-  <p>Falls der Download nicht startet, nutzen Sie diesen Link:</p>
-  <p><a href="/admin/settlements/{{ settlement_id }}/pdf" role="button">PDF jetzt herunterladen</a></p>
-  <p class="secondary">Sie werden in wenigen Sekunden zur Abrechnungsübersicht weitergeleitet.</p>
+  <h2 style="margin-top:0;font-size:1.1rem">PDF lokal speichern</h2>
+  <p>Bitte wählen Sie einen Speicherort auf dem Tablet aus.</p>
+  <p><a href="/admin/settlements/{{ settlement_id }}/pdf" role="button" download>PDF speichern</a></p>
+  <p class="secondary">Danach zur Abrechnungsübersicht zurückkehren.</p>
 </article>
-
-<iframe src="/admin/settlements/{{ settlement_id }}/pdf" style="display:none" title="PDF download"></iframe>
-<script>
-  window.setTimeout(function () {
-    window.location.href = "/admin/settlements";
-  }, 1400);
-</script>
+<p><a href="/admin/settlements" class="secondary">Zur Abrechnungsübersicht</a></p>
 {% endblock %}

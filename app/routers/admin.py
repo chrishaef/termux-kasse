@@ -12,8 +12,6 @@ import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
-from urllib.parse import quote
-
 from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 
@@ -268,8 +266,10 @@ def _attachment_disposition(stem: str, ext: str) -> str:
     ascii_fallback = full.encode("ascii", "replace").decode("ascii").replace("?", "_")[:180]
     if not ascii_fallback.strip():
         ascii_fallback = f"abrechnung{ext}"
-    enc = quote(full, safe="")
-    return f'attachment; filename="{ascii_fallback}"; filename*=UTF-8\'\'{enc}'
+    # Some Android WebView/DownloadManager combinations ignore or misparse filename*
+    # and then derive broken names like "pdf.odf". A plain ASCII filename is the
+    # most reliable cross-platform fallback for this kiosk deployment.
+    return f'attachment; filename="{ascii_fallback}"'
 
 
 def _parse_date_input(raw: str | None) -> str | None:
