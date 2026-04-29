@@ -98,6 +98,18 @@ ensure_venv() {
   source "$VENV_ACTIVATE"
 }
 
+ensure_master_password_files() {
+  local MASTER_FILE="$ROOT/.master_pwd"
+  local EXAMPLE_FILE="$ROOT/.master_pwd.example"
+  if [[ ! -f "$EXAMPLE_FILE" ]]; then
+    printf "master\n" >"$EXAMPLE_FILE"
+  fi
+  if [[ ! -f "$MASTER_FILE" ]]; then
+    cp "$EXAMPLE_FILE" "$MASTER_FILE"
+    echo ">>> .master_pwd wurde mit Standardwert erstellt (bitte im Live-Betrieb ändern)"
+  fi
+}
+
 stop_old() {
   PID_FILE="$ROOT/.server.pid"
   if [[ -f "$PID_FILE" ]]; then
@@ -135,6 +147,7 @@ echo ">>> Projekt: $ROOT"
 ensure_system_packages
 pick_python
 ensure_venv
+ensure_master_password_files
 echo ">>> Verwende Python: $(${PYTHON} --version 2>&1)"
 
 if [[ -d .git ]] && is_origin_reachable; then

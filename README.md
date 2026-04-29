@@ -130,7 +130,7 @@ Unter **`/admin/settlements/year-end`** (von der Abrechnungsübersicht aus errei
 
 **Voraussetzungen**
 
-- Anmeldung im Admin reicht nicht: Es wird das **Master-Passwort** verlangt (Konfiguration über **`.admin_master_password`** bzw. `KASSE_MASTER_PASSWORD_FILE` — siehe Abschnitt [Daten, Backup, Umgebungsvariablen](#daten-backup-umgebungsvariablen)).
+- Anmeldung im Admin reicht nicht: Es wird das **Master-Passwort** verlangt (Konfiguration über **`.master_pwd`** bzw. `KASSE_MASTER_PASSWORD_FILE` — siehe Abschnitt [Daten, Backup, Umgebungsvariablen](#daten-backup-umgebungsvariablen)).
 - Zusätzlich eine **explizite Bestätigung**, dass der Schritt **irreversibel** ist (Checkbox im Formular).
 
 **Was beim Auslösen passiert**
@@ -283,7 +283,7 @@ Im Browser auf demselben Gerät (oder im LAN, siehe unten):
 - Login unter [http://127.0.0.1:8000/admin/login](http://127.0.0.1:8000/admin/login) nur per Passwort (kein Benutzername).
 - Es gibt zwei gueltige Passwoerter:
   - **Admin-Passwort** (standardmaessig `admin`), im Admin-Bereich unter `/admin/password` aenderbar.
-  - **Master-Passwort** aus Datei `.admin_master_password` (standardmaessig `master`), nur per Dateisystem aenderbar.
+  - **Master-Passwort** aus Datei `.master_pwd` (standardmaessig `master`), nur per Dateisystem aenderbar.
 
 Standardport ist **8000** (änderbar mit `PORT`, siehe nächster Abschnitt).
 
@@ -430,7 +430,7 @@ Wenn aus dem LAN nichts antwortet: **Firewall** auf dem Gerät, VPN oder Router 
 | **Datenbank** | `data/kasse.db` relativ zum Projektroot |
 | **Datenverzeichnis** | Überschreibbar mit **`KASSE_DATA_DIR`** (absoluter Pfad zum Ordner; die Datei heißt darin weiter `kasse.db`) |
 | **Session-Secret** | Datei **`.secret_key`** im Projektroot (von Git ignoriert) oder Umgebungsvariable **`KASSE_SECRET_KEY`** |
-| **Master-Passwort** | Datei **`.admin_master_password`** im Projektroot (Inhalt = Passwort, Standard `master`) oder alternativer Dateipfad via **`KASSE_MASTER_PASSWORD_FILE`** |
+| **Master-Passwort** | Datei **`.master_pwd`** im Projektroot (Inhalt = Passwort, Standard `master`). Beim ersten `run.sh` wird zusätzlich `.master_pwd.example` angelegt. Alternativer Dateipfad via **`KASSE_MASTER_PASSWORD_FILE`** |
 | **Backup (Datei)** | Ordner `data/` kopieren oder nur `kasse.db` sichern — idealerweise bei **gestopptem** Server (`bash stop.sh`) |
 | **Backup (Admin-UI)** | Unter `/admin/backup`: Backup erstellen (wird im Archiv gespeichert), Import mit Vorschau, Archivansicht mit Download/Loeschen, System Reset |
 | **Jahresabschluss-Archive** | Ordner **`jahresabschluss/`** unter `KASSE_DATA_DIR` (neben `kasse.db`): gespeicherte PDF-, XLSX- und ZIP-Dateien des zuletzt erzeugten Jahresabschlusses |

@@ -22,7 +22,7 @@
 {% if not master_configured %}
 <article class="contrast">
   Es ist kein Master-Passwort konfiguriert (Datei fehlt oder leer). Der Jahresabschluss ist aus Sicherheitsgründen deaktiviert.
-  Legen Sie z. B. <code>.admin_master_password</code> an oder setzen Sie <code>KASSE_MASTER_PASSWORD_FILE</code>.
+  Legen Sie z. B. <code>.master_pwd</code> an oder setzen Sie <code>KASSE_MASTER_PASSWORD_FILE</code>.
 </article>
 {% elif err == "master" %}
 <article class="contrast">Master-Passwort ungültig.</article>

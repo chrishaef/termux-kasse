@@ -3,7 +3,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SECRET_KEY_FILE = ROOT / ".secret_key"
-MASTER_PASSWORD_FILE = ROOT / ".admin_master_password"
+MASTER_PASSWORD_FILE = ROOT / ".master_pwd"
 
 
 def data_dir() -> Path:
