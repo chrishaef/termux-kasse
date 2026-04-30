@@ -21,7 +21,7 @@ fi
 echo ">>> Shopkasse Erstinstallation (Termux)"
 echo ">>> Projekt: $ROOT"
 
-chmod +x "$ROOT/run.sh" "$ROOT/stop.sh" "$ROOT/setup_boot.sh" "$ROOT/install.sh" "$ROOT/uninstall.sh" 2>/dev/null || true
+chmod +x "$ROOT/run.sh" "$ROOT/stop.sh" "$ROOT/install.sh" "$ROOT/uninstall.sh" 2>/dev/null || true
 
 mkdir -p "$BOOT_DIR"
 cat >"$BOOT_SCRIPT" <<EOF
@@ -74,6 +74,10 @@ fi
 echo "URL lokal: http://127.0.0.1:\$PORT"
 if [[ "\$HOST" == "0.0.0.0" ]]; then
   echo "LAN: http://<IP-des-Geräts>:\$PORT"
+fi
+echo
+if [[ -t 0 ]]; then
+  read -r -p "Enter drücken zum Schließen..." _
 fi
 EOF
 chmod 700 "$STATUS_WIDGET"

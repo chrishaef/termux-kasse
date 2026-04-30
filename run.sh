@@ -9,6 +9,8 @@ cd "$ROOT"
 
 export PORT="${PORT:-8000}"
 export HOST="${HOST:-0.0.0.0}"
+# Avoid noisy pip update notices during unattended startup.
+export PIP_DISABLE_PIP_VERSION_CHECK="${PIP_DISABLE_PIP_VERSION_CHECK:-1}"
 NO_SYSTEM_INSTALL=0
 for arg in "$@"; do
   case "$arg" in

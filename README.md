@@ -14,7 +14,7 @@ Lokal laufende **Shopkasse** für kleine Gruppen: Mitglieder buchen Artikel am K
 2. [Technik](#technik)  
 3. [Installation auf Android (Termux)](#installation-auf-android-termux)  
 4. [Start und Betrieb (`run.sh`)](#start-und-betrieb-runsh)  
-5. [Android-Autostart (Termux:Boot)](#android-autostart-termuxboot)  
+5. [Android-Einrichtung (Install + Autostart + Widgets)](#android-einrichtung-install--autostart--widgets)  
 6. [Schnelle Inbetriebnahme auf Android-Tablet (Kiosk)](#schnelle-inbetriebnahme-auf-android-tablet-kiosk)  
 7. [Netzwerk (LAN vs. nur Gerät)](#netzwerk-lan-vs-nur-gerät)  
 8. [Daten, Backup, Umgebungsvariablen](#daten-backup-umgebungsvariablen)  
@@ -237,7 +237,7 @@ git clone https://github.com/DEIN_USER/DEIN_REPO.git termux-kasse
 cd ~/termux-kasse
 ```
 
-Alle folgenden Befehle (`run.sh`, `stop.sh`, `setup_boot.sh`) beziehen sich auf diesen Ordner (Projektroot).
+Alle folgenden Befehle (`install.sh`, `run.sh`, `stop.sh`, `uninstall.sh`) beziehen sich auf diesen Ordner (Projektroot).
 
 **pip / Termux:** In `requirements.txt` gilt:
 
@@ -289,24 +289,29 @@ Standardport ist **8000** (änderbar mit `PORT`, siehe nächster Abschnitt).
 
 ---
 
-## Android-Autostart (Termux:Boot)
+## Android-Einrichtung (Install + Autostart + Widgets)
 
-Fuer Autostart beim Android-Geraetestart wird die Zusatz-App **Termux:Boot** benoetigt.
+Fuer einen stabilen Betrieb werden **Termux** und **Termux:Boot** benoetigt.  
+**Termux:Widget** ist je nach Termux-Build optional (wenn Widget-Eintraege fehlen, installieren).
 
 ### Einrichten
 
-1. **Termux:Boot installieren** (empfohlen ueber F-Droid)
-2. Termux und Termux:Boot jeweils einmal oeffnen
-3. Im Projekt ausfuehren:
+1. **Termux** installieren und einmal oeffnen
+2. **Termux:Boot** installieren und einmal oeffnen
+3. Optional: **Termux:Widget** installieren und einmal oeffnen
+4. Im Projekt ausfuehren:
 
 ```bash
 cd ~/termux-kasse
-bash setup_boot.sh
+bash install.sh
 ```
 
 Das erstellt automatisch:
 
 - `~/.termux/boot/start-shopkasse.sh` (ruft `run.sh` auf)
+- `~/.shortcuts/shopkasse-start.sh`
+- `~/.shortcuts/shopkasse-stop.sh`
+- `~/.shortcuts/shopkasse-status.sh`
 
 ### Android-Einstellungen
 
@@ -374,20 +379,21 @@ bash run.sh
    - **Server-Adresse aendern** auf `http://127.0.0.1:8000` (oder LAN-IP)
    - **Verbindung testen** und **Speichern**
 
-### 2) Autostart einrichten (Termux:Boot)
+### 2) Autostart und Widgets einrichten
 
 1. **Termux:Boot installieren** (F-Droid) und einmal oeffnen.
-2. Im Projektordner:
+2. Optional: **Termux:Widget** installieren, falls keine Widget-Eintraege sichtbar sind.
+3. Im Projektordner:
 
 ```bash
 cd ~/termux-kasse
-bash setup_boot.sh
+bash install.sh
 ```
 
-3. Android-Einstellungen setzen:
+4. Android-Einstellungen setzen:
    - Akku-Optimierung fuer **Termux** und **Termux:Boot** deaktivieren
    - Hintergrundstart/Autostart erlauben
-4. Tablet neu starten und pruefen:
+5. Tablet neu starten und pruefen:
    - startet `run.sh` automatisch (Log: `~/termux-kasse/server.log`)?
    - ist der Shop danach unter `http://127.0.0.1:8000` erreichbar?
 
