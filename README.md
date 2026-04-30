@@ -312,6 +312,7 @@ Das erstellt automatisch:
 - `~/.shortcuts/shopkasse-start.sh`
 - `~/.shortcuts/shopkasse-stop.sh`
 - `~/.shortcuts/shopkasse-status.sh`
+- `~/.termux/termux.properties`: setzt `allow-external-apps = true`
 
 ### Android-Einstellungen
 

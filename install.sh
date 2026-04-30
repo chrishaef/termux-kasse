@@ -13,6 +13,68 @@ is_termux() {
   [[ -n "${TERMUX_VERSION:-}" ]]
 }
 
+ensure_allow_external_apps_enabled() {
+  local TERMUX_DIR="$HOME/.termux"
+  local PROPS_FILE="$TERMUX_DIR/termux.properties"
+  local TMP_FILE
+  mkdir -p "$TERMUX_DIR"
+
+  if [[ ! -f "$PROPS_FILE" ]]; then
+    printf "allow-external-apps = true\n" >"$PROPS_FILE"
+    echo ">>> Termux-Property gesetzt: allow-external-apps = true"
+    return 0
+  fi
+
+  if grep -Eq '^[[:space:]]*allow-external-apps[[:space:]]*=' "$PROPS_FILE"; then
+    TMP_FILE="$(mktemp)"
+    awk '
+      BEGIN { done=0 }
+      /^[[:space:]]*allow-external-apps[[:space:]]*=/ {
+        if (!done) {
+          print "allow-external-apps = true"
+          done=1
+        }
+        next
+      }
+      { print }
+      END {
+        if (!done) {
+          print "allow-external-apps = true"
+        }
+      }
+    ' "$PROPS_FILE" >"$TMP_FILE"
+    mv "$TMP_FILE" "$PROPS_FILE"
+    echo ">>> Termux-Property aktualisiert: allow-external-apps = true"
+    return 0
+  fi
+
+  if grep -Eq '^[[:space:]]*#?[[:space:]]*allow-external-apps[[:space:]]*=' "$PROPS_FILE"; then
+    TMP_FILE="$(mktemp)"
+    awk '
+      BEGIN { done=0 }
+      /^[[:space:]]*#?[[:space:]]*allow-external-apps[[:space:]]*=/ {
+        if (!done) {
+          print "allow-external-apps = true"
+          done=1
+        }
+        next
+      }
+      { print }
+      END {
+        if (!done) {
+          print "allow-external-apps = true"
+        }
+      }
+    ' "$PROPS_FILE" >"$TMP_FILE"
+    mv "$TMP_FILE" "$PROPS_FILE"
+    echo ">>> Termux-Property aktiviert: allow-external-apps = true"
+    return 0
+  fi
+
+  printf "\nallow-external-apps = true\n" >>"$PROPS_FILE"
+  echo ">>> Termux-Property ergänzt: allow-external-apps = true"
+}
+
 if ! is_termux; then
   echo "Fehler: install.sh ist nur für Termux gedacht."
   exit 1
@@ -22,6 +84,7 @@ echo ">>> Shopkasse Erstinstallation (Termux)"
 echo ">>> Projekt: $ROOT"
 
 chmod +x "$ROOT/run.sh" "$ROOT/stop.sh" "$ROOT/install.sh" "$ROOT/uninstall.sh" 2>/dev/null || true
+ensure_allow_external_apps_enabled
 
 mkdir -p "$BOOT_DIR"
 cat >"$BOOT_SCRIPT" <<EOF
@@ -94,4 +157,5 @@ echo "Wichtig:"
 echo "1) Termux, Termux:Boot und Termux:Widget installieren und jeweils einmal öffnen."
 echo "2) Akku-Optimierung für Termux + Termux:Boot deaktivieren."
 echo "3) Widget ggf. neu hinzufügen, damit neue Einträge sichtbar sind."
-echo "4) Danach normal starten mit: bash \"$ROOT/run.sh\""
+echo "4) Termux einmal neu öffnen oder 'termux-reload-settings' ausführen."
+echo "5) Danach normal starten mit: bash \"$ROOT/run.sh\""
