@@ -101,7 +101,24 @@ cat >"$START_WIDGET" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
 cd "$ROOT"
-bash "$ROOT/run.sh"
+echo "=== Shopkasse: Start/Update ==="
+echo "Projekt: $ROOT"
+echo "Zeit: \$(date '+%Y-%m-%d %H:%M:%S')"
+echo
+if bash "$ROOT/run.sh"; then
+  echo
+  echo "Ergebnis: Start/Update erfolgreich."
+else
+  echo
+  echo "Ergebnis: Start/Update fehlgeschlagen."
+fi
+echo
+echo "Wechsle zur SBrowser-App in 3 Sekunden..."
+sleep 3
+if command -v am >/dev/null 2>&1; then
+  am start -n com.example.s_browser/.MainActivity >/dev/null 2>&1 || \
+    monkey -p com.example.s_browser -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
+fi
 EOF
 chmod 700 "$START_WIDGET"
 
@@ -109,7 +126,24 @@ cat >"$STOP_WIDGET" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
 cd "$ROOT"
-bash "$ROOT/stop.sh"
+echo "=== Shopkasse: Stop ==="
+echo "Projekt: $ROOT"
+echo "Zeit: \$(date '+%Y-%m-%d %H:%M:%S')"
+echo
+if bash "$ROOT/stop.sh"; then
+  echo
+  echo "Ergebnis: System wurde gestoppt."
+else
+  echo
+  echo "Ergebnis: Stop meldete einen Fehler."
+fi
+echo
+echo "Termux wird in 3 Sekunden geschlossen..."
+sleep 3
+if command -v am >/dev/null 2>&1; then
+  am force-stop com.termux >/dev/null 2>&1 || \
+    am start -a android.intent.action.MAIN -c android.intent.category.HOME >/dev/null 2>&1 || true
+fi
 EOF
 chmod 700 "$STOP_WIDGET"
 
@@ -139,8 +173,11 @@ if [[ "\$HOST" == "0.0.0.0" ]]; then
   echo "LAN: http://<IP-des-Geräts>:\$PORT"
 fi
 echo
-if [[ -t 0 ]]; then
-  read -r -p "Enter drücken zum Schließen..." _
+echo "Wechsle zur SBrowser-App in 5 Sekunden..."
+sleep 5
+if command -v am >/dev/null 2>&1; then
+  am start -n com.example.s_browser/.MainActivity >/dev/null 2>&1 || \
+    monkey -p com.example.s_browser -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
 fi
 EOF
 chmod 700 "$STATUS_WIDGET"
