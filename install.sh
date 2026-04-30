@@ -157,6 +157,7 @@ HOST="\${HOST:-0.0.0.0}"
 
 echo "Shopkasse Status"
 echo "Projekt: \$ROOT"
+echo "Zeit: \$(date '+%Y-%m-%d %H:%M:%S')"
 echo
 if [[ -f "\$PID_FILE" ]]; then
   PID="\$(cat "\$PID_FILE" || true)"
@@ -173,11 +174,27 @@ if [[ "\$HOST" == "0.0.0.0" ]]; then
   echo "LAN: http://<IP-des-Geräts>:\$PORT"
 fi
 echo
-echo "Wechsle zur SBrowser-App in 5 Sekunden..."
+if [[ -d "\$ROOT/.git" ]] && command -v git >/dev/null 2>&1; then
+  BRANCH="\$(git -C "\$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"
+  LOCAL_SHA="\$(git -C "\$ROOT" rev-parse HEAD 2>/dev/null || echo "")"
+  REMOTE_SHA="\$(git -C "\$ROOT" ls-remote origin "refs/heads/\$BRANCH" 2>/dev/null | awk 'NR==1 {print \$1}')"
+  if [[ -n "\$LOCAL_SHA" && -n "\$REMOTE_SHA" ]]; then
+    if [[ "\$LOCAL_SHA" == "\$REMOTE_SHA" ]]; then
+      echo "Update-Status: up to date (\${LOCAL_SHA:0:7})"
+    else
+      echo "Update-Status: Update verfügbar (lokal \${LOCAL_SHA:0:7}, remote \${REMOTE_SHA:0:7})"
+    fi
+  else
+    echo "Update-Status: nicht prüfbar (offline oder kein origin)."
+  fi
+else
+  echo "Update-Status: nicht verfügbar (kein git repo)."
+fi
+echo
+echo "Termux wird in 5 Sekunden minimiert..."
 sleep 5
 if command -v am >/dev/null 2>&1; then
-  am start -n com.example.s_browser/.MainActivity >/dev/null 2>&1 || \
-    monkey -p com.example.s_browser -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
+  am start -a android.intent.action.MAIN -c android.intent.category.HOME >/dev/null 2>&1 || true
 fi
 EOF
 chmod 700 "$STATUS_WIDGET"
