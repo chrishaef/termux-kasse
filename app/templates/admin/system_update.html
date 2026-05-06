@@ -20,7 +20,7 @@
   <p>Installiert: <strong>{{ precheck["installed_version_commit"] }}</strong></p>
   <p>Verfügbar: <strong>{{ precheck["latest_version_commit"] }}</strong></p>
   {% if not precheck["online"] %}
-  <p>Es besteht keine Internetverbindung. Ein Versionscheck konnte nicht durchgeführt werden, daher kann aktuell nur ein Neustart ausgeführt werden.</p>
+  <p>Es besteht keine Internetverbindung. Versionscheck konnte nicht durchgeführt werden, daher kann aktuell nur ein Neustart ausgeführt werden.</p>
   {% elif precheck["release_update_available"] %}
   <p><strong>Es ist ein offizielles Update verfügbar.</strong> Das Update kann jetzt durchgeführt werden.</p>
   {% elif precheck["commit_only_update_available"] %}
