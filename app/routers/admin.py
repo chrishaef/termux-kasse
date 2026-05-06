@@ -101,7 +101,7 @@ def _current_branch(root: Path) -> str:
     return "main"
 
 
-def _trigger_background_update() -> None:
+def _trigger_background_update(update_channel: str = "release") -> None:
     root = Path(__file__).resolve().parent.parent.parent
     run_script = root / "run.sh"
     if not run_script.exists():
@@ -113,8 +113,11 @@ def _trigger_background_update() -> None:
     with log_path.open("a", encoding="utf-8") as log_file:
         log_file.write(f"\n=== Update ausgelöst: {datetime.now().isoformat()} ===\n")
         log_file.flush()
+        cmd = ["bash", str(run_script)]
+        if update_channel == "commit":
+            cmd.append("--update-mode=commit")
         proc = subprocess.Popen(
-            ["bash", str(run_script)],
+            cmd,
             cwd=str(root),
             stdout=log_file,
             stderr=subprocess.STDOUT,
@@ -226,6 +229,7 @@ def _system_update_precheck() -> dict[str, str | bool]:
         "installed_version_commit": f"{installed_version} ({installed_commit})",
         "latest_version_commit": f"{latest_version} ({latest_commit})",
         "update_available": update_available,
+        "commit_update_available": commit_update_available,
         "release_update_available": release_update_available,
         "commit_only_update_available": commit_only_update_available,
     }
@@ -470,7 +474,11 @@ def admin_dashboard(request: Request) -> Response:
 
 
 @router.post("/system-update")
-def admin_system_update_start(request: Request, master_password: str = Form("")) -> Response:
+def admin_system_update_start(
+    request: Request,
+    master_password: str = Form(""),
+    update_channel: str = Form("release"),
+) -> Response:
     if (r := _redirect_login(request)):
         return r
     master_password = (master_password or "").strip()
@@ -519,8 +527,25 @@ def admin_system_update_start(request: Request, master_password: str = Form(""))
             },
             status_code=400,
         )
+    update_channel = (update_channel or "release").strip().lower()
+    if update_channel not in ("release", "commit"):
+        update_channel = "release"
+    if update_channel == "commit" and not precheck.get("commit_update_available", False):
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "update_log_lines": update_log_lines,
+                "err": "commit_unavailable",
+                "started": False,
+                "update_running": False,
+            },
+            status_code=400,
+        )
     try:
-        _trigger_background_update()
+        _trigger_background_update(update_channel)
         return TEMPLATES.TemplateResponse(
             request,
             "admin/system_update.html",

@@ -13,6 +13,43 @@ is_termux() {
   [[ -n "${TERMUX_VERSION:-}" ]]
 }
 
+is_origin_reachable() {
+  if [[ ! -d "$ROOT/.git" ]]; then
+    return 1
+  fi
+  git -C "$ROOT" ls-remote --exit-code --heads origin >/dev/null 2>&1
+}
+
+latest_release_tag() {
+  git -C "$ROOT" tag --list "v[0-9]*.[0-9]*.[0-9]*" --sort=-version:refname | sed -n '1p'
+}
+
+sync_to_latest_release() {
+  local latest_tag current_commit target_commit
+  if [[ ! -d "$ROOT/.git" ]]; then
+    return 0
+  fi
+  if ! is_origin_reachable; then
+    echo ">>> Kein Zugriff auf GitHub/origin. Release-Update beim Install übersprungen."
+    return 0
+  fi
+  echo ">>> Suche neuesten offiziellen Release..."
+  git -C "$ROOT" fetch --tags --prune origin
+  latest_tag="$(latest_release_tag)"
+  if [[ -z "$latest_tag" ]]; then
+    echo ">>> Kein offizieller Release-Tag gefunden. Aktueller Stand bleibt unverändert."
+    return 0
+  fi
+  target_commit="$(git -C "$ROOT" rev-list -n 1 "$latest_tag" 2>/dev/null || true)"
+  current_commit="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
+  if [[ -n "$target_commit" && "$current_commit" == "$target_commit" ]]; then
+    echo ">>> Bereits auf aktuellem Release: $latest_tag"
+    return 0
+  fi
+  echo ">>> Wechsle auf neuesten offiziellen Release: $latest_tag"
+  git -C "$ROOT" checkout -f "$latest_tag"
+}
+
 ensure_allow_external_apps_enabled() {
   local TERMUX_DIR="$HOME/.termux"
   local PROPS_FILE="$TERMUX_DIR/termux.properties"
@@ -84,6 +121,7 @@ echo ">>> Shopkasse Erstinstallation (Termux)"
 echo ">>> Projekt: $ROOT"
 
 chmod +x "$ROOT/run.sh" "$ROOT/stop.sh" "$ROOT/install.sh" "$ROOT/uninstall.sh" 2>/dev/null || true
+sync_to_latest_release
 ensure_allow_external_apps_enabled
 
 mkdir -p "$BOOT_DIR"
@@ -175,17 +213,16 @@ if [[ "\$HOST" == "0.0.0.0" ]]; then
 fi
 echo
 if [[ -d "\$ROOT/.git" ]] && command -v git >/dev/null 2>&1; then
-  BRANCH="\$(git -C "\$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"
-  LOCAL_SHA="\$(git -C "\$ROOT" rev-parse HEAD 2>/dev/null || echo "")"
-  REMOTE_SHA="\$(git -C "\$ROOT" ls-remote origin "refs/heads/\$BRANCH" 2>/dev/null | awk 'NR==1 {print \$1}')"
-  if [[ -n "\$LOCAL_SHA" && -n "\$REMOTE_SHA" ]]; then
-    if [[ "\$LOCAL_SHA" == "\$REMOTE_SHA" ]]; then
-      echo "Update-Status: up to date (\${LOCAL_SHA:0:7})"
+  CURRENT_TAG="\$(git -C "\$ROOT" describe --tags --exact-match 2>/dev/null || true)"
+  LATEST_TAG="\$(git -C "\$ROOT" tag --list "v[0-9]*.[0-9]*.[0-9]*" --sort=-version:refname | sed -n '1p')"
+  if [[ -n "\$LATEST_TAG" ]]; then
+    if [[ "\$CURRENT_TAG" == "\$LATEST_TAG" ]]; then
+      echo "Update-Status: up to date (\$LATEST_TAG)"
     else
-      echo "Update-Status: Update verfügbar (lokal \${LOCAL_SHA:0:7}, remote \${REMOTE_SHA:0:7})"
+      echo "Update-Status: neuer offizieller Release verfügbar (\$LATEST_TAG)"
     fi
   else
-    echo "Update-Status: nicht prüfbar (offline oder kein origin)."
+    echo "Update-Status: kein offizieller Release-Tag gefunden."
   fi
 else
   echo "Update-Status: nicht verfügbar (kein git repo)."

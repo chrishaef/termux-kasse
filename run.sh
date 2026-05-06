@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Unified runner for Termux/Debian:
-# - If GitHub/origin is reachable: pull + dependency update + restart server
+# - If GitHub/origin is reachable: update to newest official release tag + dependency update + restart server
 # - If not reachable: start server without update
 set -euo pipefail
 
@@ -12,9 +12,13 @@ export HOST="${HOST:-0.0.0.0}"
 # Avoid noisy pip update notices during unattended startup.
 export PIP_DISABLE_PIP_VERSION_CHECK="${PIP_DISABLE_PIP_VERSION_CHECK:-1}"
 NO_SYSTEM_INSTALL=0
+UPDATE_MODE="${UPDATE_MODE:-release}"
 for arg in "$@"; do
   case "$arg" in
     --no-system-install) NO_SYSTEM_INSTALL=1 ;;
+    --commit-update) UPDATE_MODE="commit" ;;
+    --update-mode=release) UPDATE_MODE="release" ;;
+    --update-mode=commit) UPDATE_MODE="commit" ;;
   esac
 done
 
@@ -86,6 +90,54 @@ is_origin_reachable() {
   timeout 8 git ls-remote --exit-code --heads origin >/dev/null 2>&1
 }
 
+latest_release_tag() {
+  git tag --list "v[0-9]*.[0-9]*.[0-9]*" --sort=-version:refname | sed -n '1p'
+}
+
+sync_to_latest_release() {
+  local latest_tag current_commit target_commit
+  latest_tag="$(latest_release_tag)"
+  if [[ -z "$latest_tag" ]]; then
+    echo ">>> Kein offizieller Release-Tag gefunden. Aktueller Stand bleibt unverändert."
+    return 0
+  fi
+  target_commit="$(git rev-list -n 1 "$latest_tag" 2>/dev/null || true)"
+  current_commit="$(git rev-parse HEAD 2>/dev/null || true)"
+  if [[ -n "$target_commit" && "$current_commit" == "$target_commit" ]]; then
+    echo ">>> Bereits auf aktuellem Release: $latest_tag"
+    return 0
+  fi
+  echo ">>> Wechsle auf neuesten offiziellen Release: $latest_tag"
+  git checkout -f "$latest_tag"
+}
+
+default_remote_branch() {
+  local head_ref
+  head_ref="$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)"
+  if [[ -n "$head_ref" ]]; then
+    echo "${head_ref#origin/}"
+    return 0
+  fi
+  echo "main"
+}
+
+sync_to_latest_commit() {
+  local branch target_commit current_commit
+  branch="$(default_remote_branch)"
+  target_commit="$(git rev-parse "origin/$branch" 2>/dev/null || true)"
+  if [[ -z "$target_commit" ]]; then
+    echo ">>> Konnte origin/$branch nicht auflösen. Commit-Update übersprungen."
+    return 0
+  fi
+  current_commit="$(git rev-parse HEAD 2>/dev/null || true)"
+  if [[ "$current_commit" == "$target_commit" ]]; then
+    echo ">>> Bereits auf aktuellem Commit von origin/$branch (${target_commit:0:7})"
+    return 0
+  fi
+  echo ">>> Wechsle auf neuesten Commit von origin/$branch (${target_commit:0:7})"
+  git checkout -B "$branch" "origin/$branch"
+}
+
 ensure_venv() {
   VENV_DIR="$ROOT/.venv"
   VENV_ACTIVATE="$VENV_DIR/bin/activate"
@@ -153,11 +205,14 @@ ensure_master_password_files
 echo ">>> Verwende Python: $(${PYTHON} --version 2>&1)"
 
 if [[ -d .git ]] && is_origin_reachable; then
-  CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"
-  echo ">>> Verbindung zu GitHub erkannt: Update wird durchgeführt"
-  echo ">>> Hole Remote-Tags für Versionsanzeige"
-  git fetch --tags --prune origin || true
-  git pull --ff-only origin "${CURRENT_BRANCH}"
+  echo ">>> Verbindung zu GitHub erkannt: Update wird durchgeführt (Modus: $UPDATE_MODE)"
+  echo ">>> Hole Remote-Referenzen"
+  git fetch --tags --prune origin "+refs/heads/*:refs/remotes/origin/*"
+  if [[ "$UPDATE_MODE" == "commit" ]]; then
+    sync_to_latest_commit
+  else
+    sync_to_latest_release
+  fi
   echo ">>> pip install -r requirements.txt"
   pip install -q -r requirements.txt
   date +"%Y-%m-%d %H:%M:%S" > "$ROOT/.last_sync"

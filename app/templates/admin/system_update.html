@@ -35,6 +35,8 @@
   <article class="contrast">Master-Passwort ist falsch.</article>
   {% elif err == "running" %}
   <article class="contrast">Ein Update-/Neustart-Prozess läuft bereits. Bitte warten, bis er abgeschlossen ist.</article>
+  {% elif err == "commit_unavailable" %}
+  <article class="contrast">Commit-Update ist aktuell nicht verfügbar.</article>
   {% elif err == "start" %}
   <article class="contrast">Update konnte nicht gestartet werden.</article>
   {% endif %}
@@ -42,6 +44,19 @@
   <form method="post" action="/admin/system-update">
     <label for="master-password-confirm">Master-Passwort</label>
     <input id="master-password-confirm" name="master_password" type="password" required autocomplete="current-password" {% if update_running %}disabled{% endif %} />
+    <fieldset style="margin-top:0.75rem">
+      <legend style="font-size:0.95rem;margin-bottom:0.25rem">Update-Modus</legend>
+      <label style="display:block;margin:0.2rem 0">
+        <input type="radio" name="update_channel" value="release" checked {% if update_running %}disabled{% endif %} />
+        Offizieller Release (empfohlen)
+      </label>
+      {% if precheck["commit_update_available"] %}
+      <label style="display:block;margin:0.2rem 0">
+        <input type="radio" name="update_channel" value="commit" {% if update_running %}disabled{% endif %} />
+        Neuester Commit (nur nach Rücksprache mit dem Programmierer)
+      </label>
+      {% endif %}
+    </fieldset>
     <button id="system-update-submit" type="submit" {% if update_running %}disabled{% endif %}>{{ "Update & Neustart starten" if precheck["update_available"] else "Neustart starten" }}</button>
   </form>
   {% endif %}

@@ -137,8 +137,8 @@ def test_admin_system_update_result_page_is_available() -> None:
 def test_admin_system_update_post_triggers_background_runner(monkeypatch) -> None:
     calls: list[str] = []
 
-    def fake_trigger() -> None:
-        calls.append("called")
+    def fake_trigger(update_channel: str = "release") -> None:
+        calls.append(update_channel)
 
     monkeypatch.setattr(admin_router, "_trigger_background_update", fake_trigger)
     monkeypatch.setattr(admin_router, "read_master_password", lambda: "master")
@@ -149,7 +149,7 @@ def test_admin_system_update_post_triggers_background_runner(monkeypatch) -> Non
         assert r.status_code == 200
         assert "Update und Neustart laufen" in r.text
         assert "/admin/system-update/result" in r.text
-    assert calls == ["called"]
+    assert calls == ["release"]
 
 
 def test_admin_system_update_page_shows_restart_button_without_update(monkeypatch) -> None:
@@ -163,6 +163,7 @@ def test_admin_system_update_page_shows_restart_button_without_update(monkeypatc
             "installed_version_commit": "1.1.0 (abc1234)",
             "latest_version_commit": "1.1.0 (abc1234)",
             "update_available": False,
+            "commit_update_available": False,
             "release_update_available": False,
             "commit_only_update_available": False,
         },
@@ -185,6 +186,7 @@ def test_admin_system_update_page_shows_offline_hint(monkeypatch) -> None:
             "installed_version_commit": "1.1.0 (abc1234)",
             "latest_version_commit": "unbekannt (unbekannt)",
             "update_available": False,
+            "commit_update_available": False,
             "release_update_available": False,
             "commit_only_update_available": False,
         },
