@@ -117,7 +117,7 @@ def test_admin_system_update_page_is_available() -> None:
         assert "System-Update Vorbereitung" in r.text
         assert "Netzwerk:" in r.text
         assert "Installiert:" in r.text
-        assert "Neueste verfügbare Version:" in r.text
+        assert "Neuester verfügbarer Stand:" in r.text
         assert 'name="master_password"' in r.text
         assert "Bisherige Update-Logzeilen" in r.text
         assert ("admin-update-log-box" in r.text) or ("Noch keine Update-Logs vorhanden." in r.text)
@@ -160,10 +160,11 @@ def test_admin_system_update_page_shows_restart_button_without_update(monkeypatc
             "online": True,
             "online_label": "Ja",
             "online_badge": "online",
-            "branch": "main",
             "installed_version_commit": "1.1.0 (abc1234)",
             "latest_version_commit": "1.1.0 (abc1234)",
             "update_available": False,
+            "release_update_available": False,
+            "commit_only_update_available": False,
         },
     )
     with TestClient(app) as client:
@@ -181,10 +182,11 @@ def test_admin_system_update_page_shows_offline_hint(monkeypatch) -> None:
             "online": False,
             "online_label": "Nein",
             "online_badge": "offline",
-            "branch": "main",
             "installed_version_commit": "1.1.0 (abc1234)",
             "latest_version_commit": "unbekannt (unbekannt)",
             "update_available": False,
+            "release_update_available": False,
+            "commit_only_update_available": False,
         },
     )
     with TestClient(app) as client:

@@ -203,17 +203,31 @@ def _system_update_precheck() -> dict[str, str | bool]:
         online = False
         latest_commit = "unbekannt"
 
-    update_available = bool(
+    def _parse_semver(raw: str) -> tuple[int, int, int] | None:
+        m = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", (raw or "").strip())
+        if not m:
+            return None
+        return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+
+    installed_ver = _parse_semver(installed_version)
+    latest_ver = _parse_semver(latest_version)
+    release_update_available = bool(
+        online and installed_ver is not None and latest_ver is not None and latest_ver > installed_ver
+    )
+    commit_update_available = bool(
         online and installed_head_full and latest_head_full and installed_head_full != latest_head_full
     )
+    commit_only_update_available = bool(commit_update_available and not release_update_available)
+    update_available = bool(release_update_available or commit_update_available)
     return {
         "online": online,
         "online_label": "Ja" if online else "Nein",
         "online_badge": "online" if online else "offline",
-        "branch": branch,
         "installed_version_commit": f"{installed_version} ({installed_commit})",
         "latest_version_commit": f"{latest_version} ({latest_commit})",
         "update_available": update_available,
+        "release_update_available": release_update_available,
+        "commit_only_update_available": commit_only_update_available,
     }
 
 
