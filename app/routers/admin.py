@@ -238,6 +238,13 @@ def _parse_price_eur_to_cents(raw: str) -> int:
     return int(round(float(s) * 100))
 
 
+def _parse_signed_eur_to_cents(raw: str) -> int:
+    s = raw.strip().replace(",", ".")
+    if not re.fullmatch(r"-?\d+(\.\d{1,2})?", s):
+        raise ValueError("Betrag ungültig")
+    return int(round(float(s) * 100))
+
+
 _FN_UNSAFE = re.compile(r'[\s<>:"/\\|?*\x00-\x1f]+')
 
 
@@ -1170,18 +1177,45 @@ def admin_users_create(
     request: Request,
     name: str = Form(...),
     group_id: int = Form(...),
+    opening_balance_eur: str = Form(""),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
     name = name.strip()
     if not name:
         return RedirectResponse("/admin/users", status_code=303)
+    opening_balance_cents = 0
+    opening_balance_raw = (opening_balance_eur or "").strip()
+    if opening_balance_raw:
+        try:
+            opening_balance_cents = _parse_signed_eur_to_cents(opening_balance_raw)
+        except ValueError:
+            return RedirectResponse("/admin/users?err=invalid_opening_balance", status_code=303)
+        if opening_balance_cents >= 0:
+            return RedirectResponse("/admin/users?err=opening_balance_not_negative", status_code=303)
     with db.get_connection() as conn:
         so = sort_order_util.next_user_sort_order_in_group(conn, group_id)
-        conn.execute(
+        cur = conn.execute(
             "INSERT INTO users (group_id, name, sort_order) VALUES (?, ?, ?)",
             (group_id, name, so),
         )
+        user_id = int(cur.lastrowid)
+        if opening_balance_cents != 0:
+            # UI/Operator semantics: only negative input is allowed and means debt.
+            # Internally, debts are positive open balances in ledger_entries.
+            ledger_amount_cents = -opening_balance_cents
+            conn.execute(
+                """
+                INSERT INTO ledger_entries (user_id, product_id, description, amount_cents, created_at)
+                VALUES (?, NULL, ?, ?, ?)
+                """,
+                (
+                    user_id,
+                    "Startsaldo-Übertrag Altsystem",
+                    ledger_amount_cents,
+                    ledger_service.utc_now_iso(),
+                ),
+            )
     return RedirectResponse("/admin/users", status_code=303)
 
 

@@ -138,3 +138,56 @@ def test_over_limit_users_page_lists_affected_users() -> None:
         assert "Anna" in r.text
         assert "4,00 €" in r.text
         assert "21.04.2026" in r.text
+
+
+def test_admin_users_create_with_opening_balance_creates_initial_ledger_entry() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "G1"})
+        with db.get_connection() as conn:
+            gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
+
+        r = client.post(
+            "/admin/users",
+            data={"name": "Import Anna", "group_id": str(gid), "opening_balance_eur": "-12.50"},
+            follow_redirects=False,
+        )
+        assert r.status_code == 303
+        assert r.headers["location"] == "/admin/users"
+
+        with db.get_connection() as conn:
+            user_row = conn.execute("SELECT id FROM users WHERE name = ?", ("Import Anna",)).fetchone()
+            assert user_row is not None
+            uid = int(user_row[0])
+            ledger_row = conn.execute(
+                """
+                SELECT description, amount_cents, settlement_id
+                FROM ledger_entries
+                WHERE user_id = ?
+                """,
+                (uid,),
+            ).fetchone()
+            assert ledger_row is not None
+            assert str(ledger_row[0]) == "Startsaldo-Übertrag Altsystem"
+            assert int(ledger_row[1]) == 1250
+            assert ledger_row[2] is None
+
+
+def test_admin_users_create_with_positive_opening_balance_is_rejected() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "G1"})
+        with db.get_connection() as conn:
+            gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
+
+        r = client.post(
+            "/admin/users",
+            data={"name": "Import Ben", "group_id": str(gid), "opening_balance_eur": "12.50"},
+            follow_redirects=False,
+        )
+        assert r.status_code == 303
+        assert r.headers["location"] == "/admin/users?err=opening_balance_not_negative"
+
+        with db.get_connection() as conn:
+            user_row = conn.execute("SELECT id FROM users WHERE name = ?", ("Import Ben",)).fetchone()
+            assert user_row is None

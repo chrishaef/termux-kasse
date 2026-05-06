@@ -80,6 +80,12 @@
 </div>
 <article class="k-panel" id="new-user-form">
   <h2 style="margin-top:0;font-size:1.1rem">Neuer Nutzer</h2>
+  {% if request.query_params.get('err') == 'invalid_opening_balance' %}
+  <article class="contrast">Startsaldo ungültig. Bitte Betrag als Zahl mit bis zu zwei Nachkommastellen eingeben (z. B. 12.50 oder -5.00).</article>
+  {% endif %}
+  {% if request.query_params.get('err') == 'opening_balance_not_negative' %}
+  <article class="contrast">Startsaldo muss negativ sein (Schulden), z. B. -22.00.</article>
+  {% endif %}
   <form method="post" action="/admin/users">
     <label>Name <input type="text" name="name" required /></label>
     <label>Gruppe
@@ -88,6 +94,10 @@
         <option value="{{ g['id'] }}">{{ g['name'] }}</option>
         {% endfor %}
       </select>
+    </label>
+    <label>Startsaldo (EUR, optional)
+      <input type="text" name="opening_balance_eur" placeholder="z. B. -10.00" />
+      <small>Nur negative Werte erlaubt (offene Zahlung/Schulden).</small>
     </label>
     <button type="submit">Anlegen</button>
   </form>
