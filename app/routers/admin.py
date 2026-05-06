@@ -741,14 +741,20 @@ def admin_backup_get(request: Request) -> Response:
             "archive": archive,
             "archive_deleted": request.query_params.get("deleted") == "1",
             "last_auto_backup_at": last_auto_backup_at,
+            "export_err": request.query_params.get("export_err"),
+            "import_err": request.query_params.get("import_err"),
         },
     )
 
 
-@router.get("/backup/export")
-def admin_backup_export(request: Request) -> Response:
+@router.post("/backup/export")
+def admin_backup_export(request: Request, master_password: str = Form("")) -> Response:
     if (r := _redirect_login(request)):
         return r
+    if read_master_password() is None:
+        return RedirectResponse("/admin/backup?export_err=nomaster", status_code=303)
+    if not admin_auth.is_master_password(master_password):
+        return RedirectResponse("/admin/backup?export_err=master", status_code=303)
     if not db_path().exists():
         raise HTTPException(status_code=404, detail="Datenbank nicht gefunden")
     backup_service.create_system_backup_archive()
@@ -796,9 +802,17 @@ def admin_backup_preview(request: Request, backup_file: UploadFile = File(...)) 
 
 
 @router.post("/backup/import")
-def admin_backup_import(request: Request, backup_file: UploadFile = File(...)) -> RedirectResponse:
+def admin_backup_import(
+    request: Request,
+    master_password: str = Form(""),
+    backup_file: UploadFile = File(...),
+) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
+    if read_master_password() is None:
+        return RedirectResponse("/admin/backup?import_err=nomaster", status_code=303)
+    if not admin_auth.is_master_password(master_password):
+        return RedirectResponse("/admin/backup?import_err=master", status_code=303)
     data = backup_file.file.read()
     if not data:
         return RedirectResponse("/admin/backup?err=invalid", status_code=303)

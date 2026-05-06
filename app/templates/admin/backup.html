@@ -19,6 +19,16 @@
 {% if error %}
 <article class="contrast" style="border-color:#b33"><strong>Import fehlgeschlagen.</strong> Bitte ein gültiges System-Backup (.zip) oder Legacy-Backup (.db) auswählen.</article>
 {% endif %}
+{% if export_err == "master" %}
+<article class="contrast">Backup erstellen abgebrochen: Master-Passwort ungültig.</article>
+{% elif export_err == "nomaster" %}
+<article class="contrast">Backup erstellen abgebrochen: Master-Passwort nicht konfiguriert.</article>
+{% endif %}
+{% if import_err == "master" %}
+<article class="contrast">Backup-Import abgebrochen: Master-Passwort ungültig.</article>
+{% elif import_err == "nomaster" %}
+<article class="contrast">Backup-Import abgebrochen: Master-Passwort nicht konfiguriert.</article>
+{% endif %}
 {% if reset_ok %}
 <article class="contrast"><strong>System Reset ausgeführt.</strong> Alle Buchungen und Abrechnungen wurden gelöscht. Nutzer, Gruppen und Artikel bleiben erhalten.</article>
 {% endif %}
@@ -37,7 +47,12 @@
   <article class="k-panel">
     <h2 style="margin-top:0;font-size:1.1rem">Backup erstellen</h2>
     {% if db_exists %}
-    <p><a href="/admin/backup/export" role="button">System-Backup erstellen (.zip)</a></p>
+    <form method="post" action="/admin/backup/export">
+      <label for="backup_export_master_password">Master-Passwort
+        <input type="password" id="backup_export_master_password" name="master_password" required autocomplete="off" />
+      </label>
+      <button type="submit">System-Backup erstellen (.zip)</button>
+    </form>
     <p class="secondary" style="margin-top:0.3rem">Erstellt ein Backup und speichert es im Archiv.</p>
     {% else %}
     <p class="secondary">Aktuell keine Datenbank vorhanden.</p>
@@ -47,6 +62,9 @@
   <article class="k-panel">
     <h2 style="margin-top:0;font-size:1.1rem">Backup importieren</h2>
     <form method="post" action="/admin/backup/import" enctype="multipart/form-data">
+      <label for="backup_import_master_password">Master-Passwort
+        <input type="password" id="backup_import_master_password" name="master_password" required autocomplete="off" />
+      </label>
       <label>System-Backup (.zip) oder Legacy-SQLite (.db)
         <input type="file" id="backup_file" name="backup_file" accept=".zip,.db,application/zip,application/octet-stream,application/x-sqlite3,application/vnd.sqlite3" required />
       </label>

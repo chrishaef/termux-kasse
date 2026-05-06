@@ -85,7 +85,11 @@ def test_system_backup_export_contains_db_and_year_end_files(tmp_path, monkeypat
     (export_dir / "Jahresabschluss_20260101.zip").write_bytes(b"zip-demo")
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
-        r = client.get("/admin/backup/export", follow_redirects=False)
+        r = client.post(
+            "/admin/backup/export",
+            data={"master_password": "reset-master-secret"},
+            follow_redirects=False,
+        )
         assert r.status_code == 303
         assert r.headers["location"].endswith("/admin/backup?created=1")
 
@@ -115,7 +119,12 @@ def test_system_backup_import_rejects_invalid_manifest(tmp_path, monkeypatch) ->
             zf.writestr("manifest.json", '{"format":"wrong"}')
             zf.writestr("kasse.db", db_path().read_bytes())
         files = {"backup_file": ("kasse-system-backup.zip", backup_buf.getvalue(), "application/zip")}
-        r = client.post("/admin/backup/import", files=files, follow_redirects=False)
+        r = client.post(
+            "/admin/backup/import",
+            data={"master_password": "reset-master-secret"},
+            files=files,
+            follow_redirects=False,
+        )
         assert r.status_code == 303
         assert r.headers["location"].endswith("/admin/backup?err=invalid")
 
@@ -173,7 +182,12 @@ def test_system_backup_import_replaces_db_and_year_end_files(tmp_path, monkeypat
             zf.writestr("jahresabschluss/new.zip", b"new-zip")
 
         files = {"backup_file": ("kasse-system-backup.zip", backup_buf.getvalue(), "application/zip")}
-        r = client.post("/admin/backup/import", files=files, follow_redirects=False)
+        r = client.post(
+            "/admin/backup/import",
+            data={"master_password": "reset-master-secret"},
+            files=files,
+            follow_redirects=False,
+        )
         assert r.status_code == 303
         assert r.headers["location"].endswith("/admin/backup?saved=1")
 
@@ -182,3 +196,30 @@ def test_system_backup_import_replaces_db_and_year_end_files(tmp_path, monkeypat
             assert "NEU" in names
         files_after = sorted(p.name for p in old_export_dir.glob("*") if p.is_file())
         assert files_after == ["new.pdf", "new.xlsx", "new.zip"]
+
+
+def test_system_backup_export_requires_master_password(tmp_path, monkeypatch) -> None:
+    _master_env(tmp_path, monkeypatch)
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.post("/admin/backup/export", data={"master_password": "wrong"}, follow_redirects=False)
+        assert r.status_code == 303
+        assert r.headers["location"].endswith("/admin/backup?export_err=master")
+
+
+def test_system_backup_import_requires_master_password(tmp_path, monkeypatch) -> None:
+    _master_env(tmp_path, monkeypatch)
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        backup_buf = io.BytesIO()
+        with zipfile.ZipFile(backup_buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("kasse.db", db_path().read_bytes())
+        files = {"backup_file": ("kasse-system-backup.zip", backup_buf.getvalue(), "application/zip")}
+        r = client.post(
+            "/admin/backup/import",
+            data={"master_password": "wrong"},
+            files=files,
+            follow_redirects=False,
+        )
+        assert r.status_code == 303
+        assert r.headers["location"].endswith("/admin/backup?import_err=master")
