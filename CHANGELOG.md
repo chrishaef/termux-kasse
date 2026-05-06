@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4.1 - 2026-05-06
+
+- Added optional opening-balance import when creating users to migrate legacy debt into the new system.
+- Enforced debt-only semantics for opening balances: only negative UI values are accepted and mapped to internal open debt.
+- Improved admin system-update messaging by distinguishing official release updates from commit-only updates.
+- Simplified update preparation view by removing branch display and clarifying action guidance.
+
 ## v1.4.0 - 2026-04-29
 
 - Added per-product group visibility controls in admin so products can be shown only to selected user groups on kiosk booking pages.

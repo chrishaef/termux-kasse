@@ -117,7 +117,7 @@ def test_admin_system_update_page_is_available() -> None:
         assert "System-Update Vorbereitung" in r.text
         assert "Netzwerk:" in r.text
         assert "Installiert:" in r.text
-        assert "Neuester verfügbarer Stand:" in r.text
+        assert "Verfügbar:" in r.text
         assert 'name="master_password"' in r.text
         assert "Bisherige Update-Logzeilen" in r.text
         assert ("admin-update-log-box" in r.text) or ("Noch keine Update-Logs vorhanden." in r.text)
