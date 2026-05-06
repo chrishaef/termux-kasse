@@ -22,11 +22,11 @@
   {% if not precheck["online"] %}
   <p>Es besteht keine Internetverbindung. Ein Versionscheck konnte nicht durchgeführt werden, daher kann aktuell nur ein Neustart ausgeführt werden.</p>
   {% elif precheck["release_update_available"] %}
-  <p><strong>Es ist ein offizielles Update (neuer Release) verfügbar.</strong> Das Update kann jetzt durchgeführt werden.</p>
+  <p><strong>Es ist ein offizielles Update verfügbar.</strong> Das Update kann jetzt durchgeführt werden.</p>
   {% elif precheck["commit_only_update_available"] %}
   <p><strong>Es sind neue Commits verfügbar, aber kein offizieller Release.</strong> Update bitte nur nach Rücksprache mit dem Programmierer durchführen.</p>
   {% else %}
-  <p>Das System ist bereits aktuell. Es kann ein reiner Neustart ausgeführt werden.</p>
+  <p>Das System ist auf aktuellstem Stand. Es kann ein Neustart ausgeführt werden.</p>
   {% endif %}
 
   {% if err == "nomaster" %}
