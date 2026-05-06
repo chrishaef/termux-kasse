@@ -6,7 +6,7 @@ Das System ist für Touchscreen Bildschirme ab 10" optimiert.
 
 Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — Buchungen, Kontostände und Abrechnungen laufen lokal; Styles und Skripte kommen aus dem Projekt (`/static`). Eine Internet Verbindung wird nur für die Installation, Updates und den optionalen Online-/Versionscheck genutzt.
 
-**Aktuelle Version:** **1.4.1** (Git-Tag [`v1.4.1`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.1))
+**Aktuelle Version:** **1.4.2** (Git-Tag [`v1.4.2`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.2))
 
 **Zugehörige Android-Kiosk-App:** [`chrishaef/kiosk-app`](https://github.com/chrishaef/kiosk-app) (WebView-Wrapper, Vollbild/Kiosk-Steuerung, PIN/Admin-Menü).
 
@@ -557,13 +557,13 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ### Versionierung und Releases
 
-- Aktueller Git-Tag: **v1.4.1** — Übersicht: [Tag v1.4.1](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.1).
-- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.4.1](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.4.1) öffnen, Titel z. B. `Termux-Shopkasse 1.4.1`, Beschreibung einfügen, *Publish release*.
+- Aktueller Git-Tag: **v1.4.2** — Übersicht: [Tag v1.4.2](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.2).
+- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.4.2](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.4.2) öffnen, Titel z. B. `Termux-Shopkasse 1.4.2`, Beschreibung einfügen, *Publish release*.
 - **GitHub CLI** (einmalig `gh auth login`):  
-  `gh release create v1.4.1 --title "Termux-Shopkasse 1.4.1" --generate-notes`
+  `gh release create v1.4.2 --title "Termux-Shopkasse 1.4.2" --generate-notes`
 - Änderungsübersicht im Repo: [`CHANGELOG.md`](./CHANGELOG.md)
 
-**v1.4.1** (Kurzüberblick): Nutzer-Startsaldo für Altsystem-Migration ergänzt (nur Schuldenwerte), Update-Dialog für Release-vs-Commit-Updates präzisiert und Android-Setup/Widget-Flows weiter geschärft.
+**v1.4.2** (Kurzüberblick): Admin-Passwortwechsel und Backup-Export/-Import verlangen jetzt das Master-Passwort; Backup-Fehlerhinweise wurden klarer formuliert.
 
 ---
 

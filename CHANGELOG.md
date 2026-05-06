@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4.2 - 2026-05-06
+
+- Changed admin password update flow: changing the regular admin password now requires the master password instead of the old admin password.
+- Protected backup export and backup import with master-password verification in backend and admin UI.
+- Added clearer backup error hints when master password is missing or invalid.
+- Updated footer repository link wording in the base template.
+
 ## v1.4.1 - 2026-05-06
 
 - Added optional opening-balance import when creating users to migrate legacy debt into the new system.
