@@ -18,25 +18,27 @@ def test_admin_login_accepts_master_password() -> None:
         assert r.headers["location"] == "/admin"
 
 
-def test_admin_password_change_requires_old_password() -> None:
+def test_admin_password_change_requires_master_password(monkeypatch) -> None:
+    monkeypatch.setattr(admin_router, "read_master_password", lambda: "master")
+    monkeypatch.setattr(admin_router.admin_auth, "is_master_password", lambda raw: raw == "master")
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
 
         bad = client.post(
             "/admin/password",
             data={
-                "old_password": "wrong",
+                "master_password": "wrong",
                 "new_password": "neu1234",
                 "new_password2": "neu1234",
             },
         )
         assert bad.status_code == 400
-        assert "Altes Passwort falsch" in bad.text
+        assert "Master-Passwort falsch" in bad.text
 
         ok = client.post(
             "/admin/password",
             data={
-                "old_password": "admin",
+                "master_password": "master",
                 "new_password": "neu1234",
                 "new_password2": "neu1234",
             },

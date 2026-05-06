@@ -373,7 +373,7 @@ def admin_password_form(request: Request) -> Response:
 @router.post("/password")
 def admin_password_post(
     request: Request,
-    old_password: str = Form(...),
+    master_password: str = Form(...),
     new_password: str = Form(...),
     new_password2: str = Form(...),
 ) -> Response:
@@ -399,18 +399,27 @@ def admin_password_post(
             },
             status_code=400,
         )
+    if read_master_password() is None:
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/password.html",
+            {
+                "title": "Passwort ändern",
+                "error": "Kein Master-Passwort konfiguriert.",
+            },
+            status_code=400,
+        )
+    if not admin_auth.is_master_password(master_password):
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/password.html",
+            {
+                "title": "Passwort ändern",
+                "error": "Master-Passwort falsch.",
+            },
+            status_code=400,
+        )
     with db.get_connection() as conn:
-        ok, _is_master = admin_auth.verify_admin_password(conn, old_password)
-        if not ok:
-            return TEMPLATES.TemplateResponse(
-                request,
-                "admin/password.html",
-                {
-                    "title": "Passwort ändern",
-                    "error": "Altes Passwort falsch.",
-                },
-                status_code=400,
-            )
         admin_auth.set_regular_password(conn, new_password)
     return RedirectResponse("/admin/password?saved=1", status_code=303)
 
