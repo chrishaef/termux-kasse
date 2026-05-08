@@ -147,7 +147,9 @@
           if (!logoutForm) return;
 
           const IDLE_MS = APP_TIMEOUTS.adminLogoutSeconds * 1000;
-          const SHOW_AFTER_INACTIVE_MS = Math.min(15000, Math.max(0, IDLE_MS - 10000));
+          const DOWNLOAD_IDLE_MS = 3 * 60 * 1000;
+          let downloadIdleUntil = 0;
+          let downloadIdlePath = "";
           let idleTimer = 0;
           let countdownTimer = 0;
           let deadlineAt = 0;
@@ -173,6 +175,36 @@
             logoutForm.submit();
           };
 
+          const isDownloadInteraction = function (el) {
+            if (!el) return false;
+            const attr = function (name) {
+              try {
+                return (el.getAttribute(name) || "").trim().toLowerCase();
+              } catch (_e) {
+                return "";
+              }
+            };
+            const href = attr("href");
+            const action = attr("action");
+            const downloadAttr = attr("download");
+            const explicitDownload =
+              downloadAttr !== "" ||
+              /(\.pdf|\.xlsx|\.xls|\.zip|\.csv)(\?|$)/.test(href) ||
+              /\/(pdf|xlsx|xls|zip)(\/|$)/.test(href) ||
+              /\/admin\/backup\/archive\//.test(href) ||
+              /\/admin\/backup\/export/.test(action);
+            return explicitDownload;
+          };
+
+          const currentIdleMs = function () {
+            if (downloadIdleUntil > 0 && downloadIdlePath && window.location.pathname !== downloadIdlePath) {
+              downloadIdleUntil = 0;
+              downloadIdlePath = "";
+            }
+            if (Date.now() < downloadIdleUntil) return DOWNLOAD_IDLE_MS;
+            return IDLE_MS;
+          };
+
           const stopCountdown = function () {
             window.clearInterval(countdownTimer);
             countdownTimer = 0;
@@ -182,14 +214,16 @@
           const startCountdown = function () {
             stopCountdown();
             countdownTimer = window.setInterval(function () {
+              const effectiveIdleMs = currentIdleMs();
+              const showAfterInactiveMs = Math.min(15000, Math.max(0, effectiveIdleMs - 10000));
               const msLeft = deadlineAt - Date.now();
               if (msLeft <= 0) {
                 stopCountdown();
                 return;
               }
               const secondsLeft = Math.ceil(msLeft / 1000);
-              const inactiveMs = IDLE_MS - msLeft;
-              if (inactiveMs >= SHOW_AFTER_INACTIVE_MS) {
+              const inactiveMs = effectiveIdleMs - msLeft;
+              if (inactiveMs >= showAfterInactiveMs) {
                 renderWarning(secondsLeft);
               } else {
                 hideWarning();
@@ -198,16 +232,56 @@
           };
 
           const resetIdleTimer = function () {
+            const effectiveIdleMs = currentIdleMs();
             window.clearTimeout(idleTimer);
-            deadlineAt = Date.now() + IDLE_MS;
+            deadlineAt = Date.now() + effectiveIdleMs;
             stopCountdown();
             startCountdown();
-            idleTimer = window.setTimeout(triggerLogout, IDLE_MS);
+            idleTimer = window.setTimeout(triggerLogout, effectiveIdleMs);
           };
 
           ["pointerdown", "pointermove", "keydown", "input", "touchstart", "scroll"].forEach(function (ev) {
             document.addEventListener(ev, resetIdleTimer, { passive: true });
           });
+
+          document.addEventListener(
+            "click",
+            function (event) {
+              const t = event.target;
+              const trigger =
+                t && typeof t.closest === "function"
+                  ? t.closest("a[href], button[download], [role='button'][download]")
+                  : null;
+              if (!trigger) return;
+              if (isDownloadInteraction(trigger)) {
+                downloadIdleUntil = Date.now() + DOWNLOAD_IDLE_MS;
+                downloadIdlePath = window.location.pathname;
+                resetIdleTimer();
+                return;
+              }
+              // Any regular in-app navigation/action resets back to configured idle timeout.
+              downloadIdleUntil = 0;
+              downloadIdlePath = "";
+            },
+            true
+          );
+
+          document.addEventListener(
+            "submit",
+            function (event) {
+              const form = event.target;
+              if (!form || form.tagName !== "FORM") return;
+              if (isDownloadInteraction(form)) {
+                downloadIdleUntil = Date.now() + DOWNLOAD_IDLE_MS;
+                downloadIdlePath = window.location.pathname;
+                resetIdleTimer();
+                return;
+              }
+              downloadIdleUntil = 0;
+              downloadIdlePath = "";
+            },
+            true
+          );
 
           resetIdleTimer();
         })();
