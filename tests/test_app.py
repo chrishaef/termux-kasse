@@ -60,7 +60,7 @@ def test_kiosk_top_ten_shows_active_users() -> None:
         r = c.get("/top-ten")
         assert r.status_code == 200
         assert "Top Ten" in r.text
-        assert 'id="site-repo-link"' not in r.text
+        assert 'id="site-repo-link"' in r.text
         # Ben hat mehr Buchungen und sollte vor Anna erscheinen.
         assert r.text.find("Ben") < r.text.find("Anna")
 

@@ -4,36 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#252b23" />
-  <script>
-    (function () {
-      var applyViewportHeight = function () {
-        var h =
-          (window.visualViewport && window.visualViewport.height) ||
-          window.innerHeight ||
-          document.documentElement.clientHeight;
-        if (!h) return;
-        document.documentElement.style.setProperty("--kiosk-vh", Math.round(h) + "px");
-      };
-      applyViewportHeight();
-      window.addEventListener("resize", applyViewportHeight, { passive: true });
-      window.addEventListener(
-        "orientationchange",
-        function () {
-          window.setTimeout(applyViewportHeight, 120);
-        },
-        { passive: true }
-      );
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", applyViewportHeight, { passive: true });
-      }
-    })();
-  </script>
-  <style>
-    html,
-    body {
-      min-height: var(--kiosk-vh, 100dvh);
-    }
-  </style>
   <title>{{ title }} · Shopkasse</title>
   <link rel="stylesheet" href="/static/pico.min.css" />
   <link rel="stylesheet" href="/static/kasse.css" />
@@ -74,7 +44,7 @@
     {% block trust %}{% endblock %}
     {% block content %}{% endblock %}
   </main>
-  {% set show_footer_note = request.url.path in ['/', '/preisliste'] %}
+  {% set show_footer_note = request.url.path in ['/', '/preisliste', '/top-ten'] %}
   {% if show_footer_note %}
   <footer class="site-footer-note" aria-label="Systemhinweis">
     <div class="site-footer-note__inner container">
