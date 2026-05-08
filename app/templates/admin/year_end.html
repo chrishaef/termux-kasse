@@ -47,5 +47,33 @@
     <button type="submit">Jahresabschluss ausführen und ZIP herunterladen</button>
   </footer>
 </form>
+<article
+  id="year-end-progress"
+  class="contrast"
+  style="display:none;max-width:52rem;margin:1rem auto 0;"
+  role="status"
+  aria-live="polite"
+>
+  Jahresabschluss läuft … Dateien werden erstellt und vorbereitet. Bitte warten.
+</article>
+{% endif %}
+{% endblock %}
+{% block extra_scripts %}
+{% if master_configured %}
+<script>
+  (function () {
+    const form = document.querySelector('form[action="/admin/settlements/year-end"]');
+    const progress = document.getElementById("year-end-progress");
+    if (!form || !progress) return;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    form.addEventListener("submit", function () {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Jahresabschluss wird erstellt ...";
+      }
+      progress.style.display = "block";
+    });
+  })();
+</script>
 {% endif %}
 {% endblock %}
