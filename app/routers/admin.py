@@ -101,6 +101,24 @@ def _current_branch(root: Path) -> str:
     return "main"
 
 
+def _default_remote_branch(root: Path) -> str:
+    try:
+        out = subprocess.run(
+            ["git", "symbolic-ref", "--short", "refs/remotes/origin/HEAD"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=2.0,
+        )
+        ref = (out.stdout or "").strip()
+        if ref.startswith("origin/") and len(ref) > len("origin/"):
+            return ref[len("origin/") :]
+    except Exception:
+        pass
+    return _current_branch(root)
+
+
 def _trigger_background_update(update_channel: str = "release") -> None:
     root = Path(__file__).resolve().parent.parent.parent
     run_script = root / "run.sh"
@@ -128,7 +146,7 @@ def _trigger_background_update(update_channel: str = "release") -> None:
 
 def _system_update_precheck() -> dict[str, str | bool]:
     root = Path(__file__).resolve().parent.parent.parent
-    branch = _current_branch(root)
+    branch = _default_remote_branch(root)
     installed_version = "unbekannt"
     installed_commit = "unbekannt"
     installed_head_full = ""

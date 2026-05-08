@@ -125,6 +125,42 @@ def _latest_remote_release_version(root: Path) -> tuple[int, int, int] | None:
         return None
 
 
+def _installed_release_version(root: Path) -> tuple[int, int, int] | None:
+    try:
+        out = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=2.0,
+        )
+        tag = (out.stdout or "").strip()
+        if not tag:
+            return None
+        return _parse_semver(tag)
+    except Exception:
+        return None
+
+
+def _default_remote_branch(root: Path) -> str:
+    try:
+        out = subprocess.run(
+            ["git", "symbolic-ref", "--short", "refs/remotes/origin/HEAD"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=2.0,
+        )
+        ref = (out.stdout or "").strip()
+        if ref.startswith("origin/") and len(ref) > len("origin/"):
+            return ref[len("origin/") :]
+    except Exception:
+        pass
+    return "main"
+
+
 def _commit_freshness_label(root: Path) -> str:
     global _freshness_cache_checked_at
     global _freshness_cache_label
@@ -133,21 +169,22 @@ def _commit_freshness_label(root: Path) -> str:
     if (now - _freshness_cache_checked_at) < _FRESHNESS_CACHE_TTL_SECONDS:
         return _freshness_cache_label
     try:
+        branch = _default_remote_branch(root)
         head = subprocess.run(
             ["git", "rev-parse", "HEAD"],
             cwd=str(root),
             capture_output=True,
             text=True,
             check=False,
-            timeout=1.5,
+            timeout=2.0,
         )
         origin_main = subprocess.run(
-            ["git", "ls-remote", "origin", "refs/heads/main"],
+            ["git", "ls-remote", "origin", f"refs/heads/{branch}"],
             cwd=str(root),
             capture_output=True,
             text=True,
             check=False,
-            timeout=1.5,
+            timeout=2.0,
         )
         head_sha = (head.stdout or "").strip()
         remote_line = (origin_main.stdout or "").strip()
@@ -156,19 +193,18 @@ def _commit_freshness_label(root: Path) -> str:
             _freshness_cache_label = "unknown"
             _freshness_cache_online = False
         else:
-            if head_sha == remote_sha:
-                _freshness_cache_label = "latest"
+            installed_release = _installed_release_version(root)
+            remote_release = _latest_remote_release_version(root)
+            if (
+                installed_release is not None
+                and remote_release is not None
+                and remote_release > installed_release
+            ):
+                _freshness_cache_label = "outdated"
+            elif head_sha != remote_sha:
+                _freshness_cache_label = "new-commit"
             else:
-                local_release = _latest_local_release_version(root)
-                remote_release = _latest_remote_release_version(root)
-                if (
-                    local_release is not None
-                    and remote_release is not None
-                    and remote_release > local_release
-                ):
-                    _freshness_cache_label = "outdated"
-                else:
-                    _freshness_cache_label = "new-commit"
+                _freshness_cache_label = "latest"
             _freshness_cache_online = True
     except Exception:
         _freshness_cache_label = "unknown"
