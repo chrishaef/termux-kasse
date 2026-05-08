@@ -107,6 +107,10 @@ sync_to_latest_release() {
     echo ">>> Bereits auf aktuellem Release: $latest_tag"
     return 0
   fi
+  if [[ -n "$target_commit" && -n "$current_commit" ]] && git merge-base --is-ancestor "$target_commit" "$current_commit" 2>/dev/null; then
+    echo ">>> Aktueller Stand enthält bereits den neuesten Release ($latest_tag). Kein Downgrade auf Tag-Stand."
+    return 0
+  fi
   echo ">>> Wechsle auf neuesten offiziellen Release: $latest_tag"
   git checkout -f "$latest_tag"
 }
