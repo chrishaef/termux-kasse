@@ -159,6 +159,17 @@
           warningEl.setAttribute("aria-live", "polite");
           warningEl.hidden = true;
           document.body.appendChild(warningEl);
+          const downloadInfoEl = document.createElement("div");
+          downloadInfoEl.className = "admin-idle-warning";
+          downloadInfoEl.style.top = "8.1rem";
+          downloadInfoEl.style.borderColor = "#5f7e1f";
+          downloadInfoEl.style.background = "linear-gradient(180deg, #ecf7d7 0%, #d5efae 100%)";
+          downloadInfoEl.style.color = "#1f3200";
+          downloadInfoEl.style.boxShadow = "0 8px 22px rgba(0,0,0,0.28)";
+          downloadInfoEl.style.display = "none";
+          downloadInfoEl.textContent = "Dateivorbereitung läuft … bitte warten.";
+          document.body.appendChild(downloadInfoEl);
+          let downloadInfoTimer = 0;
 
           const hideWarning = function () {
             warningEl.hidden = true;
@@ -186,13 +197,15 @@
             };
             const href = attr("href");
             const action = attr("action");
-            const downloadAttr = attr("download");
+            const hasDownloadAttr =
+              typeof el.hasAttribute === "function" && el.hasAttribute("download");
             const explicitDownload =
-              downloadAttr !== "" ||
+              hasDownloadAttr ||
               /(\.pdf|\.xlsx|\.xls|\.zip|\.csv)(\?|$)/.test(href) ||
-              /\/(pdf|xlsx|xls|zip)(\/|$)/.test(href) ||
+              /\/(pdf|xlsx|xls|zip)(\/|\?|$)/.test(href) ||
               /\/admin\/backup\/archive\//.test(href) ||
-              /\/admin\/backup\/export/.test(action);
+              /\/admin\/backup\/export/.test(action) ||
+              /\/admin\/statistics\/(pdf|xlsx)(\?|$)/.test(href);
             return explicitDownload;
           };
 
@@ -209,6 +222,14 @@
             window.clearInterval(countdownTimer);
             countdownTimer = 0;
             hideWarning();
+          };
+
+          const showDownloadInfo = function () {
+            window.clearTimeout(downloadInfoTimer);
+            downloadInfoEl.style.display = "block";
+            downloadInfoTimer = window.setTimeout(function () {
+              downloadInfoEl.style.display = "none";
+            }, 15000);
           };
 
           const startCountdown = function () {
@@ -256,6 +277,7 @@
               if (isDownloadInteraction(trigger)) {
                 downloadIdleUntil = Date.now() + DOWNLOAD_IDLE_MS;
                 downloadIdlePath = window.location.pathname;
+                showDownloadInfo();
                 resetIdleTimer();
                 return;
               }
@@ -274,6 +296,7 @@
               if (isDownloadInteraction(form)) {
                 downloadIdleUntil = Date.now() + DOWNLOAD_IDLE_MS;
                 downloadIdlePath = window.location.pathname;
+                showDownloadInfo();
                 resetIdleTimer();
                 return;
               }
