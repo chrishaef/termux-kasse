@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4.3 - 2026-05-08
+
+- Fixed release update behavior so systems updated to a newer commit are no longer downgraded back to the latest release tag on next `run.sh`/`install.sh`.
+- Improved Android kiosk rendering stability (full-height behavior, top-ten footer consistency) and refined pricelist presentation.
+- Added clearer in-app progress feedback for longer-running operations (downloads and year-end archive generation).
+- Hardened update-availability detection in admin/dashboard by resolving the remote default branch and comparing installed vs. remote release state more reliably.
+
 ## v1.4.2 - 2026-05-06
 
 - Changed admin password update flow: changing the regular admin password now requires the master password instead of the old admin password.

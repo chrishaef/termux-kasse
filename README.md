@@ -6,7 +6,7 @@ Das System ist für Touchscreen Bildschirme ab 10" optimiert.
 
 Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — Buchungen, Kontostände und Abrechnungen laufen lokal; Styles und Skripte kommen aus dem Projekt (`/static`). Eine Internet Verbindung wird nur für die Installation, Updates und den optionalen Online-/Versionscheck genutzt.
 
-**Aktuelle Version:** **1.4.2** (Git-Tag [`v1.4.2`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.2))
+**Aktuelle Version:** **1.4.3** (Git-Tag [`v1.4.3`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.3))
 
 **Zugehörige Android-Kiosk-App:** [`chrishaef/kiosk-app`](https://github.com/chrishaef/kiosk-app) (WebView-Wrapper, Vollbild/Kiosk-Steuerung, PIN/Admin-Menü).
 
@@ -557,13 +557,13 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ### Versionierung und Releases
 
-- Aktueller Git-Tag: **v1.4.2** — Übersicht: [Tag v1.4.2](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.2).
-- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.4.2](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.4.2) öffnen, Titel z. B. `Termux-Shopkasse 1.4.2`, Beschreibung einfügen, *Publish release*.
+- Aktueller Git-Tag: **v1.4.3** — Übersicht: [Tag v1.4.3](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.3).
+- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.4.3](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.4.3) öffnen, Titel z. B. `Termux-Shopkasse 1.4.3`, Beschreibung einfügen, *Publish release*.
 - **GitHub CLI** (einmalig `gh auth login`):  
-  `gh release create v1.4.2 --title "Termux-Shopkasse 1.4.2" --generate-notes`
+  `gh release create v1.4.3 --title "Termux-Shopkasse 1.4.3" --generate-notes`
 - Änderungsübersicht im Repo: [`CHANGELOG.md`](./CHANGELOG.md)
 
-**v1.4.2** (Kurzüberblick): Admin-Passwortwechsel und Backup-Export/-Import verlangen jetzt das Master-Passwort; Backup-Fehlerhinweise wurden klarer formuliert.
+**v1.4.3** (Kurzüberblick): Stabilerer Android-Kiosk-Betrieb (Darstellung/Feedback), zuverlässigere Update-Erkennung und verbesserte Download-/Jahresabschluss-UX bei längeren Verarbeitungsschritten.
 
 ---
 
