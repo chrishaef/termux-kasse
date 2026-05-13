@@ -151,7 +151,7 @@
           balanceBaseLabel + " (wird gleich wieder ausgeblendet)"
         );
         if (balanceRevealTimer) window.clearTimeout(balanceRevealTimer);
-        balanceRevealTimer = window.setTimeout(balanceReblur, 8000);
+        balanceRevealTimer = window.setTimeout(balanceReblur, 3000);
       }
       balanceEl.addEventListener("click", function () {
         if (balanceEl.classList.contains("k-user-head__balance-value--blurred")) {

@@ -51,7 +51,7 @@
         el.classList.remove("admin-stat__value--blurred");
         el.setAttribute("aria-label", baseLabel + " (wird gleich wieder ausgeblendet)");
         if (timer) window.clearTimeout(timer);
-        timer = window.setTimeout(reblur, 8000);
+        timer = window.setTimeout(reblur, 3000);
       }
 
       el.addEventListener("click", function () {
