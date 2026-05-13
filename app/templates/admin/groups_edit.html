@@ -2,10 +2,24 @@
 {% block body_class %}app-admin app-admin--detail{% endblock %}
 {% block admin_page %}
 <a href="/admin" class="admin-back js-history-back">← Zurück</a>
+{% if request.query_params.get('err') == 'logo_invalid' %}
+<article class="contrast">Logo: bitte eine gültige PNG-Datei (max. 512×512 Pixel, max. 512&nbsp;KB).</article>
+{% endif %}
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.1rem">Name ändern</h2>
-  <form method="post" action="/admin/groups/{{ group['id'] }}/edit">
+  <form method="post" action="/admin/groups/{{ group['id'] }}/edit" enctype="multipart/form-data">
     <label>Name <input type="text" name="name" required value="{{ group['name'] }}" /></label>
+    <h3 style="margin:1rem 0 0.5rem;font-size:1rem">Gruppenlogo (PNG)</h3>
+    <p style="margin:0 0 0.5rem;font-size:0.9rem;color:var(--kas-muted)">Optional; wird in der Kiosk-Gruppenauswahl neben dem Namen angezeigt.</p>
+    {% if group['has_logo'] %}
+    <p style="margin:0 0 0.5rem">
+      <img src="/group-logo/{{ group['id'] }}" alt="Aktuelles Logo" style="max-width:120px;max-height:120px;vertical-align:middle;border:1px solid #ccc;border-radius:4px" />
+    </p>
+    <label style="display:block;margin:0.5rem 0">
+      <input type="checkbox" name="remove_logo" value="1" /> Logo entfernen
+    </label>
+    {% endif %}
+    <label style="display:block;margin:0.5rem 0">PNG hochladen <input type="file" name="logo_png" accept="image/png" /></label>
     <button type="submit">Speichern</button>
   </form>
 </article>

@@ -19,6 +19,7 @@ from app import admin_auth
 from app import backup_service
 from app import db
 from app import debt_thresholds
+from app import group_logo_util
 from app import kiosk_notice
 from app import ledger_service
 from app import sort_order_util
@@ -846,6 +847,7 @@ def admin_backup_import(
 
     db_bytes = data
     imported_exports: list[tuple[str, bytes]] = []
+    imported_group_logos: list[tuple[str, bytes]] = []
     if data.startswith(b"SQLite format 3\x00"):
         # Legacy fallback: allow importing plain .db backups.
         db_bytes = data
@@ -867,6 +869,14 @@ def admin_backup_import(
                     if not rel:
                         continue
                     imported_exports.append((rel, zf.read(name)))
+                for name in sorted(names):
+                    if not name.startswith("group_logos/") or name.endswith("/"):
+                        continue
+                    safe = group_logo_util.safe_group_logo_arcname(name)
+                    if not safe:
+                        continue
+                    base = Path(safe).name
+                    imported_group_logos.append((base, zf.read(name)))
         except zipfile.BadZipFile:
             return RedirectResponse("/admin/backup?err=invalid", status_code=303)
 
@@ -904,6 +914,9 @@ def admin_backup_import(
                 p.unlink(missing_ok=True)
         for fname, fbytes in imported_exports:
             (exports_dir / fname).write_bytes(fbytes)
+        group_logo_util.unlink_all_logo_files()
+        for fname, fbytes in imported_group_logos:
+            (group_logo_util.group_logos_dir() / fname).write_bytes(fbytes)
         try:
             init_db()
         except Exception:
@@ -1155,7 +1168,9 @@ def admin_groups_edit_form(request: Request, group_id: int) -> Response:
     if (r := _redirect_login(request)):
         return r
     with db.get_connection() as conn:
-        group = db.fetch_one(conn, "SELECT id, name FROM user_groups WHERE id = ?", (group_id,))
+        group = db.fetch_one(
+            conn, "SELECT id, name, has_logo FROM user_groups WHERE id = ?", (group_id,)
+        )
         if not group:
             raise HTTPException(status_code=404)
     return TEMPLATES.TemplateResponse(
@@ -1170,17 +1185,44 @@ def admin_groups_edit_save(
     request: Request,
     group_id: int,
     name: str = Form(...),
+    remove_logo: str = Form(""),
+    logo_png: Optional[UploadFile] = File(default=None),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
     name = name.strip()
     if not name:
         return RedirectResponse(f"/admin/groups/{group_id}/edit", status_code=303)
+
+    raw_logo: bytes | None = None
+    if logo_png is not None and (logo_png.filename or "").strip():
+        raw = logo_png.file.read()
+        if raw:
+            raw_logo = raw
+
+    if raw_logo is not None:
+        try:
+            group_logo_util.validate_png_bytes(raw_logo)
+        except ValueError:
+            return RedirectResponse(
+                f"/admin/groups/{group_id}/edit?err=logo_invalid", status_code=303
+            )
+
     with db.get_connection() as conn:
         row = db.fetch_one(conn, "SELECT id FROM user_groups WHERE id = ?", (group_id,))
         if not row:
             raise HTTPException(status_code=404)
         conn.execute("UPDATE user_groups SET name = ? WHERE id = ?", (name, group_id))
+        if raw_logo is not None:
+            group_logo_util.save_logo_png(group_id, raw_logo)
+            conn.execute(
+                "UPDATE user_groups SET has_logo = 1 WHERE id = ?", (group_id,)
+            )
+        elif remove_logo.strip() in ("1", "on", "yes", "true"):
+            group_logo_util.delete_logo_file(group_id)
+            conn.execute(
+                "UPDATE user_groups SET has_logo = 0 WHERE id = ?", (group_id,)
+            )
     return RedirectResponse("/admin/groups", status_code=303)
 
 
@@ -1189,6 +1231,7 @@ def admin_groups_delete(request: Request, group_id: int) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
     with db.get_connection() as conn:
+        group_logo_util.delete_logo_file(group_id)
         conn.execute("DELETE FROM user_groups WHERE id = ?", (group_id,))
     return RedirectResponse("/admin/groups", status_code=303)
 

@@ -610,12 +610,13 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .k-tile {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  gap: 0.4rem;
+  gap: 0;
   text-decoration: none;
   color: inherit;
   background: var(--kas-surface);
@@ -624,7 +625,10 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   padding: 1.25rem 1.35rem;
   box-shadow: var(--kas-shadow);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  height: 6rem;
   min-height: 6rem;
+  max-height: 6rem;
+  overflow: hidden;
 }
 
 .k-tile:hover {
@@ -637,19 +641,42 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   transform: translateY(0);
 }
 
+/* Zeile Logo + Name: feste Höhe innerhalb der Kachel (6rem inkl. Padding) */
+.k-tile__inner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  max-height: 3.5rem;
+  flex: 1 1 auto;
+}
+
+.k-tile__logo {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  max-width: 2.5rem;
+  max-height: 2.5rem;
+  object-fit: contain;
+  display: block;
+}
+
 .k-tile__title {
   margin: 0;
   font-size: clamp(1.38rem, 3.4vw, 1.85rem);
   font-weight: 800;
   color: var(--kas-text);
   line-height: 1.2;
-}
-
-.k-tile__hint {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--kas-label-muted-surface);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 .k-toolbar {
@@ -816,7 +843,7 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 /* Gleiche Idee wie .admin-stat__value--blurred: Betrag zunächst verborgen, per Tipp kurz sichtbar */
 .k-user-head__balance-value--blurred {
-  filter: blur(7px);
+  filter: blur(16px);
   user-select: none;
   -webkit-user-select: none;
   cursor: pointer;
@@ -1283,7 +1310,7 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .admin-stat__value--blurred {
-  filter: blur(7px);
+  filter: blur(16px);
   user-select: none;
   -webkit-user-select: none;
   cursor: pointer;

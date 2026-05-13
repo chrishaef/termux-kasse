@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from app import db
+from app import group_logo_util
 from app.config import db_path, year_end_exports_dir
 
 BACKUP_ARCHIVE_KEEP = 25
@@ -115,6 +116,14 @@ def _latest_auto_backup_at_from_archive() -> datetime | None:
 
 def _build_backup_manifest(db_file: Path, exports_dir: Path, created_at: str, *, automatic: bool) -> dict:
     export_files = [path.name for path in sorted(exports_dir.glob("*")) if path.is_file()]
+    logo_dir = group_logo_util.group_logos_dir()
+    group_logos: list[dict[str, str | int]] = []
+    if logo_dir.is_dir():
+        for path in sorted(logo_dir.glob("*.png")):
+            if path.is_file():
+                group_logos.append(
+                    {"path": f"group_logos/{path.name}", "bytes": int(path.stat().st_size)}
+                )
     return {
         "format": "kasse-system-backup",
         "version": 1,
@@ -127,6 +136,7 @@ def _build_backup_manifest(db_file: Path, exports_dir: Path, created_at: str, *,
                 for name in export_files
             ],
         },
+        "group_logos": group_logos,
     }
 
 
@@ -159,6 +169,11 @@ def create_system_backup_archive(created_at: datetime | None = None, *, automati
         for path in sorted(exports_dir.glob("*")):
             if path.is_file():
                 zf.write(path, arcname=f"jahresabschluss/{path.name}")
+        logo_dir = group_logo_util.group_logos_dir()
+        if logo_dir.is_dir():
+            for path in sorted(logo_dir.glob("*.png")):
+                if path.is_file():
+                    zf.write(path, arcname=f"group_logos/{path.name}")
     out = _next_backup_path(stamp)
     out.write_bytes(buf.getvalue())
     if automatic:

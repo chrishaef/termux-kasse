@@ -9,7 +9,18 @@
 <div class="k-tiles">
   {% for g in groups %}
   <a class="k-tile" href="/g/{{ g['id'] }}">
-    <p class="k-tile__title">{{ g['name'] }}</p>
+    <span class="k-tile__inner">
+      {% if g['has_logo'] %}
+      <img
+        class="k-tile__logo"
+        src="/group-logo/{{ g['id'] }}"
+        alt=""
+        decoding="async"
+        loading="lazy"
+      />
+      {% endif %}
+      <span class="k-tile__title">{{ g['name'] }}</span>
+    </span>
   </a>
   {% endfor %}
 </div>

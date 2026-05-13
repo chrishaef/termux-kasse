@@ -13,7 +13,9 @@
 <div class="k-tiles">
   {% for u in users %}
   <a class="k-tile" href="/u/{{ u['id'] }}">
-    <p class="k-tile__title">{{ u['name'] }}</p>
+    <span class="k-tile__inner">
+      <span class="k-tile__title">{{ u['name'] }}</span>
+    </span>
   </a>
   {% endfor %}
 </div>

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 from app import db
 from app import debt_thresholds
+from app import group_logo_util
 from app import ledger_service
 from app.ledger_service import add_purchase, last_settlement, oldest_open_age_days, user_balance_cents
 from app.templates_env import TEMPLATES
@@ -17,12 +18,36 @@ def kiosk_home(request: Request) -> HTMLResponse:
     with db.get_connection() as conn:
         groups = db.fetch_all(
             conn,
-            "SELECT id, name FROM user_groups ORDER BY sort_order, name COLLATE NOCASE",
+            """
+            SELECT id, name, has_logo
+            FROM user_groups
+            ORDER BY sort_order, name COLLATE NOCASE
+            """,
         )
     return TEMPLATES.TemplateResponse(
         request,
         "kiosk/groups.html",
         {"groups": groups, "title": "Kiosk"},
+    )
+
+
+@router.get("/group-logo/{group_id}")
+def kiosk_group_logo(group_id: int) -> FileResponse:
+    with db.get_connection() as conn:
+        row = db.fetch_one(
+            conn,
+            "SELECT id, has_logo FROM user_groups WHERE id = ?",
+            (group_id,),
+        )
+    if not row or int(row["has_logo"] or 0) != 1:
+        raise HTTPException(status_code=404, detail="Kein Logo")
+    path = group_logo_util.logo_file_path(group_id)
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Datei fehlt")
+    return FileResponse(
+        path,
+        media_type="image/png",
+        filename=f"group-{group_id}.png",
     )
 
 

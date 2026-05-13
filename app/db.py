@@ -175,7 +175,19 @@ def _migrate_schema(conn: sqlite3.Connection) -> None:
     _migrate_sort_order_columns(conn)
     _migrate_products_pricelist_visibility(conn)
     _migrate_products_remove_categories(conn)
+    _migrate_user_groups_logo_flag(conn)
     _backfill_product_visibility_defaults_once(conn)
+
+
+def _migrate_user_groups_logo_flag(conn: sqlite3.Connection) -> None:
+    info = conn.execute("PRAGMA table_info(user_groups)").fetchall()
+    if not info:
+        return
+    cols = {r[1] for r in info}
+    if "has_logo" not in cols:
+        conn.execute(
+            "ALTER TABLE user_groups ADD COLUMN has_logo INTEGER NOT NULL DEFAULT 0"
+        )
 
 
 def _migrate_sort_order_columns(conn: sqlite3.Connection) -> None:
