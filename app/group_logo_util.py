@@ -8,8 +8,9 @@ from pathlib import Path
 from app.config import data_dir
 
 _PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
-_MAX_FILE_BYTES = 512 * 1024
-_MAX_DIMENSION = 512
+# Große PNGs sind ok — in der Kachel wird nur klein dargestellt (CSS).
+_MAX_FILE_BYTES = 8 * 1024 * 1024
+_MAX_DIMENSION = 8192
 _FILENAME_RE = re.compile(r"^(\d+)\.png$")
 
 

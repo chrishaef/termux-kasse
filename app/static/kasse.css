@@ -651,16 +651,16 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   width: 100%;
   max-width: 100%;
   min-height: 0;
-  max-height: 3.5rem;
+  max-height: 3.1rem;
   flex: 1 1 auto;
 }
 
 .k-tile__logo {
   flex: 0 0 auto;
-  width: 2.5rem;
-  height: 2.5rem;
-  max-width: 2.5rem;
-  max-height: 2.5rem;
+  width: 2rem;
+  height: 2rem;
+  max-width: 2rem;
+  max-height: 2rem;
   object-fit: contain;
   display: block;
 }
