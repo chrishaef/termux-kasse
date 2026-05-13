@@ -16,6 +16,7 @@
       <img src="/group-logo/{{ group['id'] }}" alt="Aktuelles Logo" style="max-width:120px;max-height:120px;vertical-align:middle;border:1px solid #ccc;border-radius:4px" />
     </p>
     <label style="display:block;margin:0.5rem 0">
+      <input type="hidden" name="remove_logo" value="0" />
       <input type="checkbox" name="remove_logo" value="1" /> Logo entfernen
     </label>
     {% endif %}

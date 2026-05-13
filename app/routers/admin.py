@@ -1185,7 +1185,7 @@ def admin_groups_edit_save(
     request: Request,
     group_id: int,
     name: str = Form(...),
-    remove_logo: str = Form(""),
+    remove_logo: str = Form("0"),
     logo_png: Optional[UploadFile] = File(default=None),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
@@ -1218,7 +1218,7 @@ def admin_groups_edit_save(
             conn.execute(
                 "UPDATE user_groups SET has_logo = 1 WHERE id = ?", (group_id,)
             )
-        elif remove_logo.strip() in ("1", "on", "yes", "true"):
+        elif remove_logo.strip() == "1":
             group_logo_util.delete_logo_file(group_id)
             conn.execute(
                 "UPDATE user_groups SET has_logo = 0 WHERE id = ?", (group_id,)

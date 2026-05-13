@@ -6,6 +6,7 @@ import io
 from fastapi.testclient import TestClient
 
 from app import db
+from app import group_logo_util
 from app.main import app
 
 _MINI_PNG = base64.b64decode(
@@ -64,3 +65,37 @@ def test_admin_group_logo_upload_and_kiosk_tile() -> None:
         lg = client.get(f"/group-logo/{gid}")
         assert lg.status_code == 200
         assert lg.headers.get("content-type", "").startswith("image/png")
+
+
+def test_admin_group_logo_remove_checkbox() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "RmLogoGrp"})
+        with db.get_connection() as conn:
+            gid = int(
+                conn.execute(
+                    "SELECT id FROM user_groups WHERE name='RmLogoGrp'"
+                ).fetchone()[0]
+            )
+        client.post(
+            f"/admin/groups/{gid}/edit",
+            data={"name": "RmLogoGrp"},
+            files={"logo_png": ("logo.png", io.BytesIO(_MINI_PNG), "image/png")},
+            follow_redirects=False,
+        )
+        assert group_logo_util.logo_file_path(gid).is_file()
+        rm = client.post(
+            f"/admin/groups/{gid}/edit",
+            data={"name": "RmLogoGrp", "remove_logo": "1"},
+            files={"logo_png": ("", io.BytesIO(b""), "application/octet-stream")},
+            follow_redirects=False,
+        )
+        assert rm.status_code == 303
+        with db.get_connection() as conn:
+            has = int(
+                conn.execute(
+                    "SELECT has_logo FROM user_groups WHERE id = ?", (gid,)
+                ).fetchone()[0]
+            )
+        assert has == 0
+        assert not group_logo_util.logo_file_path(gid).is_file()
