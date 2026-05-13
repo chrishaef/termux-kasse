@@ -625,9 +625,9 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   padding: 1.25rem 1.35rem;
   box-shadow: var(--kas-shadow);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  height: 6rem;
-  min-height: 6rem;
-  max-height: 6rem;
+  height: 7rem;
+  min-height: 7rem;
+  max-height: 7rem;
   overflow: hidden;
 }
 
@@ -651,16 +651,16 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   width: 100%;
   max-width: 100%;
   min-height: 0;
-  max-height: 3.1rem;
+  max-height: 4.35rem;
   flex: 1 1 auto;
 }
 
 .k-tile__logo {
   flex: 0 0 auto;
-  width: 2rem;
-  height: 2rem;
-  max-width: 2rem;
-  max-height: 2rem;
+  width: 4rem;
+  height: 4rem;
+  max-width: 4rem;
+  max-height: 4rem;
   object-fit: contain;
   display: block;
 }
