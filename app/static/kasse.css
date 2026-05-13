@@ -1689,6 +1689,23 @@ body.app-admin .k-panel strong {
   color: #0a0f0a;
 }
 
+/* Pico: Checkbox-Häkchen sonst oft unsichtbar — native Darstellung (Quittung unten ausgenommen) */
+body.app-admin .k-panel input[type="checkbox"] {
+  appearance: auto;
+  -webkit-appearance: checkbox;
+  accent-color: var(--kas-accent);
+  width: 1.15rem;
+  height: 1.15rem;
+  min-width: 1.15rem;
+  min-height: 1.15rem;
+  margin: 0 0.45rem 0 0;
+  vertical-align: middle;
+  cursor: pointer;
+  opacity: 1;
+  position: static;
+  pointer-events: auto;
+}
+
 body.app-admin .k-panel input:not([type="checkbox"]):not([type="radio"]),
 body.app-admin .k-panel select,
 body.app-admin .k-panel textarea {
