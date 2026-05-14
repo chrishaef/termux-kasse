@@ -10,7 +10,7 @@
   <form method="post" action="/admin/groups/{{ group['id'] }}/edit" enctype="multipart/form-data">
     <label>Name <input type="text" name="name" required value="{{ group['name'] }}" /></label>
     <h3 style="margin:1rem 0 0.5rem;font-size:1rem">Gruppenlogo (PNG)</h3>
-    <p style="margin:0 0 0.5rem;font-size:0.9rem;color:var(--kas-muted)">PNG; wird in der Kachel automatisch klein angezeigt (Originalgröße ist unkritisch).</p>
+    <p style="margin:0 0 0.5rem;font-size:0.9rem;color:var(--kas-muted)">Anzeige ind er Gruppenkachel</p>
     {% if group['has_logo'] %}
     <p style="margin:0 0 0.5rem">
       <img src="/group-logo/{{ group['id'] }}" alt="Aktuelles Logo" style="max-width:120px;max-height:120px;vertical-align:middle;border:1px solid #ccc;border-radius:4px" />

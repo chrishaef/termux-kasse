@@ -658,10 +658,10 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .k-tile__logo {
   flex: 0 0 auto;
-  width: 4.5rem;
-  height: 4.5rem;
-  max-width: 4.5rem;
-  max-height: 4.5rem;
+  width: 5rem;
+  height: 5rem;
+  max-width: 5rem;
+  max-height: 5rem;
   object-fit: contain;
   display: block;
 }
