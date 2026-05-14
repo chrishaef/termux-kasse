@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.4 - 2026-05-13
+
+- Unified admin `<select>` styling for Android WebView / in-app browsers (e.g. SBrowser on Android 12): touch-friendly height, minimum 16px text, consistent padding and native appearance.
+- Reworked settlement (user billing) filter layout: dedicated `admin-settlement-filters` block inside the light panel instead of reusing the dark toolbar pattern, with full-width selects and safer flex sizing.
+- Extended the same select rules to the users list group filter, new/edit user forms, and statistics group filter (including readable `option` colors on the dark toolbar).
+
 ## v1.4.3 - 2026-05-08
 
 - Fixed release update behavior so systems updated to a newer commit are no longer downgraded back to the latest release tag on next `run.sh`/`install.sh`.
