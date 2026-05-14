@@ -9,15 +9,15 @@
 
 <article class="k-panel">
   {% if groups %}
-  <form method="get" action="/admin/settlements/start" class="k-toolbar" style="margin-bottom:0.55rem;align-items:flex-end">
-    <label style="min-width:180px;flex:1 1 220px">Gruppe
+  <form method="get" action="/admin/settlements/start" class="admin-settlement-filters">
+    <label class="admin-settlement-filters__label admin-settlement-filters__label--group">Gruppe
       <select name="group_id" onchange="this.form.submit()">
         {% for g in groups %}
         <option value="{{ g['id'] }}"{% if selected_group_id == g['id'] %} selected{% endif %}>{{ g['name'] }}</option>
         {% endfor %}
       </select>
     </label>
-    <label style="min-width:220px;flex:2 1 360px">Nutzer
+    <label class="admin-settlement-filters__label admin-settlement-filters__label--user">Nutzer
       <select name="user_id" onchange="this.form.submit()">
         {% for u in users %}
         <option value="{{ u['id'] }}"{% if selected_user_id == u['id'] %} selected{% endif %}>{{ u['name'] }}</option>

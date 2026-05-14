@@ -722,14 +722,17 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .k-toolbar .admin-users-filter-form select {
   margin: 0;
-  min-width: 11rem;
-  min-height: 2.35rem;
-  padding: 0.45rem 0.75rem;
+  min-width: min(11rem, 100%);
+  min-height: 2.75rem;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  font-size: max(16px, 1rem);
   color: var(--kas-page-fg);
   border-color: var(--kas-control-border);
   background: rgba(255, 255, 255, 0.08);
   border-radius: var(--kas-radius-button);
   font-weight: 700;
+  -webkit-appearance: menulist;
+  appearance: auto;
 }
 
 .k-toolbar .admin-users-filter-form select:hover {
@@ -1661,6 +1664,26 @@ form:not(.inline) label {
 }
 
 /* ---------- Admin: helle Karten/Tabellen vs. globales Pico-Dark ---------- */
+
+/* Native <select>: einheitliche Touch-Größe, 16px+ (WebView/Android 12), natives Dropdown */
+body.app-admin select {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 2.5rem 0.5rem 0.7rem;
+  font-size: max(16px, 1rem);
+  line-height: 1.35;
+  font-family: inherit;
+  text-overflow: ellipsis;
+  -webkit-appearance: menulist;
+  appearance: auto;
+}
+
+body.app-admin select:focus-visible {
+  outline: 2px solid var(--kas-accent);
+  outline-offset: 2px;
+}
+
 body.app-admin .k-panel {
   color: #121812;
 }
@@ -1946,6 +1969,56 @@ body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar_
 body.app-admin .k-panel select option {
   color: #141a16;
   background: #fff;
+}
+
+body.app-admin .k-toolbar .admin-users-filter-form select option {
+  color: #141a16;
+  background: #fff;
+}
+
+/* Abrechnung: Gruppe/Nutzer (heller Panel-Kontext, kein dunkles k-toolbar) */
+body.app-admin .k-panel .admin-settlement-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 0.75rem;
+  align-items: flex-end;
+  margin-bottom: 0.55rem;
+}
+
+body.app-admin .k-panel .admin-settlement-filters__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+}
+
+body.app-admin .k-panel .admin-settlement-filters__label--group {
+  flex: 1 1 12.5rem;
+  min-width: min(100%, 11.25rem);
+}
+
+body.app-admin .k-panel .admin-settlement-filters__label--user {
+  flex: 2 1 18rem;
+  min-width: min(100%, 13.75rem);
+}
+
+body.app-admin .k-panel .admin-settlement-filters__label select {
+  width: 100%;
+  min-width: 0;
+}
+
+body.app-admin .k-panel label > select {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar__filters > label {
+  min-width: 0;
+}
+
+body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar__filters select {
+  width: 100%;
 }
 
 body.app-admin .k-panel button[type="submit"] {
