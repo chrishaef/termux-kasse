@@ -21,7 +21,7 @@
     {% endif %}
     <div class="admin-group-tile-options">
       <label>
-        Logo-Größe in der Gruppenauswahl
+        Logo-Größe
         <select name="tile_logo_size">
           {% for value in tile_logo_sizes %}
           <option value="{{ value }}" {% if group['tile_logo_size'] == value %}selected{% endif %}>
@@ -38,7 +38,7 @@
           value="1"
           {% if group['tile_show_name'] %}checked{% endif %}
         />
-        Gruppennamen in der Kachel anzeigen
+        Nur Logo anzeigen
       </label>
     </div>
     <label style="display:block;margin:0.5rem 0">PNG hochladen <input type="file" name="logo_png" accept="image/png" /></label>
