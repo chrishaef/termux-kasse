@@ -114,7 +114,15 @@ def _latest_auto_backup_at_from_archive() -> datetime | None:
     return latest
 
 
-def _build_backup_manifest(db_file: Path, exports_dir: Path, created_at: str, *, automatic: bool) -> dict:
+def _build_backup_manifest(
+    db_file: Path,
+    exports_dir: Path,
+    created_at: str,
+    *,
+    automatic: bool,
+    purpose: str = "manual",
+    source_commit: str | None = None,
+) -> dict:
     export_files = [path.name for path in sorted(exports_dir.glob("*")) if path.is_file()]
     logo_dir = group_logo_util.group_logos_dir()
     group_logos: list[dict[str, str | int]] = []
@@ -129,6 +137,8 @@ def _build_backup_manifest(db_file: Path, exports_dir: Path, created_at: str, *,
         "version": 1,
         "created_at": created_at,
         "automatic": bool(automatic),
+        "purpose": purpose,
+        "source_commit": source_commit or "",
         "files": {
             "db": {"path": "kasse.db", "bytes": int(db_file.stat().st_size)},
             "year_end_exports": [
@@ -153,7 +163,13 @@ def _next_backup_path(stamp: str) -> Path:
         suffix += 1
 
 
-def create_system_backup_archive(created_at: datetime | None = None, *, automatic: bool = False) -> Path | None:
+def create_system_backup_archive(
+    created_at: datetime | None = None,
+    *,
+    automatic: bool = False,
+    purpose: str | None = None,
+    source_commit: str | None = None,
+) -> Path | None:
     db_file = db_path()
     if not db_file.exists():
         return None
@@ -161,7 +177,14 @@ def create_system_backup_archive(created_at: datetime | None = None, *, automati
     created_iso = created.isoformat(timespec="seconds")
     stamp = created.strftime("%Y%m%d_%H%M%S")
     exports_dir = year_end_exports_dir()
-    manifest = _build_backup_manifest(db_file, exports_dir, created_iso, automatic=automatic)
+    manifest = _build_backup_manifest(
+        db_file,
+        exports_dir,
+        created_iso,
+        automatic=automatic,
+        purpose=purpose or ("automatic" if automatic else "manual"),
+        source_commit=source_commit,
+    )
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         zf.writestr("manifest.json", json.dumps(manifest, ensure_ascii=True, indent=2))

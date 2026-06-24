@@ -1,4 +1,6 @@
 from fastapi.testclient import TestClient
+import json
+import zipfile
 
 from app.main import app
 from app.routers import admin as admin_router
@@ -11,7 +13,10 @@ def test_admin_login_accepts_default_password() -> None:
         assert r.headers["location"] == "/admin"
 
 
-def test_admin_login_accepts_master_password() -> None:
+def test_admin_login_accepts_master_password(monkeypatch, tmp_path) -> None:
+    master_file = tmp_path / "master_pwd"
+    master_file.write_text("master", encoding="utf-8")
+    monkeypatch.setenv("KASSE_MASTER_PASSWORD_FILE", str(master_file))
     with TestClient(app) as client:
         r = client.post("/admin/login", data={"password": "master"}, follow_redirects=False)
         assert r.status_code == 303
@@ -152,6 +157,105 @@ def test_admin_system_update_post_triggers_background_runner(monkeypatch) -> Non
         assert "Update und Neustart laufen" in r.text
         assert "/admin/system-update/result" in r.text
     assert calls == ["release"]
+
+
+def test_background_update_creates_backup_and_rollback_state(monkeypatch, tmp_path) -> None:
+    commit = "a" * 40
+    root = admin_router._root_dir()
+    log_path = root / "update-trigger.log"
+    pid_path = root / "update-trigger.pid"
+    old_log = log_path.read_bytes() if log_path.exists() else None
+    old_pid = pid_path.read_bytes() if pid_path.exists() else None
+
+    class FakeProcess:
+        pid = 12345
+
+    monkeypatch.setattr(admin_router, "_is_update_running", lambda: False)
+    monkeypatch.setattr(admin_router, "_git_head_full", lambda _root: commit)
+    monkeypatch.setattr(admin_router.subprocess, "Popen", lambda *args, **kwargs: FakeProcess())
+
+    try:
+        with TestClient(app):
+            admin_router._trigger_background_update("commit")
+    finally:
+        if old_log is None:
+            log_path.unlink(missing_ok=True)
+        else:
+            log_path.write_bytes(old_log)
+        if old_pid is None:
+            pid_path.unlink(missing_ok=True)
+        else:
+            pid_path.write_bytes(old_pid)
+
+    state = json.loads(admin_router._rollback_state_path().read_text(encoding="utf-8"))
+    assert state["previous_commit"] == commit
+    assert state["previous_commit_short"] == commit[:7]
+    assert state["update_channel"] == "commit"
+    assert state["backup_name"]
+
+    backup_path = tmp_path / "data" / "system_backups" / state["backup_name"]
+    assert backup_path.is_file()
+    with zipfile.ZipFile(backup_path, "r") as zf:
+        manifest = json.loads(zf.read("manifest.json").decode("utf-8"))
+    assert manifest["automatic"] is True
+    assert manifest["purpose"] == "pre_update"
+    assert manifest["source_commit"] == commit
+
+
+def test_admin_system_update_page_shows_rollback_target(monkeypatch) -> None:
+    commit = "b" * 40
+    monkeypatch.setattr(
+        admin_router,
+        "_read_update_rollback_state",
+        lambda: {
+            "created_at": "2026-06-24T20:00:00",
+            "previous_commit": commit,
+            "previous_commit_short": commit[:7],
+            "previous_branch": "main",
+            "update_channel": "commit",
+            "backup_name": "kasse-system-backup-test.zip",
+            "backup_exists": "1",
+        },
+    )
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.get("/admin/system-update")
+    assert r.status_code == 200
+    assert "Rollback auf bbbbbbb starten" in r.text
+    assert "kasse-system-backup-test.zip" in r.text
+
+
+def test_admin_system_rollback_post_triggers_background_runner(monkeypatch) -> None:
+    commit = "c" * 40
+    calls: list[str] = []
+    state = {
+        "created_at": "2026-06-24T20:00:00",
+        "previous_commit": commit,
+        "previous_commit_short": commit[:7],
+        "previous_branch": "main",
+        "update_channel": "release",
+        "backup_name": "backup.zip",
+        "backup_exists": "1",
+    }
+
+    def fake_trigger(received_state: dict[str, str]) -> None:
+        calls.append(received_state["previous_commit"])
+
+    monkeypatch.setattr(admin_router, "_read_update_rollback_state", lambda: state)
+    monkeypatch.setattr(admin_router, "_trigger_background_rollback", fake_trigger)
+    monkeypatch.setattr(admin_router, "_is_update_running", lambda: False)
+    monkeypatch.setattr(admin_router, "read_master_password", lambda: "master")
+    monkeypatch.setattr(admin_router.admin_auth, "is_master_password", lambda raw: raw == "master")
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        r = client.post(
+            "/admin/system-update/rollback",
+            data={"master_password": "master"},
+            follow_redirects=False,
+        )
+    assert r.status_code == 200
+    assert "Rollback und Neustart laufen" in r.text
+    assert calls == [commit]
 
 
 def test_admin_system_update_page_shows_restart_button_without_update(monkeypatch) -> None:

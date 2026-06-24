@@ -27,6 +27,8 @@ EVENT_LABELS = {
     "admin_password_changed": "Admin-Passwort geaendert",
     "system_update_start": "System-Update gestartet",
     "system_update_start_failed": "System-Update konnte nicht gestartet werden",
+    "system_rollback_start": "System-Rollback gestartet",
+    "system_rollback_start_failed": "System-Rollback konnte nicht gestartet werden",
     "backup_export_rejected": "Backup-Export abgelehnt",
     "backup_export_created": "Backup erstellt",
     "backup_import_rejected": "Backup-Import abgelehnt",

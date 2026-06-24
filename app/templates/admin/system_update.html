@@ -3,9 +3,9 @@
 <a href="/admin" class="admin-back js-history-back">← Zurück</a>
 <article class="k-panel" data-disable-admin-idle="1">
   {% if started %}
-  <h2>Update und Neustart laufen</h2>
+  <h2>{{ "Rollback" if operation == "rollback" else "Update" }} und Neustart laufen</h2>
   <p>
-    Der Update-Prozess wurde gestartet. Danach wird die Admin-Seite automatisch neu geladen.
+    Der {{ "Rollback" if operation == "rollback" else "Update-Prozess" }} wurde gestartet. Danach wird die Admin-Seite automatisch neu geladen.
   </p>
   <p>Verbleibende Zeit: <strong id="update-countdown">35</strong>s</p>
   <p class="secondary">Bitte warten, bis der Server neu verfügbar ist.</p>
@@ -39,6 +39,14 @@
   <article class="contrast">Commit-Update ist aktuell nicht verfügbar.</article>
   {% elif err == "start" %}
   <article class="contrast">Update konnte nicht gestartet werden.</article>
+  {% elif err == "rollback_master" %}
+  <article class="contrast">Rollback abgebrochen: Master-Passwort ist falsch.</article>
+  {% elif err == "rollback_running" %}
+  <article class="contrast">Ein Update-/Rollback-Prozess läuft bereits. Bitte warten, bis er abgeschlossen ist.</article>
+  {% elif err == "rollback_unavailable" %}
+  <article class="contrast">Kein Rollback-Ziel vorhanden. Ein Rollback ist erst nach einem geführten Update möglich.</article>
+  {% elif err == "rollback_start" %}
+  <article class="contrast">Rollback konnte nicht gestartet werden.</article>
   {% endif %}
 
   <form method="post" action="/admin/system-update">
@@ -59,6 +67,31 @@
     </fieldset>
     <button id="system-update-submit" type="submit" {% if update_running %}disabled{% endif %}>{{ "Update & Neustart starten" if precheck["update_available"] else "Neustart starten" }}</button>
   </form>
+
+  <hr />
+  <h3 style="font-size:1.05rem">Rollback</h3>
+  {% if rollback_state %}
+  <p>
+    Letzter Stand vor einem geführten Update:
+    <strong>{{ rollback_state["previous_commit_short"] }}</strong>
+    {% if rollback_state["created_at"] %}<span class="secondary">({{ rollback_state["created_at"] }})</span>{% endif %}
+  </p>
+  {% if rollback_state["backup_name"] %}
+  <p class="secondary">
+    Pre-Update-Backup:
+    <code>{{ rollback_state["backup_name"] }}</code>
+    {% if rollback_state["backup_exists"] != "1" %}(nicht mehr im Archiv vorhanden){% endif %}
+  </p>
+  {% endif %}
+  <form method="post" action="/admin/system-update/rollback" onsubmit="return window.confirm('Code wirklich auf den Stand vor dem letzten Update zurücksetzen?');">
+    <label for="rollback-master-password">Master-Passwort</label>
+    <input id="rollback-master-password" name="master_password" type="password" required autocomplete="current-password" {% if update_running %}disabled{% endif %} />
+    <button type="submit" class="secondary" {% if update_running %}disabled{% endif %}>Rollback auf {{ rollback_state["previous_commit_short"] }} starten</button>
+  </form>
+  <p class="secondary">Setzt den Programmcode zurück und startet den Server neu. Daten werden dabei nicht automatisch zurückgespielt.</p>
+  {% else %}
+  <p class="secondary">Noch kein Rollback-Ziel vorhanden. Beim nächsten geführten Update wird der aktuelle Commit automatisch gespeichert.</p>
+  {% endif %}
   {% endif %}
 
   <hr />

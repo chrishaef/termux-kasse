@@ -4,6 +4,7 @@ import io
 import json
 import os
 import re
+import shlex
 import shutil
 import sqlite3
 import subprocess
@@ -41,6 +42,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 ADMIN_LOG = app_logging.get_logger("admin")
 LOG_VIEW_MAX_BYTES = 128_000
 LOG_VIEW_MAX_LINES = 400
+ROLLBACK_STATE_FILE = "last_update_rollback.json"
 
 
 def _backup_archive_dir() -> Path:
@@ -124,6 +126,94 @@ def _backup_archive_list() -> list[dict]:
 
 def _backup_archive_prune() -> None:
     backup_service.backup_archive_prune()
+
+
+def _rollback_state_path() -> Path:
+    return data_dir() / ROLLBACK_STATE_FILE
+
+
+def _git_head_full(root: Path) -> str:
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=2.0,
+        )
+        value = (head.stdout or "").strip()
+        if re.fullmatch(r"[0-9a-f]{40}", value):
+            return value
+    except Exception:
+        pass
+    return ""
+
+
+def _git_commit_exists(root: Path, commit: str) -> bool:
+    if not re.fullmatch(r"[0-9a-f]{40}", commit or ""):
+        return False
+    try:
+        result = subprocess.run(
+            ["git", "cat-file", "-e", f"{commit}^{{commit}}"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=2.0,
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
+def _write_update_rollback_state(
+    *,
+    root: Path,
+    update_channel: str,
+    previous_commit: str,
+    backup_path: Path | None,
+) -> dict[str, str]:
+    state = {
+        "version": "1",
+        "created_at": datetime.now().isoformat(timespec="seconds"),
+        "previous_commit": previous_commit,
+        "previous_commit_short": previous_commit[:7],
+        "previous_branch": _current_branch(root),
+        "update_channel": update_channel,
+        "backup_name": backup_path.name if backup_path is not None else "",
+    }
+    path = _rollback_state_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(state, ensure_ascii=True, indent=2), encoding="utf-8")
+    return state
+
+
+def _read_update_rollback_state() -> dict[str, str] | None:
+    path = _rollback_state_path()
+    try:
+        if not path.is_file():
+            return None
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if not isinstance(raw, dict):
+        return None
+    commit = str(raw.get("previous_commit") or "").strip().lower()
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        return None
+    backup_name = str(raw.get("backup_name") or "").strip()
+    return {
+        "created_at": str(raw.get("created_at") or ""),
+        "previous_commit": commit,
+        "previous_commit_short": str(raw.get("previous_commit_short") or commit[:7]),
+        "previous_branch": str(raw.get("previous_branch") or ""),
+        "update_channel": str(raw.get("update_channel") or ""),
+        "backup_name": backup_name,
+        "backup_exists": "1"
+        if backup_name and (backup_service.backup_archive_dir() / backup_name).is_file()
+        else "0",
+    }
 
 
 def _redirect_login(request: Request) -> Optional[RedirectResponse]:
@@ -210,12 +300,96 @@ def _trigger_background_update(update_channel: str = "release") -> None:
     pid_path = _update_pid_path()
     with log_path.open("a", encoding="utf-8") as log_file:
         log_file.write(f"\n=== Update ausgelöst: {datetime.now().isoformat()} ===\n")
+        previous_commit = _git_head_full(root)
+        backup_path = None
+        if previous_commit:
+            log_file.write(f">>> Rollback-Ziel vor Update: {previous_commit[:7]}\n")
+        try:
+            backup_path = backup_service.create_system_backup_archive(
+                automatic=True,
+                purpose="pre_update",
+                source_commit=previous_commit or None,
+            )
+            if backup_path is not None:
+                log_file.write(f">>> Pre-Update-Backup erstellt: {backup_path.name}\n")
+            else:
+                log_file.write(">>> Kein Pre-Update-Backup erstellt: Datenbank nicht gefunden.\n")
+        except Exception as ex:
+            log_file.write(f">>> Pre-Update-Backup fehlgeschlagen: {ex}\n")
+            raise
+        if previous_commit:
+            _write_update_rollback_state(
+                root=root,
+                update_channel=update_channel,
+                previous_commit=previous_commit,
+                backup_path=backup_path,
+            )
         log_file.flush()
         cmd = ["bash", str(run_script)]
         if update_channel == "commit":
             cmd.append("--update-mode=commit")
         proc = subprocess.Popen(
             cmd,
+            cwd=str(root),
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+        pid_path.write_text(str(proc.pid), encoding="utf-8")
+
+
+def _trigger_background_rollback(state: dict[str, str]) -> None:
+    root = Path(__file__).resolve().parent.parent.parent
+    if _is_update_running():
+        raise RuntimeError("Update oder Rollback läuft bereits")
+    commit = str(state.get("previous_commit") or "").strip().lower()
+    if not _git_commit_exists(root, commit):
+        raise RuntimeError("Rollback-Commit nicht gefunden")
+    log_path = root / "update-trigger.log"
+    app_logging.rotate_plain_log(
+        log_path,
+        max_bytes=app_logging.UPDATE_LOG_MAX_BYTES,
+    )
+    pid_path = _update_pid_path()
+    server_log = root / "server.log"
+    venv_activate = root / ".venv" / "bin" / "activate"
+    uvicorn_path = root / ".venv" / "bin" / "uvicorn"
+    script = f"""
+set -e
+cd {shlex.quote(str(root))}
+echo "=== Rollback ausgelöst: $(date -Iseconds) ==="
+echo ">>> Ziel-Commit: {commit[:7]} ({commit})"
+echo ">>> Setze Code auf gespeicherten Commit zurück"
+git checkout -f {shlex.quote(commit)}
+if [ -f {shlex.quote(str(venv_activate))} ]; then
+  . {shlex.quote(str(venv_activate))}
+fi
+if [ -f requirements.txt ]; then
+  echo ">>> pip install -r requirements.txt"
+  pip install -q -r requirements.txt
+fi
+date +"%Y-%m-%d %H:%M:%S" > {shlex.quote(str(root / ".last_sync"))}
+sleep 2
+echo ">>> Beende bisherigen Server"
+if [ -f {shlex.quote(str(root / ".server.pid"))} ]; then
+  OLD_PID="$(cat {shlex.quote(str(root / ".server.pid"))} 2>/dev/null || true)"
+  if [ -n "$OLD_PID" ]; then kill "$OLD_PID" 2>/dev/null || true; fi
+  rm -f {shlex.quote(str(root / ".server.pid"))}
+fi
+pkill -f "uvicorn app.main:app" 2>/dev/null || true
+sleep 1
+echo ">>> Starte Server nach Rollback"
+if [ -x {shlex.quote(str(uvicorn_path))} ]; then
+  nohup {shlex.quote(str(uvicorn_path))} app.main:app --host "${{HOST:-0.0.0.0}}" --port "${{PORT:-8000}}" --no-access-log >> {shlex.quote(str(server_log))} 2>&1 &
+else
+  nohup uvicorn app.main:app --host "${{HOST:-0.0.0.0}}" --port "${{PORT:-8000}}" --no-access-log >> {shlex.quote(str(server_log))} 2>&1 &
+fi
+echo $! > {shlex.quote(str(root / ".server.pid"))}
+echo ">>> Rollback abgeschlossen"
+"""
+    with log_path.open("a", encoding="utf-8") as log_file:
+        proc = subprocess.Popen(
+            ["bash", "-lc", script],
             cwd=str(root),
             stdout=log_file,
             stderr=subprocess.STDOUT,
@@ -352,6 +526,13 @@ def _parse_price_eur_to_cents(raw: str) -> int:
     if not re.fullmatch(r"\d+(\.\d{1,2})?", s):
         raise ValueError("Preis ungültig")
     return int(round(float(s) * 100))
+
+
+def _parse_optional_percent(raw: str, fallback: int) -> int:
+    value = (raw or "").strip()
+    if not value:
+        return fallback
+    return int(value)
 
 
 def _parse_signed_eur_to_cents(raw: str) -> int:
@@ -640,6 +821,7 @@ def admin_system_update_start(
     precheck = _system_update_precheck()
     update_running = _is_update_running()
     update_log_lines = _read_update_log_snippet()
+    rollback_state = _read_update_rollback_state()
     if update_running:
         return TEMPLATES.TemplateResponse(
             request,
@@ -651,6 +833,8 @@ def admin_system_update_start(
                 "err": "running",
                 "started": False,
                 "update_running": True,
+                "rollback_state": rollback_state,
+                "operation": "update",
             },
             status_code=409,
         )
@@ -665,6 +849,8 @@ def admin_system_update_start(
                 "err": "nomaster",
                 "started": False,
                 "update_running": False,
+                "rollback_state": rollback_state,
+                "operation": "update",
             },
             status_code=400,
         )
@@ -679,6 +865,8 @@ def admin_system_update_start(
                 "err": "master",
                 "started": False,
                 "update_running": False,
+                "rollback_state": rollback_state,
+                "operation": "update",
             },
             status_code=400,
         )
@@ -696,6 +884,8 @@ def admin_system_update_start(
                 "err": "commit_unavailable",
                 "started": False,
                 "update_running": False,
+                "rollback_state": rollback_state,
+                "operation": "update",
             },
             status_code=400,
         )
@@ -718,6 +908,8 @@ def admin_system_update_start(
                 "started": True,
                 "err": None,
                 "update_running": True,
+                "rollback_state": _read_update_rollback_state(),
+                "operation": "update",
             },
         )
     except Exception:
@@ -738,6 +930,131 @@ def admin_system_update_start(
                 "err": "start",
                 "started": False,
                 "update_running": _is_update_running(),
+                "rollback_state": _read_update_rollback_state(),
+                "operation": "update",
+            },
+            status_code=500,
+        )
+
+
+@router.post("/system-update/rollback")
+def admin_system_rollback_start(
+    request: Request,
+    master_password: str = Form(""),
+) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    precheck = _system_update_precheck()
+    update_log_lines = _read_update_log_snippet()
+    rollback_state = _read_update_rollback_state()
+    if _is_update_running():
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "update_log_lines": update_log_lines,
+                "err": "rollback_running",
+                "started": False,
+                "update_running": True,
+                "rollback_state": rollback_state,
+                "operation": "rollback",
+            },
+            status_code=409,
+        )
+    if rollback_state is None:
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "update_log_lines": update_log_lines,
+                "err": "rollback_unavailable",
+                "started": False,
+                "update_running": False,
+                "rollback_state": None,
+                "operation": "rollback",
+            },
+            status_code=400,
+        )
+    if read_master_password() is None:
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "update_log_lines": update_log_lines,
+                "err": "nomaster",
+                "started": False,
+                "update_running": False,
+                "rollback_state": rollback_state,
+                "operation": "rollback",
+            },
+            status_code=400,
+        )
+    if not admin_auth.is_master_password((master_password or "").strip()):
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "update_log_lines": update_log_lines,
+                "err": "rollback_master",
+                "started": False,
+                "update_running": False,
+                "rollback_state": rollback_state,
+                "operation": "rollback",
+            },
+            status_code=400,
+        )
+    try:
+        app_logging.log_event(
+            ADMIN_LOG,
+            30,
+            "system_rollback_start",
+            request,
+            target_commit=rollback_state["previous_commit_short"],
+            backup=rollback_state.get("backup_name") or None,
+        )
+        _trigger_background_rollback(rollback_state)
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "update_log_lines": update_log_lines,
+                "started": True,
+                "err": None,
+                "update_running": True,
+                "rollback_state": rollback_state,
+                "operation": "rollback",
+            },
+        )
+    except Exception:
+        app_logging.log_event(
+            ADMIN_LOG,
+            40,
+            "system_rollback_start_failed",
+            request,
+            target_commit=rollback_state["previous_commit_short"],
+        )
+        return TEMPLATES.TemplateResponse(
+            request,
+            "admin/system_update.html",
+            {
+                "title": "System-Update",
+                "precheck": precheck,
+                "update_log_lines": update_log_lines,
+                "err": "rollback_start",
+                "started": False,
+                "update_running": _is_update_running(),
+                "rollback_state": rollback_state,
+                "operation": "rollback",
             },
             status_code=500,
         )
@@ -751,6 +1068,7 @@ def admin_system_update_page(request: Request) -> Response:
     master_ok = bool(read_master_password())
     update_running = _is_update_running()
     update_log_lines = _read_update_log_snippet()
+    rollback_state = _read_update_rollback_state()
     return TEMPLATES.TemplateResponse(
         request,
         "admin/system_update.html",
@@ -762,6 +1080,8 @@ def admin_system_update_page(request: Request) -> Response:
             "err": None,
             "started": False,
             "update_running": update_running,
+            "rollback_state": rollback_state,
+            "operation": "update",
         },
     )
 
@@ -1283,12 +1603,16 @@ def admin_debt_thresholds_post(
         da = int((age_threshold_a_days or "").strip())
         dbb = int((age_threshold_b_days or "").strip())
         dc = int((age_threshold_c_days or "").strip())
-        v1 = int((volume_1_percent or "").strip())
-        v2 = int((volume_2_percent or "").strip())
-        v3 = int((volume_3_percent or "").strip())
     except ValueError:
         return RedirectResponse("/admin/debt-thresholds?err=invalid", status_code=303)
     with db.get_connection() as conn:
+        current_v1, current_v2, current_v3 = debt_thresholds.get_warn_volumes_percent(conn)
+        try:
+            v1 = _parse_optional_percent(volume_1_percent, current_v1)
+            v2 = _parse_optional_percent(volume_2_percent, current_v2)
+            v3 = _parse_optional_percent(volume_3_percent, current_v3)
+        except ValueError:
+            return RedirectResponse("/admin/debt-thresholds?err=invalid", status_code=303)
         debt_thresholds.save_thresholds_cents(conn, ca, cb, cc)
         debt_thresholds.save_age_thresholds_days(conn, da, dbb, dc)
         current_m1, current_m2, current_m3 = debt_thresholds.get_threshold_messages(conn)
