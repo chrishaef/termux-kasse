@@ -1883,16 +1883,9 @@ body.app-admin .k-panel .admin-news-options {
 }
 
 body.app-admin .k-panel .admin-news-icon-picker {
-  margin: 0.75rem 0 0;
+  margin: 0.35rem 0 0;
   padding: 0;
   border: 0;
-}
-
-body.app-admin .k-panel .admin-news-icon-picker legend {
-  margin-bottom: 0.35rem;
-  padding: 0;
-  color: #141a16;
-  font-weight: 600;
 }
 
 body.app-admin .k-panel .admin-news-icon-preview {
