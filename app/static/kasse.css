@@ -2245,6 +2245,19 @@ body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar_
   font-weight: 700;
 }
 
+body.app-admin .table-wrap .admin-statistics-row-hidden {
+  display: none;
+}
+
+body.app-admin .table-wrap .admin-statistics-expand-btn {
+  display: block;
+  width: calc(100% - 1rem);
+  margin: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--kas-radius-button);
+  font-weight: 800;
+}
+
 @media (max-width: 760px) {
   body.app-admin .k-panel form.debt-thresholds-grid {
     grid-template-columns: 1fr;

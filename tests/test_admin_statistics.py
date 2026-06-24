@@ -87,6 +87,28 @@ def test_admin_statistics_page_pdf_and_xlsx() -> None:
         assert "Statistik_Zeitraum" in disp_xlsx
 
 
+def test_admin_statistics_toplists_are_collapsed_after_five_rows() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "G1"})
+        with db.get_connection() as conn:
+            gid = int(conn.execute("SELECT id FROM user_groups WHERE name = 'G1'").fetchone()[0])
+        for idx in range(1, 7):
+            client.post("/admin/users", data={"name": f"User{idx}", "group_id": str(gid)})
+        client.post("/admin/products", data={"name": "Cola", "price_eur": "1.00"})
+        with db.get_connection() as conn:
+            pid = int(conn.execute("SELECT id FROM products WHERE name = 'Cola'").fetchone()[0])
+            users = conn.execute("SELECT id FROM users ORDER BY name").fetchall()
+            for idx, row in enumerate(users, start=1):
+                add_purchase(conn, int(row[0]), pid, "Cola (x1)", idx * 100)
+
+        r = client.get("/admin/statistics")
+        assert r.status_code == 200
+        assert r.text.count('class="admin-statistics-row-hidden" data-admin-expand-row') >= 2
+        assert r.text.count('<button type="button" class="secondary admin-statistics-expand-btn" data-admin-expand-button>') == 2
+        assert "Alle 6 Einträge anzeigen" in r.text
+
+
 def test_statistics_pdf_includes_all_users_payload_for_selected_group(monkeypatch) -> None:
     captured: dict[str, object] = {}
 

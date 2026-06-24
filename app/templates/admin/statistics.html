@@ -58,12 +58,12 @@
 {% endif %}
 
 <h2 class="k-section-title">Topliste Nutzer (Ausstände)</h2>
-<div class="table-wrap">
+<div class="table-wrap admin-statistics-expandable" data-admin-expandable="open-balances">
   <table role="grid">
     <thead><tr><th>#</th><th>Gruppe</th><th>Nutzer</th><th class="num">Offene Buchungen</th><th class="num">Offener Ausstand</th></tr></thead>
     <tbody>
       {% for row in open_balance_rows %}
-      <tr>
+      <tr {% if loop.index > 5 %}class="admin-statistics-row-hidden" data-admin-expand-row{% endif %}>
         <td class="num">{{ loop.index }}</td>
         <td>{{ row['group_name'] }}</td>
         <td>{{ row['user_name'] }}</td>
@@ -75,16 +75,21 @@
       {% endfor %}
     </tbody>
   </table>
+  {% if open_balance_rows|length > 5 %}
+  <button type="button" class="secondary admin-statistics-expand-btn" data-admin-expand-button>
+    Alle {{ open_balance_rows|length }} Einträge anzeigen
+  </button>
+  {% endif %}
 </div>
 
 
 <h2 class="k-section-title">Topliste Nutzer (nach Summe)</h2>
-<div class="table-wrap">
+<div class="table-wrap admin-statistics-expandable" data-admin-expandable="user-sums">
   <table role="grid">
     <thead><tr><th>#</th><th>Gruppe</th><th>Nutzer</th><th>Einkäufe im Zeitraum</th><th class="num">Buchungen</th><th class="num">Summe</th></tr></thead>
     <tbody>
       {% for row in user_rows %}
-      <tr>
+      <tr {% if loop.index > 5 %}class="admin-statistics-row-hidden" data-admin-expand-row{% endif %}>
         <td class="num">{{ loop.index }}</td>
         <td>{{ row['group_name'] }}</td>
         <td>{{ row['user_name'] }}</td>
@@ -97,6 +102,11 @@
       {% endfor %}
     </tbody>
   </table>
+  {% if user_rows|length > 5 %}
+  <button type="button" class="secondary admin-statistics-expand-btn" data-admin-expand-button>
+    Alle {{ user_rows|length }} Einträge anzeigen
+  </button>
+  {% endif %}
 </div>
 
 
@@ -118,4 +128,18 @@
     </tbody>
   </table>
 </div>
+<script>
+  (function () {
+    document.querySelectorAll("[data-admin-expandable]").forEach(function (wrap) {
+      const btn = wrap.querySelector("[data-admin-expand-button]");
+      if (!btn) return;
+      btn.addEventListener("click", function () {
+        wrap.querySelectorAll("[data-admin-expand-row]").forEach(function (row) {
+          row.classList.remove("admin-statistics-row-hidden");
+        });
+        btn.hidden = true;
+      });
+    });
+  })();
+</script>
 {% endblock %}
