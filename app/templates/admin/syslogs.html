@@ -5,7 +5,7 @@
 <article class="k-panel admin-syslogs">
   <h2>Syslogs</h2>
   <p class="secondary">
-    Angezeigt werden die letzten {{ max_lines }} Zeilen bzw. {{ max_kb }} KB der ausgewählten Logdatei.
+    Angezeigt werden die neuesten {{ max_lines }} Zeilen bzw. {{ max_kb }} KB der ausgewählten Logdatei. Neueste Einträge stehen oben.
   </p>
 
   {% if logs %}
@@ -34,7 +34,7 @@
     </table>
   </div>
 
-  <h3>Inhalt</h3>
+  <h3>Inhalt <small class="secondary">neueste Einträge oben</small></h3>
   {% if selected_lines %}
   <pre class="admin-syslogs__log">{{ "\n".join(selected_lines) }}</pre>
   {% else %}

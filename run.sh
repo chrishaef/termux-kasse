@@ -211,7 +211,7 @@ start_server() {
   LOG_FILE="$ROOT/server.log"
   rotate_log_file "$LOG_FILE" 2000000 5
   echo ">>> Starte Server (Hintergrund), Host ${HOST}, Port ${PORT}"
-  nohup "$ROOT/.venv/bin/uvicorn" app.main:app --host "${HOST}" --port "${PORT}" >>"$LOG_FILE" 2>&1 &
+  nohup "$ROOT/.venv/bin/uvicorn" app.main:app --host "${HOST}" --port "${PORT}" --no-access-log >>"$LOG_FILE" 2>&1 &
   echo $! >"$PID_FILE"
   echo "Log: $LOG_FILE"
   echo "lokal:  http://127.0.0.1:${PORT}"

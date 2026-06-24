@@ -4,7 +4,7 @@
 <article class="k-panel" data-disable-admin-idle="1">
   <h2>System-Update Protokoll</h2>
   <p>Der Update-/Neustart-Prozess wurde ausgeführt. Prüfe unten die letzten Logzeilen.</p>
-  <p><strong>Aktuelle Update-Logzeilen nach dem Neustart</strong></p>
+  <p><strong>Aktuelle Update-Logzeilen nach dem Neustart</strong> <span class="secondary">(neueste Einträge oben)</span></p>
   {% if update_log_lines %}
   <pre class="admin-update-log-box">{{ "\n".join(update_log_lines) }}</pre>
   {% else %}

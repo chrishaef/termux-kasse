@@ -62,7 +62,7 @@
   {% endif %}
 
   <hr />
-  <p><strong>Bisherige Update-Logzeilen</strong></p>
+  <p><strong>Bisherige Update-Logzeilen</strong> <span class="secondary">(neueste Einträge oben)</span></p>
   {% if update_log_lines %}
   <pre class="admin-update-log-box">{{ "\n".join(update_log_lines) }}</pre>
   {% else %}

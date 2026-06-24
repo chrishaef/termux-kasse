@@ -112,8 +112,9 @@ def _read_syslog_tail(path: Path) -> list[str]:
     lines = text.splitlines()
     if len(lines) > LOG_VIEW_MAX_LINES:
         lines = lines[-LOG_VIEW_MAX_LINES:]
+    lines = list(reversed(lines))
     if data and len(data) >= LOG_VIEW_MAX_BYTES:
-        lines.insert(0, f"... nur die letzten {LOG_VIEW_MAX_LINES} Zeilen / {LOG_VIEW_MAX_BYTES // 1024} KB werden angezeigt ...")
+        lines.append(f"... nur die neuesten {LOG_VIEW_MAX_LINES} Zeilen / {LOG_VIEW_MAX_BYTES // 1024} KB werden angezeigt ...")
     return lines
 
 
@@ -341,7 +342,7 @@ def _read_update_log_snippet(max_lines: int = 80) -> list[str]:
         lines = [line.rstrip("\r\n") for line in log_path.read_text(encoding="utf-8").splitlines()]
         if not lines:
             return []
-        return lines[-max_lines:]
+        return list(reversed(lines[-max_lines:]))
     except Exception:
         return []
 
@@ -613,7 +614,6 @@ def admin_syslogs(request: Request, log: str | None = Query(default=None)) -> Re
     selected_lines: list[str] = []
     if selected_path is not None:
         selected_lines = _read_syslog_tail(selected_path)
-    app_logging.log_event(ADMIN_LOG, 20, "syslogs_viewed", request, log=selected_key or None)
     return TEMPLATES.TemplateResponse(
         request,
         "admin/syslogs.html",

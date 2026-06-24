@@ -285,7 +285,7 @@ async def log_system_relevant_requests(request: Request, call_next):
         raise
     elapsed_ms = int((time.monotonic() - started) * 1000)
     path = request.url.path
-    if response.status_code >= 400 and not path.startswith("/static/"):
+    if response.status_code >= 400 and not path.startswith("/static/") and path != "/favicon.ico":
         app_logging.log_event(
             logger,
             30 if response.status_code < 500 else 40,
