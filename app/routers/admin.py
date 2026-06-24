@@ -978,7 +978,7 @@ def admin_news_form(request: Request) -> Response:
             "notice_sizes": kiosk_notice.SIZES,
             "notice_icons": kiosk_notice.ICONS,
             "notice_icon_labels": kiosk_notice.ICON_LABELS,
-            "notice_icon_symbols": kiosk_notice.ICON_SYMBOLS,
+            "notice_icon_files": kiosk_notice.ICON_FILES,
             "saved": request.query_params.get("saved") == "1",
         },
     )

@@ -271,6 +271,7 @@ async def attach_kiosk_notice(request: Request, call_next):
             "alignment": kiosk_notice.DEFAULT_ALIGNMENT,
             "size": kiosk_notice.DEFAULT_SIZE,
             "icon": kiosk_notice.DEFAULT_ICON,
+            "icon_file": kiosk_notice.ICON_FILES[kiosk_notice.DEFAULT_ICON],
         }
     root = Path(__file__).resolve().parent.parent
     version_label, last_sync_label, last_sync_at_label = _sync_labels()

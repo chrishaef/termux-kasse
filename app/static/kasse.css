@@ -500,33 +500,13 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .trust-banner__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   flex-shrink: 0;
-  width: 1.45rem;
-  height: 1.45rem;
-  margin-top: 0.05rem;
-  border-radius: 999px;
-  border: 2px solid var(--kas-accent);
-  color: var(--kas-accent-bright);
-  font-size: 0.95rem;
-  font-weight: 900;
-  line-height: 1;
-  opacity: 0.95;
-}
-
-.trust-banner--icon-info .trust-banner__icon::before {
-  content: "i";
-}
-
-.trust-banner--icon-megaphone .trust-banner__icon::before,
-.trust-banner--icon-warning .trust-banner__icon::before {
-  content: "!";
-}
-
-.trust-banner--icon-star .trust-banner__icon::before {
-  content: "*";
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+  margin-top: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
 }
 
 .trust-banner__text {
@@ -1900,6 +1880,50 @@ body.app-admin .k-panel .admin-news-options {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.55rem 0.9rem;
   margin-top: 0.75rem;
+}
+
+body.app-admin .k-panel .admin-news-icon-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+}
+
+body.app-admin .k-panel .admin-news-icon-preview__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #b8b2a4;
+  border-radius: var(--kas-radius-sm);
+  background: #faf8f3;
+  color: #141a16;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+body.app-admin .k-panel .admin-news-icon-preview__item--selected {
+  border-color: var(--kas-accent-hover);
+  background: #fff3cf;
+  box-shadow: 0 0 0 2px rgba(212, 160, 18, 0.18);
+}
+
+body.app-admin .k-panel .admin-news-icon-preview__item img {
+  width: 1.8rem;
+  height: 1.8rem;
+  object-fit: contain;
+}
+
+body.app-admin .k-panel .admin-news-icon-preview__none {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 999px;
+  border: 1px dashed #8f8872;
+  color: #4a554c;
+  font-size: 0.68rem;
 }
 
 body.app-admin .k-panel .admin-toggle-row {

@@ -3,8 +3,8 @@
 {% if request.state.kiosk_notice %}
 {% set notice = request.state.kiosk_notice_settings %}
 <p class="trust-banner trust-banner--align-{{ notice['alignment'] }} trust-banner--size-{{ notice['size'] }} trust-banner--icon-{{ notice['icon'] }}">
-  {% if notice['icon'] != 'none' %}
-  <span class="trust-banner__icon" aria-hidden="true"></span>
+  {% if notice['icon_file'] %}
+  <img class="trust-banner__icon" src="/static/notice-icons/{{ notice['icon_file'] }}" alt="" decoding="async" loading="lazy" />
   {% endif %}
   <span class="trust-banner__text">{{ request.state.kiosk_notice | nl2br }}</span>
 </p>
