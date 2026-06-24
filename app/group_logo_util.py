@@ -130,7 +130,28 @@ def _encode_rgba_png(width: int, height: int, rgba_rows: list[bytes]) -> bytes:
     )
 
 
-def _trim_transparent_padding(data: bytes) -> bytes:
+def _rgba_pixel(row: bytearray, x: int, bpp: int, color_type: int) -> tuple[int, int, int, int]:
+    offset = x * bpp
+    if color_type == 6:
+        return row[offset], row[offset + 1], row[offset + 2], row[offset + 3]
+    if color_type == 4:
+        gray = row[offset]
+        return gray, gray, gray, row[offset + 1]
+    if color_type == 2:
+        return row[offset], row[offset + 1], row[offset + 2], 255
+    if color_type == 0:
+        gray = row[offset]
+        return gray, gray, gray, 255
+    raise ValueError("color")
+
+
+def _background_like(pixel: tuple[int, int, int, int], bg: tuple[int, int, int]) -> bool:
+    if pixel[3] == 0:
+        return True
+    return max(abs(pixel[i] - bg[i]) for i in range(3)) <= 18
+
+
+def _trim_logo_padding(data: bytes) -> bytes:
     chunks = _png_chunks(data)
     ihdr = next((payload for ctype, payload in chunks if ctype == b"IHDR"), None)
     if ihdr is None or len(ihdr) != 13:
@@ -143,23 +164,40 @@ def _trim_transparent_padding(data: bytes) -> bytes:
         or compression != 0
         or filter_method != 0
         or interlace != 0
-        or color_type not in (4, 6)
+        or color_type not in (0, 2, 4, 6)
     ):
         return data
-    bpp = 4 if color_type == 6 else 2
+    bpp_by_color_type = {0: 1, 2: 3, 4: 2, 6: 4}
+    bpp = bpp_by_color_type[color_type]
     idat = b"".join(payload for ctype, payload in chunks if ctype == b"IDAT")
     if not idat:
         return data
     rows = _unfilter_scanlines(zlib.decompress(idat), width, height, bpp)
 
+    corners = [
+        _rgba_pixel(rows[0], 0, bpp, color_type),
+        _rgba_pixel(rows[0], width - 1, bpp, color_type),
+        _rgba_pixel(rows[height - 1], 0, bpp, color_type),
+        _rgba_pixel(rows[height - 1], width - 1, bpp, color_type),
+    ]
+    has_transparency = any(
+        _rgba_pixel(row, x, bpp, color_type)[3] < 255
+        for row in rows
+        for x in range(width)
+    )
+    bg = tuple(sorted(pixel[i] for pixel in corners)[len(corners) // 2] for i in range(3))
+
     min_x = width
     min_y = height
     max_x = -1
     max_y = -1
-    alpha_offset = 3 if color_type == 6 else 1
     for y, row in enumerate(rows):
         for x in range(width):
-            if row[x * bpp + alpha_offset] == 0:
+            pixel = _rgba_pixel(row, x, bpp, color_type)
+            if has_transparency:
+                if pixel[3] == 0:
+                    continue
+            elif _background_like(pixel, bg):
                 continue
             min_x = min(min_x, x)
             min_y = min(min_y, y)
@@ -175,13 +213,7 @@ def _trim_transparent_padding(data: bytes) -> bytes:
         source = rows[y]
         out = bytearray()
         for x in range(min_x, max_x + 1):
-            offset = x * bpp
-            if color_type == 6:
-                out.extend(source[offset : offset + 4])
-            else:
-                gray = source[offset]
-                alpha = source[offset + 1]
-                out.extend((gray, gray, gray, alpha))
+            out.extend(_rgba_pixel(source, x, bpp, color_type))
         out_rows.append(bytes(out))
     return _encode_rgba_png(max_x - min_x + 1, max_y - min_y + 1, out_rows)
 
@@ -189,7 +221,7 @@ def _trim_transparent_padding(data: bytes) -> bytes:
 def normalize_logo_png(data: bytes) -> bytes:
     validate_png_bytes(data)
     try:
-        normalized = _trim_transparent_padding(data)
+        normalized = _trim_logo_padding(data)
         validate_png_bytes(normalized)
         return normalized
     except Exception:

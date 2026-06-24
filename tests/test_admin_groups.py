@@ -41,6 +41,24 @@ def _rgba_png_with_opaque_square(size: int, square_size: int, offset: int) -> by
     )
 
 
+def _rgb_png_with_square_on_black(size: int, square_size: int, offset: int) -> bytes:
+    rows: list[bytes] = []
+    for y in range(size):
+        row = bytearray()
+        for x in range(size):
+            inside = offset <= x < offset + square_size and offset <= y < offset + square_size
+            row.extend((210, 210, 210) if inside else (0, 0, 0))
+        rows.append(bytes(row))
+    raw = b"".join(b"\x00" + row for row in rows)
+    ihdr = struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0)
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + _png_chunk(b"IHDR", ihdr)
+        + _png_chunk(b"IDAT", zlib.compress(raw, level=9))
+        + _png_chunk(b"IEND", b"")
+    )
+
+
 def test_admin_group_edit_flow() -> None:
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
@@ -127,6 +145,31 @@ def test_group_logo_upload_trims_transparent_padding_for_uniform_display() -> No
         assert group_logo_util.parse_png_ihdr_dimensions(
             group_logo_util.logo_file_path(gid_b).read_bytes()
         ) == (4, 4)
+
+
+def test_group_logo_upload_trims_solid_background_padding() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "BlackPad"})
+        with db.get_connection() as conn:
+            gid = int(conn.execute("SELECT id FROM user_groups WHERE name='BlackPad'").fetchone()[0])
+
+        up = client.post(
+            f"/admin/groups/{gid}/edit",
+            data={"name": "BlackPad", "tile_logo_size": "max"},
+            files={
+                "logo_png": (
+                    "logo.png",
+                    io.BytesIO(_rgb_png_with_square_on_black(16, 6, 5)),
+                    "image/png",
+                )
+            },
+            follow_redirects=False,
+        )
+        assert up.status_code == 303
+        assert group_logo_util.parse_png_ihdr_dimensions(
+            group_logo_util.logo_file_path(gid).read_bytes()
+        ) == (6, 6)
 
 
 def test_admin_group_logo_tile_display_options() -> None:
