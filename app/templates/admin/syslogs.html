@@ -1,0 +1,47 @@
+{% extends "admin/shell.html" %}
+{% block admin_page %}
+<a href="/admin" class="admin-back js-history-back">← Zurück</a>
+
+<article class="k-panel admin-syslogs">
+  <h2>Syslogs</h2>
+  <p class="secondary">
+    Angezeigt werden die letzten {{ max_lines }} Zeilen bzw. {{ max_kb }} KB der ausgewählten Logdatei.
+  </p>
+
+  {% if logs %}
+  <div class="table-wrap admin-syslogs__files">
+    <table role="grid">
+      <thead>
+        <tr>
+          <th>Datei</th>
+          <th>Pfad</th>
+          <th>Größe</th>
+          <th>Geändert</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in logs %}
+        <tr class="{% if item['key'] == selected_key %}admin-syslogs__row--selected{% endif %}">
+          <td>
+            <a href="/admin/syslogs?log={{ item['key'] }}" class="admin-syslogs__file-link">{{ item['name'] }}</a>
+          </td>
+          <td><code>{{ item['path_label'] }}</code></td>
+          <td>{{ item['size_kb'] }} KB</td>
+          <td>{{ item['modified_label'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Inhalt</h3>
+  {% if selected_lines %}
+  <pre class="admin-syslogs__log">{{ "\n".join(selected_lines) }}</pre>
+  {% else %}
+  <p class="secondary">Die ausgewählte Logdatei ist leer.</p>
+  {% endif %}
+  {% else %}
+  <p class="secondary">Noch keine Logdateien vorhanden.</p>
+  {% endif %}
+</article>
+{% endblock %}

@@ -146,6 +146,8 @@ def test_admin_system_settings_can_disable_pricelist_screensaver() -> None:
         home = client.get("/")
         assert home.status_code == 200
         assert "kioskPreislisteEnabled: false" in home.text
+        assert "if (!(isHomePage && !APP_TIMEOUTS.kioskPreislisteEnabled))" in home.text
+        assert 'document.getElementById("site-repo-link")' in home.text
 
         logout = client.post("/admin/logout", follow_redirects=False)
         assert logout.status_code == 303

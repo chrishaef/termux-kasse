@@ -16,6 +16,7 @@ from qrcode.image.svg import SvgPathImage
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_secret_key
+from app import app_logging
 from app import backup_service
 from app import db
 from app import debt_thresholds
@@ -251,11 +252,49 @@ def _sync_labels() -> tuple[str, str, str]:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    init_db()
-    yield
+    app_logging.configure_logging()
+    system_log = app_logging.get_logger("system")
+    try:
+        init_db()
+    except Exception:
+        system_log.exception("app_start_failed")
+        raise
+    app_logging.log_event(system_log, 20, "app_start")
+    try:
+        yield
+    finally:
+        app_logging.log_event(system_log, 20, "app_stop")
 
 
 app = FastAPI(title="Termux-Shopkasse", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def log_system_relevant_requests(request: Request, call_next):
+    started = time.monotonic()
+    logger = app_logging.get_logger("requests")
+    try:
+        response = await call_next(request)
+    except Exception:
+        logger.exception(
+            "request_exception method=%s path=%s client=%s",
+            request.method,
+            request.url.path,
+            request.client.host if request.client else None,
+        )
+        raise
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    path = request.url.path
+    if response.status_code >= 400 and not path.startswith("/static/"):
+        app_logging.log_event(
+            logger,
+            30 if response.status_code < 500 else 40,
+            "http_error",
+            request,
+            status_code=response.status_code,
+            elapsed_ms=elapsed_ms,
+        )
+    return response
 
 
 @app.middleware("http")

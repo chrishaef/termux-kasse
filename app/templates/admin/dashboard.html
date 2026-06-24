@@ -158,7 +158,15 @@
           </tr>
           <tr><td>Start:</td><td>{{ request.state.system_started_label }}</td></tr>
           <tr><td>Backup:</td><td>{{ telemetry_extra['auto_backup_label'] }} ({{ telemetry_extra['auto_backup_next_label'] }})</td></tr>
-          <tr><td>Speicher:</td><td>{{ telemetry_extra['disk_free_used_label'] }}</td></tr>
+          <tr>
+            <td>Speicher:</td>
+            <td>
+              <span class="admin-system-line">
+                {{ telemetry_extra['disk_free_used_label'] }}
+                <a href="/admin/syslogs" class="admin-version-state admin-version-state--action">syslogs</a>
+              </span>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>

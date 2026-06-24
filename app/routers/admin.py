@@ -16,6 +16,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Query, Request, Upload
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 
 from app import admin_auth
+from app import app_logging
 from app import backup_service
 from app import db
 from app import debt_thresholds
@@ -37,10 +38,83 @@ from app.export_service import (
 from app.templates_env import TEMPLATES
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+ADMIN_LOG = app_logging.get_logger("admin")
+LOG_VIEW_MAX_BYTES = 128_000
+LOG_VIEW_MAX_LINES = 400
 
 
 def _backup_archive_dir() -> Path:
     return backup_service.backup_archive_dir()
+
+
+def _root_dir() -> Path:
+    return Path(__file__).resolve().parent.parent.parent
+
+
+def _syslog_base_paths() -> dict[str, Path]:
+    root = _root_dir()
+    return {
+        "app": app_logging.app_log_path(),
+        "server": root / "server.log",
+        "update-trigger": root / "update-trigger.log",
+    }
+
+
+def _syslog_path_for_key(key: str) -> Path | None:
+    if "." in key or "/" in key or "\\" in key:
+        return None
+    base_key, _, suffix = key.partition(":")
+    base_path = _syslog_base_paths().get(base_key)
+    if base_path is None:
+        return None
+    if not suffix:
+        return base_path
+    if not suffix.isdigit():
+        return None
+    idx = int(suffix)
+    if idx < 1 or idx > app_logging.PLAIN_LOG_BACKUP_COUNT:
+        return None
+    return base_path.with_name(f"{base_path.name}.{idx}")
+
+
+def _available_syslogs() -> list[dict[str, Any]]:
+    logs: list[dict[str, Any]] = []
+    root = _root_dir()
+    for base_key, base_path in _syslog_base_paths().items():
+        candidates = [(base_key, base_path)]
+        candidates.extend(
+            (f"{base_key}:{idx}", base_path.with_name(f"{base_path.name}.{idx}"))
+            for idx in range(1, app_logging.PLAIN_LOG_BACKUP_COUNT + 1)
+        )
+        for key, path in candidates:
+            if not path.exists() or not path.is_file():
+                continue
+            stat = path.stat()
+            logs.append(
+                {
+                    "key": key,
+                    "name": path.name,
+                    "path_label": str(path.relative_to(root)) if path.is_relative_to(root) else str(path),
+                    "size_kb": max(1, round(stat.st_size / 1024)),
+                    "modified_label": datetime.fromtimestamp(stat.st_mtime).strftime("%d.%m.%y %H:%M:%S"),
+                }
+            )
+    return logs
+
+
+def _read_syslog_tail(path: Path) -> list[str]:
+    with path.open("rb") as f:
+        f.seek(0, os.SEEK_END)
+        size = f.tell()
+        f.seek(max(0, size - LOG_VIEW_MAX_BYTES), os.SEEK_SET)
+        data = f.read()
+    text = data.decode("utf-8", errors="replace")
+    lines = text.splitlines()
+    if len(lines) > LOG_VIEW_MAX_LINES:
+        lines = lines[-LOG_VIEW_MAX_LINES:]
+    if data and len(data) >= LOG_VIEW_MAX_BYTES:
+        lines.insert(0, f"... nur die letzten {LOG_VIEW_MAX_LINES} Zeilen / {LOG_VIEW_MAX_BYTES // 1024} KB werden angezeigt ...")
+    return lines
 
 
 def _backup_archive_list() -> list[dict]:
@@ -128,6 +202,10 @@ def _trigger_background_update(update_channel: str = "release") -> None:
     if _is_update_running():
         raise RuntimeError("Update läuft bereits")
     log_path = root / "update-trigger.log"
+    app_logging.rotate_plain_log(
+        log_path,
+        max_bytes=app_logging.UPDATE_LOG_MAX_BYTES,
+    )
     pid_path = _update_pid_path()
     with log_path.open("a", encoding="utf-8") as log_file:
         log_file.write(f"\n=== Update ausgelöst: {datetime.now().isoformat()} ===\n")
@@ -366,6 +444,7 @@ def admin_login_post(
     with db.get_connection() as conn:
         ok, is_master = admin_auth.verify_admin_password(conn, password)
     if not ok:
+        app_logging.log_event(ADMIN_LOG, 30, "admin_login_failed", request)
         return TEMPLATES.TemplateResponse(
             request,
             "admin/login.html",
@@ -374,6 +453,7 @@ def admin_login_post(
         )
     request.session["admin_user"] = "master" if is_master else "admin"
     request.session["admin_master"] = bool(is_master)
+    app_logging.log_event(ADMIN_LOG, 20, "admin_login_success", request, master=bool(is_master))
     return RedirectResponse("/admin", status_code=303)
 
 
@@ -383,6 +463,7 @@ def admin_logout(request: Request) -> RedirectResponse:
     with db.get_connection() as conn:
         timeouts = system_settings.get_timeout_settings(conn)
     target = "/preisliste" if timeouts["kiosk_preisliste_enabled"] else "/"
+    app_logging.log_event(ADMIN_LOG, 20, "admin_logout", request, target=target)
     return RedirectResponse(target, status_code=303)
 
 
@@ -451,6 +532,7 @@ def admin_password_post(
         )
     with db.get_connection() as conn:
         admin_auth.set_regular_password(conn, new_password)
+    app_logging.log_event(ADMIN_LOG, 20, "admin_password_changed", request)
     return RedirectResponse("/admin/password?saved=1", status_code=303)
 
 
@@ -508,6 +590,40 @@ def admin_dashboard(request: Request) -> Response:
                 "today_total_cents": today_total_cents,
                 "disk_free_used_label": disk_free_used_label,
             },
+        },
+    )
+
+
+@router.get("/syslogs", response_class=HTMLResponse)
+def admin_syslogs(request: Request, log: str | None = Query(default=None)) -> Response:
+    if (r := _redirect_login(request)):
+        return r
+    logs = _available_syslogs()
+    selected_key = (log or "").strip()
+    if selected_key:
+        selected_path = _syslog_path_for_key(selected_key)
+        if selected_path is None or not selected_path.exists() or not selected_path.is_file():
+            raise HTTPException(status_code=404, detail="Logdatei nicht gefunden")
+    elif logs:
+        selected_key = str(logs[0]["key"])
+        selected_path = _syslog_path_for_key(selected_key)
+    else:
+        selected_path = None
+
+    selected_lines: list[str] = []
+    if selected_path is not None:
+        selected_lines = _read_syslog_tail(selected_path)
+    app_logging.log_event(ADMIN_LOG, 20, "syslogs_viewed", request, log=selected_key or None)
+    return TEMPLATES.TemplateResponse(
+        request,
+        "admin/syslogs.html",
+        {
+            "title": "Syslogs",
+            "logs": logs,
+            "selected_key": selected_key,
+            "selected_lines": selected_lines,
+            "max_lines": LOG_VIEW_MAX_LINES,
+            "max_kb": LOG_VIEW_MAX_BYTES // 1024,
         },
     )
 
@@ -584,6 +700,13 @@ def admin_system_update_start(
             status_code=400,
         )
     try:
+        app_logging.log_event(
+            ADMIN_LOG,
+            20,
+            "system_update_start",
+            request,
+            update_channel=update_channel,
+        )
         _trigger_background_update(update_channel)
         return TEMPLATES.TemplateResponse(
             request,
@@ -598,6 +721,13 @@ def admin_system_update_start(
             },
         )
     except Exception:
+        app_logging.log_event(
+            ADMIN_LOG,
+            40,
+            "system_update_start_failed",
+            request,
+            update_channel=update_channel,
+        )
         return TEMPLATES.TemplateResponse(
             request,
             "admin/system_update.html",
@@ -784,10 +914,12 @@ def admin_backup_export(request: Request, master_password: str = Form("")) -> Re
     if read_master_password() is None:
         return RedirectResponse("/admin/backup?export_err=nomaster", status_code=303)
     if not admin_auth.is_master_password(master_password):
+        app_logging.log_event(ADMIN_LOG, 30, "backup_export_rejected", request, reason="master")
         return RedirectResponse("/admin/backup?export_err=master", status_code=303)
     if not db_path().exists():
         raise HTTPException(status_code=404, detail="Datenbank nicht gefunden")
     backup_service.create_system_backup_archive()
+    app_logging.log_event(ADMIN_LOG, 20, "backup_export_created", request)
     return RedirectResponse("/admin/backup?created=1", status_code=303)
 
 
@@ -842,6 +974,7 @@ def admin_backup_import(
     if read_master_password() is None:
         return RedirectResponse("/admin/backup?import_err=nomaster", status_code=303)
     if not admin_auth.is_master_password(master_password):
+        app_logging.log_event(ADMIN_LOG, 30, "backup_import_rejected", request, reason="master")
         return RedirectResponse("/admin/backup?import_err=master", status_code=303)
     data = backup_file.file.read()
     if not data:
@@ -867,9 +1000,11 @@ def admin_backup_import(
             with zipfile.ZipFile(io.BytesIO(data), "r") as zf:
                 names = set(zf.namelist())
                 if "kasse.db" not in names:
+                    app_logging.log_event(ADMIN_LOG, 30, "backup_import_invalid", request, reason="missing_db")
                     return RedirectResponse("/admin/backup?err=invalid", status_code=303)
                 if "manifest.json" in names:
                     if not _validate_backup_manifest(zf.read("manifest.json"), names):
+                        app_logging.log_event(ADMIN_LOG, 30, "backup_import_invalid", request, reason="manifest")
                         return RedirectResponse("/admin/backup?err=invalid", status_code=303)
                 db_bytes = zf.read("kasse.db")
                 for name in sorted(names):
@@ -895,6 +1030,7 @@ def admin_backup_import(
         tmp_file.write_bytes(db_bytes)
         if not _is_valid_sqlite_file(tmp_file):
             _safe_unlink(tmp_file)
+            app_logging.log_event(ADMIN_LOG, 30, "backup_import_invalid", request, reason="sqlite")
             return RedirectResponse("/admin/backup?err=invalid", status_code=303)
         if backup_exports_dir.exists():
             for p in backup_exports_dir.glob("*"):
@@ -951,6 +1087,7 @@ def admin_backup_import(
                 if p.is_file():
                     _safe_unlink(p)
             backup_exports_dir.rmdir()
+    app_logging.log_event(ADMIN_LOG, 20, "backup_import_completed", request)
     return RedirectResponse("/admin/backup?saved=1", status_code=303)
 
 
@@ -966,11 +1103,14 @@ def admin_backup_reset_transactional(
     if read_master_password() is None:
         return RedirectResponse("/admin/backup?reset_err=nomaster", status_code=303)
     if not admin_auth.is_master_password(master_password):
+        app_logging.log_event(ADMIN_LOG, 30, "transaction_reset_rejected", request, reason="master")
         return RedirectResponse("/admin/backup?reset_err=master", status_code=303)
     if confirm_reset not in ("1", "on", "yes", "true"):
+        app_logging.log_event(ADMIN_LOG, 30, "transaction_reset_rejected", request, reason="confirm")
         return RedirectResponse("/admin/backup?reset_err=noconfirm", status_code=303)
     with db.get_connection() as conn:
         ledger_service.purge_ledger_and_settlements(conn)
+    app_logging.log_event(ADMIN_LOG, 30, "transaction_reset_completed", request)
     return RedirectResponse("/admin/backup?reset=1", status_code=303)
 
 
@@ -1007,6 +1147,16 @@ def admin_news_save(
         return r
     kiosk_notice.set_custom_message(
         message,
+        alignment=alignment,
+        size=size,
+        icon=icon,
+    )
+    app_logging.log_event(
+        ADMIN_LOG,
+        20,
+        "kiosk_notice_saved",
+        request,
+        has_message=bool(message.strip()),
         alignment=alignment,
         size=size,
         icon=icon,
@@ -1060,6 +1210,16 @@ def admin_system_settings_post(
             kiosk_home_seconds=home_seconds,
             kiosk_preisliste_enabled=kiosk_preisliste_enabled in ("1", "on", "yes", "true"),
         )
+    app_logging.log_event(
+        ADMIN_LOG,
+        20,
+        "system_settings_saved",
+        request,
+        admin_logout_seconds=admin_seconds,
+        kiosk_preisliste_seconds=preisliste_seconds,
+        kiosk_home_seconds=home_seconds,
+        kiosk_preisliste_enabled=kiosk_preisliste_enabled in ("1", "on", "yes", "true"),
+    )
     return RedirectResponse("/admin/system-settings?saved=1", status_code=303)
 
 
@@ -1245,6 +1405,7 @@ def admin_groups_edit_save(
         try:
             group_logo_util.validate_png_bytes(raw_logo)
         except ValueError:
+            app_logging.log_event(ADMIN_LOG, 30, "group_logo_invalid", request, group_id=group_id)
             return RedirectResponse(
                 f"/admin/groups/{group_id}/edit?err=logo_invalid", status_code=303
             )
@@ -1271,11 +1432,13 @@ def admin_groups_edit_save(
             conn.execute(
                 "UPDATE user_groups SET has_logo = 1 WHERE id = ?", (group_id,)
             )
+            app_logging.log_event(ADMIN_LOG, 20, "group_logo_saved", request, group_id=group_id)
         elif remove_logo.strip() == "1":
             group_logo_util.delete_logo_file(group_id)
             conn.execute(
                 "UPDATE user_groups SET has_logo = 0 WHERE id = ?", (group_id,)
             )
+            app_logging.log_event(ADMIN_LOG, 20, "group_logo_removed", request, group_id=group_id)
     return RedirectResponse("/admin/groups", status_code=303)
 
 

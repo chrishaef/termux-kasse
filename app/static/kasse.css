@@ -1635,6 +1635,13 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   white-space: nowrap;
 }
 
+.admin-system-line {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
 .admin-version-state--action {
   display: inline-block;
   width: auto;
@@ -1670,6 +1677,34 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   color: #1b1f1a;
   font-size: 0.78rem;
   line-height: 1.3;
+}
+
+.admin-syslogs__files {
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.admin-syslogs__row--selected {
+  outline: 2px solid rgba(31, 75, 111, 0.35);
+  outline-offset: -2px;
+  background: rgba(31, 75, 111, 0.08);
+}
+
+.admin-syslogs__file-link {
+  font-weight: 700;
+}
+
+.admin-syslogs__log {
+  max-height: 32rem;
+  overflow: auto;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #b8b2a1;
+  background: #11160f;
+  color: #e9f0e4;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
 }
 
 @media (max-width: 700px) {

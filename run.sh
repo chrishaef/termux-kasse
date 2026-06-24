@@ -185,9 +185,31 @@ stop_old() {
   fi
 }
 
+rotate_log_file() {
+  local file="$1"
+  local max_bytes="${2:-2000000}"
+  local keep="${3:-5}"
+  if [[ ! -f "$file" ]]; then
+    return 0
+  fi
+  local size
+  size="$(wc -c <"$file" 2>/dev/null || echo 0)"
+  if [[ "$size" -lt "$max_bytes" ]]; then
+    return 0
+  fi
+  local i
+  for ((i=keep-1; i>=1; i--)); do
+    if [[ -f "$file.$i" ]]; then
+      mv -f "$file.$i" "$file.$((i+1))"
+    fi
+  done
+  mv -f "$file" "$file.1"
+}
+
 start_server() {
   PID_FILE="$ROOT/.server.pid"
   LOG_FILE="$ROOT/server.log"
+  rotate_log_file "$LOG_FILE" 2000000 5
   echo ">>> Starte Server (Hintergrund), Host ${HOST}, Port ${PORT}"
   nohup "$ROOT/.venv/bin/uvicorn" app.main:app --host "${HOST}" --port "${PORT}" >>"$LOG_FILE" 2>&1 &
   echo $! >"$PID_FILE"
