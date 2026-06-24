@@ -40,6 +40,16 @@
       />
     </label>
 
+    <label class="system-settings-grid__full admin-toggle-row">
+      <input
+        type="checkbox"
+        name="kiosk_preisliste_enabled"
+        value="1"
+        {% if timeouts['kiosk_preisliste_enabled'] %}checked{% endif %}
+      />
+      Bildschirmschoner „Preisliste“ aktivieren
+    </label>
+
     <label>
       Kiosk: Rücksprung zur Startansicht (Sekunden)
       <input
@@ -55,8 +65,9 @@
     </label>
 
     <p class="secondary system-settings-grid__full" style="margin-top:0;">
-      Der Rücksprung zur Startansicht gilt für die Nutzer-/Buchungsansicht. Die Preisliste selbst
-      bleibt weiterhin per Tipp auf den freien Bereich sofort verlassbar.
+      Der Rücksprung zur Startansicht gilt für Gruppen-, Nutzer- und Buchungsansichten. Ist der
+      Bildschirmschoner aktiv, öffnet die Startseite nach der Preisliste-Zeit automatisch die Preisliste.
+      Die Preisliste selbst bleibt per Tipp auf den freien Bereich sofort verlassbar.
     </p>
 
     <p class="secondary system-settings-grid__full" style="margin-top:0;">

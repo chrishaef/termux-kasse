@@ -7,10 +7,12 @@ from app import db
 KEY_ADMIN_LOGOUT_SECONDS = "admin_logout_seconds"
 KEY_KIOSK_PREISLISTE_SECONDS = "kiosk_preisliste_seconds"
 KEY_KIOSK_HOME_SECONDS = "kiosk_home_seconds"
+KEY_KIOSK_PREISLISTE_ENABLED = "kiosk_preisliste_enabled"
 
 DEFAULT_ADMIN_LOGOUT_SECONDS = 25
 DEFAULT_KIOSK_PREISLISTE_SECONDS = 60
 DEFAULT_KIOSK_HOME_SECONDS = 30
+DEFAULT_KIOSK_PREISLISTE_ENABLED = True
 
 MIN_TIMEOUT_SECONDS = 5
 MAX_TIMEOUT_SECONDS = 3600
@@ -47,28 +49,59 @@ def _save_int(conn: sqlite3.Connection, key: str, value: int) -> int:
     return normalized
 
 
-def default_timeout_settings() -> dict[str, int]:
+def _read_bool(conn: sqlite3.Connection, key: str) -> bool | None:
+    row = db.fetch_one(conn, "SELECT value FROM app_settings WHERE key = ?", (key,))
+    if not row or row["value"] is None:
+        return None
+    raw = str(row["value"]).strip().lower()
+    if raw in ("1", "true", "yes", "on"):
+        return True
+    if raw in ("0", "false", "no", "off"):
+        return False
+    return None
+
+
+def _save_bool(conn: sqlite3.Connection, key: str, value: bool) -> bool:
+    normalized = bool(value)
+    conn.execute(
+        """
+        INSERT INTO app_settings (key, value) VALUES (?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+        """,
+        (key, "1" if normalized else "0"),
+    )
+    return normalized
+
+
+def default_timeout_settings() -> dict[str, int | bool]:
     return {
         "admin_logout_seconds": DEFAULT_ADMIN_LOGOUT_SECONDS,
         "kiosk_preisliste_seconds": DEFAULT_KIOSK_PREISLISTE_SECONDS,
         "kiosk_home_seconds": DEFAULT_KIOSK_HOME_SECONDS,
+        "kiosk_preisliste_enabled": DEFAULT_KIOSK_PREISLISTE_ENABLED,
     }
 
 
-def get_timeout_settings(conn: sqlite3.Connection) -> dict[str, int]:
+def get_timeout_settings(conn: sqlite3.Connection) -> dict[str, int | bool]:
     defaults = default_timeout_settings()
+    preisliste_enabled = _read_bool(conn, KEY_KIOSK_PREISLISTE_ENABLED)
     return {
         "admin_logout_seconds": _normalize_timeout(
             _read_int(conn, KEY_ADMIN_LOGOUT_SECONDS),
-            defaults["admin_logout_seconds"],
+            int(defaults["admin_logout_seconds"]),
         ),
         "kiosk_preisliste_seconds": _normalize_timeout(
             _read_int(conn, KEY_KIOSK_PREISLISTE_SECONDS),
-            defaults["kiosk_preisliste_seconds"],
+            int(defaults["kiosk_preisliste_seconds"]),
         ),
         "kiosk_home_seconds": _normalize_timeout(
             _read_int(conn, KEY_KIOSK_HOME_SECONDS),
-            defaults["kiosk_home_seconds"],
+            int(defaults["kiosk_home_seconds"]),
+        ),
+        "kiosk_preisliste_enabled": (
+            preisliste_enabled
+            if preisliste_enabled is not None
+            else bool(defaults["kiosk_preisliste_enabled"])
         ),
     }
 
@@ -79,7 +112,8 @@ def save_timeout_settings(
     admin_logout_seconds: int,
     kiosk_preisliste_seconds: int,
     kiosk_home_seconds: int,
-) -> dict[str, int]:
+    kiosk_preisliste_enabled: bool = DEFAULT_KIOSK_PREISLISTE_ENABLED,
+) -> dict[str, int | bool]:
     admin_seconds = _normalize_timeout(admin_logout_seconds, DEFAULT_ADMIN_LOGOUT_SECONDS)
     preisliste_seconds = _normalize_timeout(
         kiosk_preisliste_seconds,
@@ -89,8 +123,14 @@ def save_timeout_settings(
     _save_int(conn, KEY_ADMIN_LOGOUT_SECONDS, admin_seconds)
     _save_int(conn, KEY_KIOSK_PREISLISTE_SECONDS, preisliste_seconds)
     _save_int(conn, KEY_KIOSK_HOME_SECONDS, home_seconds)
+    preisliste_enabled = _save_bool(
+        conn,
+        KEY_KIOSK_PREISLISTE_ENABLED,
+        kiosk_preisliste_enabled,
+    )
     return {
         "admin_logout_seconds": admin_seconds,
         "kiosk_preisliste_seconds": preisliste_seconds,
         "kiosk_home_seconds": home_seconds,
+        "kiosk_preisliste_enabled": preisliste_enabled,
     }

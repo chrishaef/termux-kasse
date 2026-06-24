@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 {% block trust %}
 {% if request.state.kiosk_notice %}
-<p class="trust-banner">{{ request.state.kiosk_notice | nl2br }}</p>
+{% set notice = request.state.kiosk_notice_settings %}
+<p class="trust-banner trust-banner--align-{{ notice['alignment'] }} trust-banner--size-{{ notice['size'] }} trust-banner--icon-{{ notice['icon'] }}">
+  {% if notice['icon'] != 'none' %}
+  <span class="trust-banner__icon" aria-hidden="true"></span>
+  {% endif %}
+  <span class="trust-banner__text">{{ request.state.kiosk_notice | nl2br }}</span>
+</p>
 {% endif %}
 {% endblock %}
 {% block content %}

@@ -261,9 +261,17 @@ app = FastAPI(title="Termux-Shopkasse", lifespan=lifespan)
 @app.middleware("http")
 async def attach_kiosk_notice(request: Request, call_next):
     try:
-        request.state.kiosk_notice = kiosk_notice.get_display_text()
+        notice_settings = kiosk_notice.get_settings()
+        request.state.kiosk_notice = notice_settings["message"].strip()
+        request.state.kiosk_notice_settings = notice_settings
     except Exception:
         request.state.kiosk_notice = kiosk_notice.DEFAULT_KIOSK_NOTICE
+        request.state.kiosk_notice_settings = {
+            "message": kiosk_notice.DEFAULT_KIOSK_NOTICE,
+            "alignment": kiosk_notice.DEFAULT_ALIGNMENT,
+            "size": kiosk_notice.DEFAULT_SIZE,
+            "icon": kiosk_notice.DEFAULT_ICON,
+        }
     root = Path(__file__).resolve().parent.parent
     version_label, last_sync_label, last_sync_at_label = _sync_labels()
     request.state.version_label = version_label

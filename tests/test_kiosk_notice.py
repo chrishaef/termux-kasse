@@ -20,3 +20,20 @@ def test_kiosk_home_shows_custom_notice() -> None:
         assert "Apfelkuchen" in r.text
         assert "Vertrauensbasis" not in r.text
         kiosk_notice.set_custom_message("")
+
+
+def test_kiosk_notice_style_options_are_rendered() -> None:
+    with TestClient(app) as c:
+        kiosk_notice.set_custom_message(
+            "Antreten um 18 Uhr.",
+            alignment="right",
+            size="large",
+            icon="warning",
+        )
+        r = c.get("/")
+        assert r.status_code == 200
+        assert "Antreten um 18 Uhr." in r.text
+        assert "trust-banner--align-right" in r.text
+        assert "trust-banner--size-large" in r.text
+        assert "trust-banner--icon-warning" in r.text
+        kiosk_notice.set_custom_message("")

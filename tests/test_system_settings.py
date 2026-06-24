@@ -92,6 +92,7 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
         assert re.search(r'name="admin_logout_seconds"[^>]*value="25"', page.text)
         assert re.search(r'name="kiosk_preisliste_seconds"[^>]*value="60"', page.text)
         assert re.search(r'name="kiosk_home_seconds"[^>]*value="30"', page.text)
+        assert 'name="kiosk_preisliste_enabled"' in page.text
 
         save = client.post(
             "/admin/system-settings",
@@ -99,6 +100,7 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
                 "admin_logout_seconds": "25",
                 "kiosk_preisliste_seconds": "75",
                 "kiosk_home_seconds": "45",
+                "kiosk_preisliste_enabled": "1",
             },
             follow_redirects=False,
         )
@@ -110,6 +112,7 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
                 "admin_logout_seconds": 25,
                 "kiosk_preisliste_seconds": 75,
                 "kiosk_home_seconds": 45,
+                "kiosk_preisliste_enabled": True,
             }
 
         admin_page = client.get("/admin")
@@ -117,6 +120,32 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
         assert "adminLogoutSeconds: 25" in admin_page.text
         assert "kioskPreislisteSeconds: 75" in admin_page.text
         assert "kioskHomeSeconds: 45" in admin_page.text
+        assert "kioskPreislisteEnabled: true" in admin_page.text
+
+
+def test_admin_system_settings_can_disable_pricelist_screensaver() -> None:
+    with TestClient(app) as client:
+        login = client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        assert login.status_code == 303
+
+        save = client.post(
+            "/admin/system-settings",
+            data={
+                "admin_logout_seconds": "25",
+                "kiosk_preisliste_seconds": "75",
+                "kiosk_home_seconds": "45",
+            },
+            follow_redirects=False,
+        )
+        assert save.status_code == 303
+
+        with db.get_connection() as conn:
+            settings = system_settings.get_timeout_settings(conn)
+        assert settings["kiosk_preisliste_enabled"] is False
+
+        home = client.get("/")
+        assert home.status_code == 200
+        assert "kioskPreislisteEnabled: false" in home.text
 
 
 def test_last_auto_backup_is_none_when_auto_backup_files_are_deleted(tmp_path) -> None:

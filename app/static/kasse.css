@@ -499,15 +499,80 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   backdrop-filter: blur(8px);
 }
 
-.trust-banner::before {
-  content: "";
+.trust-banner__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
-  margin-top: 0.1rem;
-  border-radius: 2px;
+  width: 1.45rem;
+  height: 1.45rem;
+  margin-top: 0.05rem;
+  border-radius: 999px;
   border: 2px solid var(--kas-accent);
-  opacity: 0.85;
+  color: var(--kas-accent-bright);
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0.95;
+}
+
+.trust-banner--icon-info .trust-banner__icon::before {
+  content: "i";
+}
+
+.trust-banner--icon-megaphone .trust-banner__icon::before,
+.trust-banner--icon-warning .trust-banner__icon::before {
+  content: "!";
+}
+
+.trust-banner--icon-star .trust-banner__icon::before {
+  content: "*";
+}
+
+.trust-banner__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.trust-banner--align-left {
+  text-align: left;
+}
+
+.trust-banner--align-center {
+  text-align: center;
+}
+
+.trust-banner--align-right {
+  text-align: right;
+}
+
+.trust-banner--align-center:not(.trust-banner--icon-none) .trust-banner__text {
+  margin-right: 2.2rem;
+}
+
+.trust-banner--align-right .trust-banner__text {
+  order: 1;
+}
+
+.trust-banner--align-right .trust-banner__icon {
+  order: 2;
+}
+
+.trust-banner--size-small {
+  font-size: 0.82rem;
+}
+
+.trust-banner--size-normal {
+  font-size: 0.9rem;
+}
+
+.trust-banner--size-large {
+  font-size: 1.08rem;
+}
+
+.trust-banner--size-xlarge {
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
 /* Seitenkopf (auf dunklem Grund) */
@@ -1830,6 +1895,20 @@ body.app-admin .k-panel form.system-settings-grid {
   gap: 0.55rem 0.9rem;
 }
 
+body.app-admin .k-panel .admin-news-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem 0.9rem;
+  margin-top: 0.75rem;
+}
+
+body.app-admin .k-panel .admin-toggle-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.15rem 0 0;
+}
+
 body.app-admin .k-panel form.debt-thresholds-grid label {
   margin: 0;
 }
@@ -1954,6 +2033,10 @@ body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar_
   }
 
   body.app-admin .k-panel form.system-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.app-admin .k-panel .admin-news-options {
     grid-template-columns: 1fr;
   }
 

@@ -967,23 +967,39 @@ def admin_backup_reset_transactional(
 def admin_news_form(request: Request) -> Response:
     if (r := _redirect_login(request)):
         return r
-    stored = kiosk_notice.get_stored_custom()
+    settings = kiosk_notice.get_settings()
     return TEMPLATES.TemplateResponse(
         request,
         "admin/news.html",
         {
             "title": "Kiosk-Nachricht",
-            "stored_notice": stored,
+            "notice_settings": settings,
+            "notice_alignments": kiosk_notice.ALIGNMENTS,
+            "notice_sizes": kiosk_notice.SIZES,
+            "notice_icons": kiosk_notice.ICONS,
+            "notice_icon_labels": kiosk_notice.ICON_LABELS,
+            "notice_icon_symbols": kiosk_notice.ICON_SYMBOLS,
             "saved": request.query_params.get("saved") == "1",
         },
     )
 
 
 @router.post("/news")
-def admin_news_save(request: Request, message: str = Form("")) -> RedirectResponse:
+def admin_news_save(
+    request: Request,
+    message: str = Form(""),
+    alignment: str = Form(kiosk_notice.DEFAULT_ALIGNMENT),
+    size: str = Form(kiosk_notice.DEFAULT_SIZE),
+    icon: str = Form(kiosk_notice.DEFAULT_ICON),
+) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
-    kiosk_notice.set_custom_message(message)
+    kiosk_notice.set_custom_message(
+        message,
+        alignment=alignment,
+        size=size,
+        icon=icon,
+    )
     return RedirectResponse("/admin/news?saved=1", status_code=303)
 
 
@@ -1015,6 +1031,7 @@ def admin_system_settings_post(
     admin_logout_seconds: str = Form(...),
     kiosk_preisliste_seconds: str = Form(...),
     kiosk_home_seconds: str = Form(...),
+    kiosk_preisliste_enabled: str | None = Form(default=None),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
@@ -1030,6 +1047,7 @@ def admin_system_settings_post(
             admin_logout_seconds=admin_seconds,
             kiosk_preisliste_seconds=preisliste_seconds,
             kiosk_home_seconds=home_seconds,
+            kiosk_preisliste_enabled=kiosk_preisliste_enabled in ("1", "on", "yes", "true"),
         )
     return RedirectResponse("/admin/system-settings?saved=1", status_code=303)
 

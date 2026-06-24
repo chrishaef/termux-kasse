@@ -10,7 +10,39 @@
   </p>
   <form method="post" action="/admin/news">
     <label for="msg">Nachricht</label>
-    <textarea id="msg" name="message" rows="5" placeholder="Leer lassen zum Ausblenden der Meldung …">{{ stored_notice }}</textarea>
+    <textarea id="msg" name="message" rows="5" placeholder="Leer lassen zum Ausblenden der Meldung …">{{ notice_settings['message'] }}</textarea>
+    <div class="admin-news-options">
+      <label>
+        Textausrichtung
+        <select name="alignment">
+          {% for value in notice_alignments %}
+          <option value="{{ value }}" {% if notice_settings['alignment'] == value %}selected{% endif %}>
+            {% if value == 'left' %}Links{% elif value == 'right' %}Rechts{% else %}Zentriert{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Textgröße
+        <select name="size">
+          {% for value in notice_sizes %}
+          <option value="{{ value }}" {% if notice_settings['size'] == value %}selected{% endif %}>
+            {% if value == 'small' %}Klein{% elif value == 'large' %}Groß{% elif value == 'xlarge' %}Sehr groß{% else %}Normal{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Icon
+        <select name="icon">
+          {% for value in notice_icons %}
+          <option value="{{ value }}" {% if notice_settings['icon'] == value %}selected{% endif %}>
+            {% if notice_icon_symbols[value] %}{{ notice_icon_symbols[value] }} · {% endif %}{{ notice_icon_labels[value] }}
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
     <p class="secondary" style="margin-top:0.5rem;font-size:0.9rem">
       <strong>Leer speichern:</strong> Die Meldung wird komplett ausgeblendet.
     </p>

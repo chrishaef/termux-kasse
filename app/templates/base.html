@@ -73,7 +73,8 @@
       const APP_TIMEOUTS = {
         adminLogoutSeconds: {{ request.state.system_timeouts['admin_logout_seconds']|int }},
         kioskPreislisteSeconds: {{ request.state.system_timeouts['kiosk_preisliste_seconds']|int }},
-        kioskHomeSeconds: {{ request.state.system_timeouts['kiosk_home_seconds']|int }}
+        kioskHomeSeconds: {{ request.state.system_timeouts['kiosk_home_seconds']|int }},
+        kioskPreislisteEnabled: {% if request.state.system_timeouts['kiosk_preisliste_enabled'] %}true{% else %}false{% endif %}
       };
 
       // Extra zoom lock for iPad Safari (double-tap and pinch gestures).
@@ -390,11 +391,12 @@
           document.addEventListener("pointerdown", goHome);
           document.addEventListener("keydown", goHome, { once: true });
         } else {
-          const isBookingPage = /^\/u\/\d+$/.test(path);
-          const idleMs = isBookingPage
-            ? APP_TIMEOUTS.kioskHomeSeconds * 1000
-            : APP_TIMEOUTS.kioskPreislisteSeconds * 1000;
-          const idleTarget = isBookingPage ? "/" : "/preisliste";
+          const isHomePage = path === "/";
+          const idleMs = isHomePage
+            ? APP_TIMEOUTS.kioskPreislisteSeconds * 1000
+            : APP_TIMEOUTS.kioskHomeSeconds * 1000;
+          const idleTarget = isHomePage ? "/preisliste" : "/";
+          if (isHomePage && !APP_TIMEOUTS.kioskPreislisteEnabled) return;
           let timer = 0;
           const reset = function () {
             window.clearTimeout(timer);
