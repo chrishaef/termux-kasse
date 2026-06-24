@@ -282,6 +282,14 @@ def _parse_signed_eur_to_cents(raw: str) -> int:
     return int(round(float(s) * 100))
 
 
+GROUP_TILE_LOGO_SIZES = ("small", "normal", "large", "xlarge")
+
+
+def _normalize_group_tile_logo_size(raw: str) -> str:
+    value = (raw or "").strip().lower()
+    return value if value in GROUP_TILE_LOGO_SIZES else "normal"
+
+
 _FN_UNSAFE = re.compile(r'[\s<>:"/\\|?*\x00-\x1f]+')
 
 
@@ -1190,14 +1198,24 @@ def admin_groups_edit_form(request: Request, group_id: int) -> Response:
         return r
     with db.get_connection() as conn:
         group = db.fetch_one(
-            conn, "SELECT id, name, has_logo FROM user_groups WHERE id = ?", (group_id,)
+            conn,
+            """
+            SELECT id, name, has_logo, tile_show_name, tile_logo_size
+            FROM user_groups
+            WHERE id = ?
+            """,
+            (group_id,),
         )
         if not group:
             raise HTTPException(status_code=404)
     return TEMPLATES.TemplateResponse(
         request,
         "admin/groups_edit.html",
-        {"title": "Gruppe bearbeiten", "group": group},
+        {
+            "title": "Gruppe bearbeiten",
+            "group": group,
+            "tile_logo_sizes": GROUP_TILE_LOGO_SIZES,
+        },
     )
 
 
@@ -1207,6 +1225,8 @@ def admin_groups_edit_save(
     group_id: int,
     name: str = Form(...),
     remove_logo: str = Form("0"),
+    tile_show_name: str = Form("1"),
+    tile_logo_size: str = Form("normal"),
     logo_png: Optional[UploadFile] = File(default=None),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
@@ -1233,7 +1253,19 @@ def admin_groups_edit_save(
         row = db.fetch_one(conn, "SELECT id FROM user_groups WHERE id = ?", (group_id,))
         if not row:
             raise HTTPException(status_code=404)
-        conn.execute("UPDATE user_groups SET name = ? WHERE id = ?", (name, group_id))
+        conn.execute(
+            """
+            UPDATE user_groups
+            SET name = ?, tile_show_name = ?, tile_logo_size = ?
+            WHERE id = ?
+            """,
+            (
+                name,
+                1 if tile_show_name in ("1", "on", "yes", "true") else 0,
+                _normalize_group_tile_logo_size(tile_logo_size),
+                group_id,
+            ),
+        )
         if raw_logo is not None:
             group_logo_util.save_logo_png(group_id, raw_logo)
             conn.execute(

@@ -19,7 +19,7 @@ def kiosk_home(request: Request) -> HTMLResponse:
         groups = db.fetch_all(
             conn,
             """
-            SELECT id, name, has_logo
+            SELECT id, name, has_logo, tile_show_name, tile_logo_size
             FROM user_groups
             ORDER BY sort_order, name COLLATE NOCASE
             """,

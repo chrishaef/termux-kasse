@@ -67,6 +67,44 @@ def test_admin_group_logo_upload_and_kiosk_tile() -> None:
         assert lg.headers.get("content-type", "").startswith("image/png")
 
 
+def test_admin_group_logo_tile_display_options() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "NurLogo"})
+        with db.get_connection() as conn:
+            gid = int(conn.execute("SELECT id FROM user_groups WHERE name='NurLogo'").fetchone()[0])
+
+        edit = client.get(f"/admin/groups/{gid}/edit")
+        assert edit.status_code == 200
+        assert 'name="tile_logo_size"' in edit.text
+        assert 'name="tile_show_name"' in edit.text
+
+        up = client.post(
+            f"/admin/groups/{gid}/edit",
+            data={
+                "name": "NurLogo",
+                "tile_logo_size": "xlarge",
+                "tile_show_name": "0",
+            },
+            files={"logo_png": ("logo.png", io.BytesIO(_MINI_PNG), "image/png")},
+            follow_redirects=False,
+        )
+        assert up.status_code == 303
+        with db.get_connection() as conn:
+            row = conn.execute(
+                "SELECT tile_show_name, tile_logo_size FROM user_groups WHERE id = ?",
+                (gid,),
+            ).fetchone()
+        assert int(row[0]) == 0
+        assert row[1] == "xlarge"
+
+        home = client.get("/")
+        assert home.status_code == 200
+        assert "k-tile--logo-only" in home.text
+        assert "k-tile--logo-xlarge" in home.text
+        assert "NurLogo" not in home.text
+
+
 def test_admin_group_logo_remove_checkbox() -> None:
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)

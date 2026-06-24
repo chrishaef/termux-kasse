@@ -14,9 +14,11 @@
 {% if groups %}
 <div class="k-tiles">
   {% for g in groups %}
-  <a class="k-tile" href="/g/{{ g['id'] }}">
+  {% set has_logo = g['has_logo'] %}
+  {% set show_name = (not has_logo) or g['tile_show_name'] %}
+  <a class="k-tile {% if has_logo and not show_name %}k-tile--logo-only{% endif %} k-tile--logo-{{ g['tile_logo_size'] or 'normal' }}" href="/g/{{ g['id'] }}">
     <span class="k-tile__inner">
-      {% if g['has_logo'] %}
+      {% if has_logo %}
       <img
         class="k-tile__logo"
         src="/group-logo/{{ g['id'] }}"
@@ -25,7 +27,9 @@
         loading="lazy"
       />
       {% endif %}
+      {% if show_name %}
       <span class="k-tile__title">{{ g['name'] }}</span>
+      {% endif %}
     </span>
   </a>
   {% endfor %}

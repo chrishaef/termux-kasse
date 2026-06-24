@@ -6,11 +6,10 @@
 <article class="contrast">Logo: bitte eine gültige PNG-Datei (max. 8&nbsp;MB, Bild max. 8192&nbsp;px Kantenlänge).</article>
 {% endif %}
 <article class="k-panel">
-  <h2 style="margin-top:0;font-size:1.1rem">Name ändern</h2>
   <form method="post" action="/admin/groups/{{ group['id'] }}/edit" enctype="multipart/form-data">
     <label>Name <input type="text" name="name" required value="{{ group['name'] }}" /></label>
     <h3 style="margin:1rem 0 0.5rem;font-size:1rem">Gruppenlogo (PNG)</h3>
-    <p style="margin:0 0 0.5rem;font-size:0.9rem;color:var(--kas-muted)">Anzeige ind er Gruppenkachel</p>
+    <p style="margin:0 0 0.5rem;font-size:0.9rem;color:var(--kas-muted)">Anzeige in der Gruppenkachel</p>
     {% if group['has_logo'] %}
     <p style="margin:0 0 0.5rem">
       <img src="/group-logo/{{ group['id'] }}" alt="Aktuelles Logo" style="max-width:120px;max-height:120px;vertical-align:middle;border:1px solid #ccc;border-radius:4px" />
@@ -20,6 +19,28 @@
       <input type="checkbox" name="remove_logo" value="1" /> Logo entfernen
     </label>
     {% endif %}
+    <div class="admin-group-tile-options">
+      <label>
+        Logo-Größe in der Gruppenauswahl
+        <select name="tile_logo_size">
+          {% for value in tile_logo_sizes %}
+          <option value="{{ value }}" {% if group['tile_logo_size'] == value %}selected{% endif %}>
+            {% if value == 'small' %}Klein{% elif value == 'large' %}Groß{% elif value == 'xlarge' %}Sehr groß{% else %}Normal{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="admin-toggle-row">
+        <input type="hidden" name="tile_show_name" value="0" />
+        <input
+          type="checkbox"
+          name="tile_show_name"
+          value="1"
+          {% if group['tile_show_name'] %}checked{% endif %}
+        />
+        Gruppennamen in der Kachel anzeigen
+      </label>
+    </div>
     <label style="display:block;margin:0.5rem 0">PNG hochladen <input type="file" name="logo_png" accept="image/png" /></label>
     <button type="submit">Speichern</button>
   </form>

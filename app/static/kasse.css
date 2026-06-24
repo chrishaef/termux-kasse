@@ -711,6 +711,106 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   display: block;
 }
 
+.k-tile--logo-small .k-tile__logo {
+  width: 4rem;
+  height: 4rem;
+  max-width: 4rem;
+  max-height: 4rem;
+}
+
+.k-tile--logo-large .k-tile__logo {
+  width: 5.6rem;
+  height: 5.6rem;
+  max-width: 5.6rem;
+  max-height: 5.6rem;
+}
+
+.k-tile--logo-large {
+  height: 6.8rem;
+  min-height: 6.8rem;
+  max-height: 6.8rem;
+}
+
+.k-tile--logo-large .k-tile__inner {
+  max-height: 5.3rem;
+}
+
+.k-tile--logo-xlarge .k-tile__logo {
+  width: 6.4rem;
+  height: 6.4rem;
+  max-width: 6.4rem;
+  max-height: 6.4rem;
+}
+
+.k-tile--logo-xlarge {
+  height: 7.8rem;
+  min-height: 7.8rem;
+  max-height: 7.8rem;
+}
+
+.k-tile--logo-xlarge .k-tile__inner {
+  max-height: 6.3rem;
+}
+
+.k-tile--logo-only {
+  height: 7rem;
+  min-height: 7rem;
+  max-height: 7rem;
+  padding: 0.3rem 0.8rem;
+}
+
+.k-tile--logo-only .k-tile__inner {
+  max-height: 5.4rem;
+}
+
+.k-tile--logo-only.k-tile--logo-small .k-tile__logo {
+  width: 4.8rem;
+  height: 4.8rem;
+  max-width: 4.8rem;
+  max-height: 4.8rem;
+}
+
+.k-tile--logo-only.k-tile--logo-normal .k-tile__logo {
+  width: 5.6rem;
+  height: 5.6rem;
+  max-width: 5.6rem;
+  max-height: 5.6rem;
+}
+
+.k-tile--logo-only.k-tile--logo-large .k-tile__logo {
+  width: 6.6rem;
+  height: 6.6rem;
+  max-width: 6.6rem;
+  max-height: 6.6rem;
+}
+
+.k-tile--logo-only.k-tile--logo-large {
+  height: 7.8rem;
+  min-height: 7.8rem;
+  max-height: 7.8rem;
+}
+
+.k-tile--logo-only.k-tile--logo-large .k-tile__inner {
+  max-height: 7.2rem;
+}
+
+.k-tile--logo-only.k-tile--logo-xlarge .k-tile__logo {
+  width: 7.4rem;
+  height: 7.4rem;
+  max-width: 7.4rem;
+  max-height: 7.4rem;
+}
+
+.k-tile--logo-only.k-tile--logo-xlarge {
+  height: 8.6rem;
+  min-height: 8.6rem;
+  max-height: 8.6rem;
+}
+
+.k-tile--logo-only.k-tile--logo-xlarge .k-tile__inner {
+  max-height: 8rem;
+}
+
 .k-tile__title {
   margin: 0;
   font-size: clamp(1.38rem, 3.4vw, 1.85rem);
@@ -1966,6 +2066,19 @@ body.app-admin .k-panel .admin-toggle-row {
   margin: 0.15rem 0 0;
 }
 
+body.app-admin .k-panel .admin-group-tile-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.55rem 0.9rem;
+  align-items: end;
+  margin: 0.75rem 0;
+}
+
+body.app-admin .k-panel .admin-group-tile-options .admin-toggle-row {
+  align-self: center;
+  margin-top: 1.45rem;
+}
+
 body.app-admin .k-panel form.debt-thresholds-grid label {
   margin: 0;
 }
@@ -2095,6 +2208,14 @@ body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar_
 
   body.app-admin .k-panel .admin-news-options {
     grid-template-columns: 1fr;
+  }
+
+  body.app-admin .k-panel .admin-group-tile-options {
+    grid-template-columns: 1fr;
+  }
+
+  body.app-admin .k-panel .admin-group-tile-options .admin-toggle-row {
+    margin-top: 0;
   }
 
   body.app-admin .k-panel form.admin-statistics-toolbar .admin-statistics-toolbar__filters {
