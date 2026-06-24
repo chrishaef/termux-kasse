@@ -6,7 +6,7 @@ Das System ist für Touchscreen Bildschirme ab 10" optimiert.
 
 Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — Buchungen, Kontostände und Abrechnungen laufen lokal; Styles und Skripte kommen aus dem Projekt (`/static`). Eine Internet Verbindung wird nur für die Installation, Updates und den optionalen Online-/Versionscheck genutzt.
 
-**Aktuelle Version:** **1.4.3** (Git-Tag [`v1.4.3`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.3))
+**Aktuelle Version:** **1.5.0** (Git-Tag [`v1.5.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.5.0))
 
 **Zugehörige Android-Kiosk-App:** [`chrishaef/kiosk-app`](https://github.com/chrishaef/kiosk-app) (WebView-Wrapper, Vollbild/Kiosk-Steuerung, PIN/Admin-Menü).
 
@@ -455,10 +455,11 @@ Nach dem Login (`/admin`):
 - **Gruppen, Nutzer, Artikel** pflegen (inkl. manueller Reihenfolge via Pfeile und Bearbeiten-Ansichten)  
 - **Abrechnungen** (`/admin/settlements`): Liste vergangener Abrechnungen mit XLS/PDF; neue Abrechnung über **„Neue Abrechnung starten“** (Gruppe/Nutzer wählen → Beträge prüfen → Zahlungseingang bestätigen → PDF); **Jahresabschluss** mit Archivdownload (Master-Passwort)  
 - **Statistik** (`/admin/statistics`): Zeitraum + Nutzergruppe filtern, Toplisten sehen, PDF/XLSX herunterladen  
-- **Warnstufen** (`/admin/debt-thresholds`): Schwellen und Meldungstexte für Kiosk-Warnungen pflegen  
-- **Kiosk-Nachricht** (`/admin/news`): Text oben auf allen Kiosk-Seiten; leer speichern stellt den Standardhinweis wieder her  
+- **Warnstufen** (`/admin/debt-thresholds`): Schwellen, Meldungstexte und Warnton-Lautstärken für Kiosk-Warnungen pflegen  
+- **Kiosk-Nachricht** (`/admin/news`): Text oben auf der Gruppenauswahl mit Ausrichtung, Größe und PNG-Icon konfigurieren  
 - **Backup & Recovery & Reset** (`/admin/backup`): Backup erstellen (Archiv), Import mit Vorschau, Archivliste, optional **System Reset** (Master-Passwort)  
-- **System-Update** (`/admin/system-update`): Online-/Versionscheck, Start nur mit Master-Passwort, Update-Neustart mit Warteseite und separater Log-Ergebnisseite
+- **System-Update** (`/admin/system-update`): Online-/Versionscheck, Pre-Update-Backup, Start nur mit Master-Passwort, Update-Neustart, Protokoll und Rollback auf den Stand vor dem letzten geführten Update
+- **Syslogs** (`/admin/syslogs`): rotierende System-/App-Logs im Adminbereich einsehen
 
 Hinweis: **Kontostände** ergeben sich nur aus Buchungen; eine manuelle Saldo-Korrektur im Nutzer-Edit gibt es nicht (dafür System Reset oder Jahresabschluss-Archiv nutzen).
 
@@ -496,19 +497,29 @@ Dieser Abschnitt ist bewusst für den Alltag geschrieben: Was sehe ich in der Ob
    - neuester verfügbarer Version,
    - klarer Empfehlung (nur Neustart oder Update + Neustart).
 3. Zur Sicherheit muss das **Master-Passwort** eingegeben werden.
-4. Das System führt den Vorgang aus und startet den Dienst neu.
-5. Danach erscheint eine **eigene Protokollseite** mit den letzten Meldungen.
-6. Mit **„Zurück zum System“** zurück ins normale Admin-Menü.
+4. Vor dem Update erstellt das System automatisch ein **Pre-Update-Backup** und speichert den aktuellen Commit als Rollback-Ziel.
+5. Das System führt den Vorgang aus und startet den Dienst neu.
+6. Danach erscheint eine **eigene Protokollseite** mit den letzten Meldungen.
+7. Mit **„Zurück zum System“** zurück ins normale Admin-Menü.
+
+### Rollback nach einem geführten Update
+
+- Nach einem geführten Update zeigt die Update-Seite den gespeicherten Stand **vor dem letzten Update**.
+- Mit Master-Passwort kann der Programmcode auf diesen Commit zurückgesetzt werden.
+- Der Server wird danach automatisch neu gestartet.
+- Daten werden beim Code-Rollback bewusst **nicht automatisch** zurückgespielt. Dafür kann bei Bedarf das zugehörige Pre-Update-Backup aus dem Backup-Archiv genutzt werden.
 
 ### Update-Protokoll (Log)
 
 - Auf der Vorbereitungsseite seht ihr die letzten bisherigen Meldungen.
 - Nach dem Vorgang seht ihr auf der Ergebnisseite die aktuellen Meldungen.
-- Der Bereich ist scrollbar, damit mehr Einträge sichtbar sind.
+- Die neuesten Einträge stehen oben; der Bereich ist scrollbar, damit mehr Einträge sichtbar sind.
+- Über **`syslogs`** in der Admin-Systemübersicht lassen sich App-, Server- und Update-Logs direkt ansehen.
 
 ### Automatische Backups – kurz erklärt
 
 - Das System erstellt automatische Backups im **7-Tage-Rhythmus**.
+- Zusätzlich erstellt der geführte Updateprozess vor jedem Update ein automatisches **Pre-Update-Backup**.
 - Sehr alte automatische Backups werden entfernt (älter als 28 Tage).
 - Zusätzlich gibt es eine Gesamtgrenze im Archiv, damit der Speicher nicht vollläuft.
 - Falls alle Auto-Backups gelöscht wurden:
@@ -557,13 +568,13 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ### Versionierung und Releases
 
-- Aktueller Git-Tag: **v1.4.3** — Übersicht: [Tag v1.4.3](https://github.com/chrishaef/termux-kasse/releases/tag/v1.4.3).
-- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.4.3](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.4.3) öffnen, Titel z. B. `Termux-Shopkasse 1.4.3`, Beschreibung einfügen, *Publish release*.
+- Aktueller Git-Tag: **v1.5.0** — Übersicht: [Tag v1.5.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.5.0).
+- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.5.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.5.0) öffnen, Titel z. B. `Termux-Shopkasse 1.5.0`, Beschreibung einfügen, *Publish release*.
 - **GitHub CLI** (einmalig `gh auth login`):  
-  `gh release create v1.4.3 --title "Termux-Shopkasse 1.4.3" --generate-notes`
+  `gh release create v1.5.0 --title "Termux-Shopkasse 1.5.0" --generate-notes`
 - Änderungsübersicht im Repo: [`CHANGELOG.md`](./CHANGELOG.md)
 
-**v1.4.3** (Kurzüberblick): Stabilerer Android-Kiosk-Betrieb (Darstellung/Feedback), zuverlässigere Update-Erkennung und verbesserte Download-/Jahresabschluss-UX bei längeren Verarbeitungsschritten.
+**v1.5.0** (Kurzüberblick): Erweiterte Kiosk-News und Gruppenlogos, steuerbarer Preisliste-Bildschirmschoner, Admin-Syslogs mit Rotation sowie geführter Update-Rollback mit Pre-Update-Backup.
 
 ---
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.5.0 - 2026-06-24
+
+- Added richer kiosk news customization with alignment, text size and selectable PNG icons in the admin panel.
+- Added configurable pricelist screensaver enable/disable setting and fixed kiosk idle navigation back to the home page.
+- Added group tile display controls for logo-only group tiles and configurable logo sizing, including safer PNG logo trimming for consistent display.
+- Added rotating application logging, quieter server logs, and an admin `syslogs` viewer with newest entries shown first.
+- Added guided update protection: automatic pre-update backups, stored rollback target and master-protected code rollback to the commit before the last guided update.
+- Improved admin statistics usability with collapsed long top lists and hardened warning-threshold form handling.
+
 ## v1.4.4 - 2026-05-13
 
 - Unified admin `<select>` styling for Android WebView / in-app browsers (e.g. SBrowser on Android 12): touch-friendly height, minimum 16px text, consistent padding and native appearance.
