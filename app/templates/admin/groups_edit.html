@@ -31,12 +31,11 @@
         </select>
       </label>
       <label class="admin-toggle-row">
-        <input type="hidden" name="tile_show_name" value="0" />
         <input
           type="checkbox"
-          name="tile_show_name"
+          name="tile_logo_only"
           value="1"
-          {% if group['tile_show_name'] %}checked{% endif %}
+          {% if not group['tile_show_name'] %}checked{% endif %}
         />
         Nur Logo anzeigen
       </label>

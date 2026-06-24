@@ -1225,7 +1225,7 @@ def admin_groups_edit_save(
     group_id: int,
     name: str = Form(...),
     remove_logo: str = Form("0"),
-    tile_show_name: str = Form("1"),
+    tile_logo_only: str | None = Form(default=None),
     tile_logo_size: str = Form("normal"),
     logo_png: Optional[UploadFile] = File(default=None),
 ) -> RedirectResponse:
@@ -1261,7 +1261,7 @@ def admin_groups_edit_save(
             """,
             (
                 name,
-                1 if tile_show_name in ("1", "on", "yes", "true") else 0,
+                0 if tile_logo_only in ("1", "on", "yes", "true") else 1,
                 _normalize_group_tile_logo_size(tile_logo_size),
                 group_id,
             ),

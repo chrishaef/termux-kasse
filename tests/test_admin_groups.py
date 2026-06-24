@@ -77,14 +77,14 @@ def test_admin_group_logo_tile_display_options() -> None:
         edit = client.get(f"/admin/groups/{gid}/edit")
         assert edit.status_code == 200
         assert 'name="tile_logo_size"' in edit.text
-        assert 'name="tile_show_name"' in edit.text
+        assert 'name="tile_logo_only"' in edit.text
 
         up = client.post(
             f"/admin/groups/{gid}/edit",
             data={
                 "name": "NurLogo",
                 "tile_logo_size": "max",
-                "tile_show_name": "0",
+                "tile_logo_only": "1",
             },
             files={"logo_png": ("logo.png", io.BytesIO(_MINI_PNG), "image/png")},
             follow_redirects=False,
