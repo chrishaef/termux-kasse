@@ -282,7 +282,7 @@ def _parse_signed_eur_to_cents(raw: str) -> int:
     return int(round(float(s) * 100))
 
 
-GROUP_TILE_LOGO_SIZES = ("small", "normal", "large", "xlarge")
+GROUP_TILE_LOGO_SIZES = ("small", "normal", "large", "xlarge", "max")
 
 
 def _normalize_group_tile_logo_size(raw: str) -> str:

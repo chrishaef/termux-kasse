@@ -25,7 +25,7 @@
         <select name="tile_logo_size">
           {% for value in tile_logo_sizes %}
           <option value="{{ value }}" {% if group['tile_logo_size'] == value %}selected{% endif %}>
-            {% if value == 'small' %}Klein{% elif value == 'large' %}Groß{% elif value == 'xlarge' %}Sehr groß{% else %}Normal{% endif %}
+            {% if value == 'small' %}Klein{% elif value == 'large' %}Groß{% elif value == 'xlarge' %}Sehr groß{% elif value == 'max' %}Maximal{% else %}Normal{% endif %}
           </option>
           {% endfor %}
         </select>

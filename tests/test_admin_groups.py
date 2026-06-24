@@ -83,7 +83,7 @@ def test_admin_group_logo_tile_display_options() -> None:
             f"/admin/groups/{gid}/edit",
             data={
                 "name": "NurLogo",
-                "tile_logo_size": "xlarge",
+                "tile_logo_size": "max",
                 "tile_show_name": "0",
             },
             files={"logo_png": ("logo.png", io.BytesIO(_MINI_PNG), "image/png")},
@@ -96,12 +96,12 @@ def test_admin_group_logo_tile_display_options() -> None:
                 (gid,),
             ).fetchone()
         assert int(row[0]) == 0
-        assert row[1] == "xlarge"
+        assert row[1] == "max"
 
         home = client.get("/")
         assert home.status_code == 200
         assert "k-tile--logo-only" in home.text
-        assert "k-tile--logo-xlarge" in home.text
+        assert "k-tile--logo-max" in home.text
         assert "NurLogo" not in home.text
 
 

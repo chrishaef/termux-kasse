@@ -757,10 +757,29 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   min-height: 7rem;
   max-height: 7rem;
   padding: 0.3rem 0.8rem;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.k-tile--logo-only:hover {
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .k-tile--logo-only .k-tile__inner {
   max-height: 5.4rem;
+}
+
+.k-tile--logo-only .k-tile__logo {
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
+  transition: filter 0.15s ease;
+}
+
+.k-tile--logo-only:hover .k-tile__logo {
+  filter:
+    drop-shadow(0 12px 24px rgba(0, 0, 0, 0.52))
+    drop-shadow(0 0 18px rgba(232, 188, 46, 0.25));
 }
 
 .k-tile--logo-only.k-tile--logo-small .k-tile__logo {
@@ -809,6 +828,40 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .k-tile--logo-only.k-tile--logo-xlarge .k-tile__inner {
   max-height: 8rem;
+}
+
+.k-tile--logo-max .k-tile__logo {
+  width: 7.2rem;
+  height: 7.2rem;
+  max-width: 7.2rem;
+  max-height: 7.2rem;
+}
+
+.k-tile--logo-max {
+  height: 8.6rem;
+  min-height: 8.6rem;
+  max-height: 8.6rem;
+}
+
+.k-tile--logo-max .k-tile__inner {
+  max-height: 7.1rem;
+}
+
+.k-tile--logo-only.k-tile--logo-max .k-tile__logo {
+  width: 9.2rem;
+  height: 9.2rem;
+  max-width: 9.2rem;
+  max-height: 9.2rem;
+}
+
+.k-tile--logo-only.k-tile--logo-max {
+  height: 10.4rem;
+  min-height: 10.4rem;
+  max-height: 10.4rem;
+}
+
+.k-tile--logo-only.k-tile--logo-max .k-tile__inner {
+  max-height: 9.8rem;
 }
 
 .k-tile__title {
