@@ -32,29 +32,30 @@
           {% endfor %}
         </select>
       </label>
-      <label>
-        Icon
-        <select name="icon">
-          {% for value in notice_icons %}
-          <option value="{{ value }}" {% if notice_settings['icon'] == value %}selected{% endif %}>
-            {{ notice_icon_labels[value] }}
-          </option>
-          {% endfor %}
-        </select>
-      </label>
     </div>
-    <div class="admin-news-icon-preview" aria-label="Verfügbare Hinweis-Icons">
-      {% for value in notice_icons %}
-      <span class="admin-news-icon-preview__item {% if notice_settings['icon'] == value %}admin-news-icon-preview__item--selected{% endif %}">
-        {% if notice_icon_files[value] %}
-        <img src="/static/notice-icons/{{ notice_icon_files[value] }}" alt="" />
-        {% else %}
-        <span class="admin-news-icon-preview__none">Ohne</span>
-        {% endif %}
-        <span>{{ notice_icon_labels[value] }}</span>
-      </span>
-      {% endfor %}
-    </div>
+    <fieldset class="admin-news-icon-picker">
+      <legend>Icon</legend>
+      <div class="admin-news-icon-preview" aria-label="Verfügbare Hinweis-Icons">
+        {% for value in notice_icons %}
+        <label class="admin-news-icon-preview__choice">
+          <input
+            type="radio"
+            name="icon"
+            value="{{ value }}"
+            {% if notice_settings['icon'] == value %}checked{% endif %}
+          />
+          <span class="admin-news-icon-preview__item">
+            {% if notice_icon_files[value] %}
+            <img src="/static/notice-icons/{{ notice_icon_files[value] }}" alt="" />
+            {% else %}
+            <span class="admin-news-icon-preview__none">Ohne</span>
+            {% endif %}
+            <span>{{ notice_icon_labels[value] }}</span>
+          </span>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
     <p class="secondary" style="margin-top:0.5rem;font-size:0.9rem">
       <strong>Leer speichern:</strong> Die Meldung wird komplett ausgeblendet.
     </p>

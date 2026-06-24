@@ -372,7 +372,10 @@ def admin_login_post(
 @router.post("/logout")
 def admin_logout(request: Request) -> RedirectResponse:
     request.session.clear()
-    return RedirectResponse("/preisliste", status_code=303)
+    with db.get_connection() as conn:
+        timeouts = system_settings.get_timeout_settings(conn)
+    target = "/preisliste" if timeouts["kiosk_preisliste_enabled"] else "/"
+    return RedirectResponse(target, status_code=303)
 
 
 @router.get("/password", response_class=HTMLResponse)

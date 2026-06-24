@@ -147,6 +147,10 @@ def test_admin_system_settings_can_disable_pricelist_screensaver() -> None:
         assert home.status_code == 200
         assert "kioskPreislisteEnabled: false" in home.text
 
+        logout = client.post("/admin/logout", follow_redirects=False)
+        assert logout.status_code == 303
+        assert logout.headers["location"] == "/"
+
 
 def test_last_auto_backup_is_none_when_auto_backup_files_are_deleted(tmp_path) -> None:
     with TestClient(app) as client:
