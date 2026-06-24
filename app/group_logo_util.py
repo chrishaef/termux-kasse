@@ -15,6 +15,8 @@ _PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 _MAX_FILE_BYTES = 8 * 1024 * 1024
 _MAX_DIMENSION = 8192
 _FILENAME_RE = re.compile(r"^(\d+)\.png$")
+_BACKGROUND_TOLERANCE = 70
+_VISIBLE_ALPHA_THRESHOLD = 24
 
 
 def group_logos_dir() -> Path:
@@ -145,10 +147,17 @@ def _rgba_pixel(row: bytearray, x: int, bpp: int, color_type: int) -> tuple[int,
     raise ValueError("color")
 
 
-def _background_like(pixel: tuple[int, int, int, int], bg: tuple[int, int, int]) -> bool:
-    if pixel[3] == 0:
+def _background_like(
+    pixel: tuple[int, int, int, int],
+    bg: tuple[int, int, int],
+    *,
+    has_transparency: bool,
+) -> bool:
+    if pixel[3] <= _VISIBLE_ALPHA_THRESHOLD:
         return True
-    return max(abs(pixel[i] - bg[i]) for i in range(3)) <= 18
+    if has_transparency and pixel[3] >= 250:
+        return False
+    return max(abs(pixel[i] - bg[i]) for i in range(3)) <= _BACKGROUND_TOLERANCE
 
 
 def _trim_logo_padding(data: bytes) -> bytes:
@@ -174,17 +183,17 @@ def _trim_logo_padding(data: bytes) -> bytes:
         return data
     rows = _unfilter_scanlines(zlib.decompress(idat), width, height, bpp)
 
+    has_transparency = any(
+        _rgba_pixel(row, x, bpp, color_type)[3] < 255
+        for row in rows
+        for x in range(width)
+    )
     corners = [
         _rgba_pixel(rows[0], 0, bpp, color_type),
         _rgba_pixel(rows[0], width - 1, bpp, color_type),
         _rgba_pixel(rows[height - 1], 0, bpp, color_type),
         _rgba_pixel(rows[height - 1], width - 1, bpp, color_type),
     ]
-    has_transparency = any(
-        _rgba_pixel(row, x, bpp, color_type)[3] < 255
-        for row in rows
-        for x in range(width)
-    )
     bg = tuple(sorted(pixel[i] for pixel in corners)[len(corners) // 2] for i in range(3))
 
     min_x = width
@@ -194,10 +203,7 @@ def _trim_logo_padding(data: bytes) -> bytes:
     for y, row in enumerate(rows):
         for x in range(width):
             pixel = _rgba_pixel(row, x, bpp, color_type)
-            if has_transparency:
-                if pixel[3] == 0:
-                    continue
-            elif _background_like(pixel, bg):
+            if _background_like(pixel, bg, has_transparency=has_transparency):
                 continue
             min_x = min(min_x, x)
             min_y = min(min_y, y)
