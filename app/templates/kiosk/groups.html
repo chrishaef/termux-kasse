@@ -37,4 +37,23 @@
 {% else %}
 <p class="k-empty">Keine Gruppen vorhanden. Bitte im Admin unter „Nutzergruppen“ anlegen.</p>
 {% endif %}
+<script>
+  (function () {
+    const tiles = document.querySelectorAll(".k-tile");
+    tiles.forEach(function (tile) {
+      const playTapFeedback = function () {
+        tile.classList.remove("k-tile--tap-feedback");
+        void tile.offsetWidth;
+        tile.classList.add("k-tile--tap-feedback");
+      };
+      tile.addEventListener("pointerdown", playTapFeedback, { passive: true });
+      tile.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") playTapFeedback();
+      });
+      tile.addEventListener("animationend", function () {
+        tile.classList.remove("k-tile--tap-feedback");
+      });
+    });
+  })();
+</script>
 {% endblock %}

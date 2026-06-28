@@ -687,6 +687,66 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   transform: translateY(0);
 }
 
+.k-tile--tap-feedback {
+  animation: k-tile-tap-feedback 260ms ease-out;
+  border-color: var(--kas-accent-bright);
+  box-shadow:
+    0 0 0 0.22rem rgba(232, 188, 46, 0.32),
+    0 14px 34px rgba(0, 0, 0, 0.32);
+}
+
+.k-tile--logo-only.k-tile--tap-feedback {
+  animation: k-tile-logo-only-tap-feedback 280ms ease-out;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.k-tile--logo-only.k-tile--tap-feedback .k-tile__logo {
+  animation: k-tile-logo-tap-feedback 320ms ease-out;
+}
+
+@keyframes k-tile-tap-feedback {
+  0% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(0.965);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes k-tile-logo-only-tap-feedback {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes k-tile-logo-tap-feedback {
+  0% {
+    filter:
+      drop-shadow(0 12px 24px rgba(0, 0, 0, 0.52))
+      drop-shadow(0 0 18px rgba(232, 188, 46, 0.25));
+  }
+  45% {
+    filter:
+      drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0 30px rgba(232, 188, 46, 0.62));
+  }
+  100% {
+    filter:
+      drop-shadow(0 12px 24px rgba(0, 0, 0, 0.52))
+      drop-shadow(0 0 18px rgba(232, 188, 46, 0.25));
+  }
+}
+
 /* Zeile Logo + Name: feste Höhe innerhalb der Kachel (6rem inkl. Padding) */
 .k-tile__inner {
   display: flex;
@@ -763,6 +823,7 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .k-tile--logo-only:hover {
+  transform: none;
   border-color: transparent;
   box-shadow: none;
 }
@@ -772,11 +833,6 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .k-tile--logo-only .k-tile__logo {
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
-  transition: filter 0.15s ease;
-}
-
-.k-tile--logo-only:hover .k-tile__logo {
   filter:
     drop-shadow(0 12px 24px rgba(0, 0, 0, 0.52))
     drop-shadow(0 0 18px rgba(232, 188, 46, 0.25));

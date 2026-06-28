@@ -207,6 +207,8 @@ def test_admin_group_logo_tile_display_options() -> None:
         assert home.status_code == 200
         assert "k-tile--logo-only" in home.text
         assert "k-tile--logo-max" in home.text
+        assert "k-tile--tap-feedback" in home.text
+        assert 'addEventListener("pointerdown"' in home.text
         assert "NurLogo" not in home.text
 
 
