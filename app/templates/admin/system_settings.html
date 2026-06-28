@@ -3,78 +3,114 @@
 <a href="/admin" class="admin-back js-history-back">← Zurück</a>
 
 {% if saved %}
-<article class="contrast"><strong>Gespeichert.</strong> Die Systemzeiten wurden aktualisiert.</article>
+<article class="contrast"><strong>Gespeichert.</strong> Die Systemeinstellungen wurden aktualisiert.</article>
 {% endif %}
 {% if error %}
 <article class="contrast" style="border-color:#b33"><strong>Ungültige Eingabe.</strong> Bitte ganze Sekundenwerte eingeben.</article>
 {% endif %}
 
 <article class="k-panel">
-  <h2 style="margin-top:0;font-size:1.1rem">Systemzeiten</h2>
+  <h2 class="system-settings-title">Systemeinstellungen</h2>
   <form method="post" action="/admin/system-settings" class="system-settings-grid">
-    <label>
-      Admin Auto-Logout (Sekunden)
-      <input
-        type="number"
-        min="5"
-        max="3600"
-        step="1"
-        name="admin_logout_seconds"
-        value="{{ timeouts['admin_logout_seconds'] }}"
-        required
-        inputmode="numeric"
-      />
-    </label>
+    <section class="system-settings-section">
+      <div class="system-settings-section__head">
+        <h3>Admin</h3>
+        <p class="secondary">Schützt den Admin-Bereich, wenn das Tablet unbeaufsichtigt bleibt.</p>
+      </div>
+      <label>
+        Auto-Logout nach Sekunden
+        <input
+          type="number"
+          min="5"
+          max="3600"
+          step="1"
+          name="admin_logout_seconds"
+          value="{{ timeouts['admin_logout_seconds'] }}"
+          required
+          inputmode="numeric"
+        />
+      </label>
+    </section>
 
-    <label>
-      Kiosk: Preisliste bei Inaktivität (Sekunden)
-      <input
-        type="number"
-        min="5"
-        max="3600"
-        step="1"
-        name="kiosk_preisliste_seconds"
-        value="{{ timeouts['kiosk_preisliste_seconds'] }}"
-        required
-        inputmode="numeric"
-      />
-    </label>
+    <section class="system-settings-section">
+      <div class="system-settings-section__head">
+        <h3>Kiosk-Inaktivität</h3>
+        <p class="secondary">Steuert Rücksprung zur Startseite und optionalen Preisliste-Bildschirmschoner.</p>
+      </div>
+      <div class="system-settings-section__fields">
+        <label>
+          Rücksprung zur Startansicht nach Sekunden
+          <input
+            type="number"
+            min="5"
+            max="3600"
+            step="1"
+            name="kiosk_home_seconds"
+            value="{{ timeouts['kiosk_home_seconds'] }}"
+            required
+            inputmode="numeric"
+          />
+        </label>
 
-    <label class="system-settings-grid__full admin-toggle-row">
-      <input
-        type="checkbox"
-        name="kiosk_preisliste_enabled"
-        value="1"
-        {% if timeouts['kiosk_preisliste_enabled'] %}checked{% endif %}
-      />
-      Bildschirmschoner „Preisliste“ aktivieren
-    </label>
+        <label>
+          Preisliste bei Inaktivität nach Sekunden
+          <input
+            type="number"
+            min="5"
+            max="3600"
+            step="1"
+            name="kiosk_preisliste_seconds"
+            value="{{ timeouts['kiosk_preisliste_seconds'] }}"
+            required
+            inputmode="numeric"
+          />
+        </label>
+      </div>
 
-    <label>
-      Kiosk: Rücksprung zur Startansicht (Sekunden)
-      <input
-        type="number"
-        min="5"
-        max="3600"
-        step="1"
-        name="kiosk_home_seconds"
-        value="{{ timeouts['kiosk_home_seconds'] }}"
-        required
-        inputmode="numeric"
-      />
-    </label>
+      <label class="admin-toggle-row">
+        <input
+          type="checkbox"
+          name="kiosk_preisliste_enabled"
+          value="1"
+          {% if timeouts['kiosk_preisliste_enabled'] %}checked{% endif %}
+        />
+        Preisliste als Bildschirmschoner verwenden
+      </label>
+    </section>
 
-    <p class="secondary system-settings-grid__full" style="margin-top:0;">
-      Der Rücksprung zur Startansicht gilt für Gruppen-, Nutzer- und Buchungsansichten. Ist der
-      Bildschirmschoner aktiv, öffnet die Startseite nach der Preisliste-Zeit automatisch die Preisliste.
-      Die Preisliste selbst bleibt per Tipp auf den freien Bereich sofort verlassbar.
-    </p>
+    <section class="system-settings-section">
+      <div class="system-settings-section__head">
+        <h3>Gruppenauswahl</h3>
+        <p class="secondary">Legt fest, wie Gruppenlogos beim Antippen reagieren.</p>
+      </div>
+      <div class="system-settings-section__fields">
+        <label>
+          Animationsgeschwindigkeit
+          <select name="kiosk_group_logo_animation_speed">
+            <option value="very_fast" {% if timeouts['kiosk_group_logo_animation_speed'] == 'very_fast' %}selected{% endif %}>Sehr schnell</option>
+            <option value="fast" {% if timeouts['kiosk_group_logo_animation_speed'] == 'fast' %}selected{% endif %}>Schnell</option>
+            <option value="normal" {% if timeouts['kiosk_group_logo_animation_speed'] == 'normal' %}selected{% endif %}>Normal</option>
+            <option value="slow" {% if timeouts['kiosk_group_logo_animation_speed'] == 'slow' %}selected{% endif %}>Langsam</option>
+          </select>
+        </label>
 
-    <p class="secondary system-settings-grid__full" style="margin-top:0;">
+        <label class="admin-toggle-row system-settings-section__toggle">
+          <input
+            type="checkbox"
+            name="kiosk_group_logo_zoom_enabled"
+            value="1"
+            {% if timeouts['kiosk_group_logo_zoom_enabled'] %}checked{% endif %}
+          />
+          Logo-Zoom aktivieren
+        </label>
+      </div>
+    </section>
+
+    <p class="secondary system-settings-backup-note">
       System-Backups werden zusätzlich automatisch einmal pro Woche erstellt und im Backup-Archiv gespeichert.
     </p>
 
-    <button type="submit">Zeiten speichern</button>
+    <button type="submit">Einstellungen speichern</button>
   </form>
 </article>
 {% endblock %}

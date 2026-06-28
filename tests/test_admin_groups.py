@@ -208,7 +208,10 @@ def test_admin_group_logo_tile_display_options() -> None:
         assert "k-tile--logo-only" in home.text
         assert "k-tile--logo-max" in home.text
         assert "k-tile--tap-feedback" in home.text
+        assert "k-tile-logo-flight" in home.text
+        assert "k-tile--flight-active" in home.text
         assert 'addEventListener("pointerdown"' in home.text
+        assert "if (logoZoomEnabled && hasLogo) return;" in home.text
         assert "NurLogo" not in home.text
 
 
@@ -244,3 +247,40 @@ def test_admin_group_logo_remove_checkbox() -> None:
             )
         assert has == 0
         assert not group_logo_util.logo_file_path(gid).is_file()
+
+
+def test_group_logo_zoom_animation_can_be_disabled() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "ZoomAus"})
+        with db.get_connection() as conn:
+            gid = int(conn.execute("SELECT id FROM user_groups WHERE name='ZoomAus'").fetchone()[0])
+        client.post(
+            f"/admin/groups/{gid}/edit",
+            data={
+                "name": "ZoomAus",
+                "tile_logo_size": "max",
+                "tile_logo_only": "1",
+            },
+            files={"logo_png": ("logo.png", io.BytesIO(_MINI_PNG), "image/png")},
+            follow_redirects=False,
+        )
+        client.post(
+            "/admin/system-settings",
+            data={
+                "admin_logout_seconds": "25",
+                "kiosk_preisliste_seconds": "60",
+                "kiosk_home_seconds": "30",
+                "kiosk_preisliste_enabled": "1",
+                "kiosk_group_logo_animation_speed": "very_fast",
+            },
+            follow_redirects=False,
+        )
+
+        home = client.get("/")
+        assert home.status_code == 200
+        assert "k-tile--tap-feedback" in home.text
+        assert 'data-logo-zoom-enabled="0"' in home.text
+        assert 'data-logo-animation-speed="very_fast"' in home.text
+        assert "k-tile--tap-feedback-subtle" in home.text
+        assert "!logoZoomEnabled" in home.text

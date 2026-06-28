@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.5.1 - 2026-06-28
+
+- Added configurable group-logo zoom animation for the kiosk group selection, including speed presets from "Sehr schnell" to "Langsam".
+- Added an admin setting to disable the group-logo zoom and fall back to a more subtle touch animation.
+- Reworked the admin system settings page into clearer sections for admin timeout, kiosk inactivity and group selection behavior.
+- Fixed group-logo animation behavior so zoom-enabled logo tiles no longer play the small tap animation before the center zoom.
+- Kept the new settings backward-compatible with existing v1.5.0 installations by storing them as optional `app_settings` keys with safe defaults.
+
 ## v1.5.0 - 2026-06-24
 
 - Added richer kiosk news customization with alignment, text size and selectable PNG icons in the admin panel.

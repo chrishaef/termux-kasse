@@ -6,7 +6,7 @@ Das System ist für Touchscreen Bildschirme ab 10" optimiert.
 
 Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — Buchungen, Kontostände und Abrechnungen laufen lokal; Styles und Skripte kommen aus dem Projekt (`/static`). Eine Internet Verbindung wird nur für die Installation, Updates und den optionalen Online-/Versionscheck genutzt.
 
-**Aktuelle Version:** **1.5.0** (Git-Tag [`v1.5.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.5.0))
+**Aktuelle Version:** **1.5.1** (Git-Tag [`v1.5.1`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.5.1))
 
 **Zugehörige Android-Kiosk-App:** [`chrishaef/kiosk-app`](https://github.com/chrishaef/kiosk-app) (WebView-Wrapper, Vollbild/Kiosk-Steuerung, PIN/Admin-Menü).
 
@@ -35,7 +35,7 @@ Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **S
 | Bereich | Kurzbeschreibung |
 |--------|-------------------|
 | **Kiosk** | Gruppe wählen → Nutzer → Kontostand, letzte Abrechnung, Artikel mit einem Tipp buchen (Klicksound + visuelles Feedback) |
-| **Kiosk Extra** | Top-Ten-Seite (umschaltbare Sortierung nach Buchungen oder Zahlungen), Preisliste, automatischer Preisliste-Bildschirmschoner bei Inaktivität |
+| **Kiosk Extra** | Top-Ten-Seite (umschaltbare Sortierung nach Buchungen oder Zahlungen), Preisliste, optionaler Preisliste-Bildschirmschoner bei Inaktivität, konfigurierbare Gruppenkachel-Animationen |
 | **Warnstufen** | 3 konfigurierbare Schwellen mit individuellen Texten und Sounds pro Stufe (einmalig beim Erreichen der nächsten Stufe) |
 | **Admin** | Login, Gruppen, Nutzer, Artikel inkl. Sortierung und Bearbeiten, Kiosk-Nachricht |
 | **Abrechnung** | Geführter Ablauf: Gruppe/Nutzer wählen → offene Posten prüfen → Zahlungseingang bestätigen → Konten begleichen, **PDF** und **XLSX** exportieren |
@@ -78,9 +78,9 @@ Die **Shopkasse** ist eine **Vertrauenskasse auf Kontobasis**: Es gibt keine War
 **Preisliste und automatischer Wechsel bei Untätigkeit**
 
 - **Preisliste** (`/preisliste`): Alle **aktiven** Artikel mit Preis; geeignet als Schaukasten am Kiosk.
-- **Ruhemodus**: Ohne Bedienung springt die Anzeige von einer **Buchungsseite** (`/u/…`) nach **30 Sekunden** zurück zur **Gruppenauswahl** (`/`). Von **allen anderen** Kiosk-Seiten (z. B. Gruppe, Top Ten) wechselt sie nach **60 Sekunden** auf die **Preisliste** — wirkt wie ein einfacher Bildschirmschoner mit Preisen.
+- **Ruhemodus**: Ohne Bedienung springt die Anzeige von Kiosk-Seiten zurück zur **Gruppenauswahl** (`/`). Optional kann die Startseite nach der eingestellten Preisliste-Zeit auf die **Preisliste** wechseln — wirkt wie ein einfacher Bildschirmschoner mit Preisen.
 - Auf der Preisliste führt ein **Tipp auf den freien Bereich** (oder eine Taste) zurück zum **Kiosk-Start**.
-- Die Timeouts/Zeiten lassen sich über das Adminpanel einstellen
+- Die Timeouts/Zeiten, die Preisliste-Bildschirmschoner-Funktion und die Gruppenkachel-Animationen lassen sich unter **Admin → Systemeinstellungen** einstellen.
 - 
 **Hinweise für Betreuer**
 
@@ -568,13 +568,13 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ### Versionierung und Releases
 
-- Aktueller Git-Tag: **v1.5.0** — Übersicht: [Tag v1.5.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.5.0).
-- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.5.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.5.0) öffnen, Titel z. B. `Termux-Shopkasse 1.5.0`, Beschreibung einfügen, *Publish release*.
+- Aktueller Git-Tag: **v1.5.1** — Übersicht: [Tag v1.5.1](https://github.com/chrishaef/termux-kasse/releases/tag/v1.5.1).
+- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.5.1](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.5.1) öffnen, Titel z. B. `Termux-Shopkasse 1.5.1`, Beschreibung einfügen, *Publish release*.
 - **GitHub CLI** (einmalig `gh auth login`):  
-  `gh release create v1.5.0 --title "Termux-Shopkasse 1.5.0" --generate-notes`
+  `gh release create v1.5.1 --title "Termux-Shopkasse 1.5.1" --generate-notes`
 - Änderungsübersicht im Repo: [`CHANGELOG.md`](./CHANGELOG.md)
 
-**v1.5.0** (Kurzüberblick): Erweiterte Kiosk-News und Gruppenlogos, steuerbarer Preisliste-Bildschirmschoner, Admin-Syslogs mit Rotation sowie geführter Update-Rollback mit Pre-Update-Backup.
+**v1.5.1** (Kurzüberblick): Konfigurierbarer Gruppenlogo-Zoom mit Geschwindigkeit, dezenter Fallback-Animation und übersichtlichere Systemeinstellungen.
 
 ---
 

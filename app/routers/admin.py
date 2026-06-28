@@ -1498,7 +1498,7 @@ def admin_system_settings_get(request: Request) -> Response:
         request,
         "admin/system_settings.html",
         {
-            "title": "Systemzeiten",
+            "title": "Systemeinstellungen",
             "timeouts": timeouts,
             "saved": request.query_params.get("saved") == "1",
             "error": request.query_params.get("err") == "invalid",
@@ -1513,6 +1513,8 @@ def admin_system_settings_post(
     kiosk_preisliste_seconds: str = Form(...),
     kiosk_home_seconds: str = Form(...),
     kiosk_preisliste_enabled: str | None = Form(default=None),
+    kiosk_group_logo_zoom_enabled: str | None = Form(default=None),
+    kiosk_group_logo_animation_speed: str = Form(default="normal"),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
@@ -1529,6 +1531,9 @@ def admin_system_settings_post(
             kiosk_preisliste_seconds=preisliste_seconds,
             kiosk_home_seconds=home_seconds,
             kiosk_preisliste_enabled=kiosk_preisliste_enabled in ("1", "on", "yes", "true"),
+            kiosk_group_logo_zoom_enabled=kiosk_group_logo_zoom_enabled
+            in ("1", "on", "yes", "true"),
+            kiosk_group_logo_animation_speed=kiosk_group_logo_animation_speed,
         )
     app_logging.log_event(
         ADMIN_LOG,
@@ -1539,6 +1544,9 @@ def admin_system_settings_post(
         kiosk_preisliste_seconds=preisliste_seconds,
         kiosk_home_seconds=home_seconds,
         kiosk_preisliste_enabled=kiosk_preisliste_enabled in ("1", "on", "yes", "true"),
+        kiosk_group_logo_zoom_enabled=kiosk_group_logo_zoom_enabled
+        in ("1", "on", "yes", "true"),
+        kiosk_group_logo_animation_speed=kiosk_group_logo_animation_speed,
     )
     return RedirectResponse("/admin/system-settings?saved=1", status_code=303)
 

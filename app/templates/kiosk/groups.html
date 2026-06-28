@@ -12,7 +12,11 @@
 {% endblock %}
 {% block content %}
 {% if groups %}
-<div class="k-tiles">
+<div
+  class="k-tiles"
+  data-logo-zoom-enabled="{% if request.state.system_timeouts['kiosk_group_logo_zoom_enabled'] %}1{% else %}0{% endif %}"
+  data-logo-animation-speed="{{ request.state.system_timeouts['kiosk_group_logo_animation_speed'] }}"
+>
   {% for g in groups %}
   {% set has_logo = g['has_logo'] %}
   {% set show_name = (not has_logo) or g['tile_show_name'] %}
@@ -40,18 +44,97 @@
 <script>
   (function () {
     const tiles = document.querySelectorAll(".k-tile");
+    const tileContainer = document.querySelector(".k-tiles");
+    const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const logoZoomEnabled = !tileContainer || tileContainer.dataset.logoZoomEnabled !== "0";
+    const animationSpeeds = {
+      very_fast: { flight: 260, fade: 110, fadeDelay: 180, navigate: 290, cleanup: 700 },
+      fast: { flight: 360, fade: 140, fadeDelay: 250, navigate: 390, cleanup: 850 },
+      normal: { flight: 480, fade: 180, fadeDelay: 340, navigate: 520, cleanup: 1200 },
+      slow: { flight: 650, fade: 240, fadeDelay: 470, navigate: 700, cleanup: 1500 },
+    };
+    const speedKey = tileContainer ? tileContainer.dataset.logoAnimationSpeed : "normal";
+    const animationSpeed = animationSpeeds[speedKey] || animationSpeeds.normal;
     tiles.forEach(function (tile) {
+      let navigationStarted = false;
+      const hasLogo = !!tile.querySelector(".k-tile__logo");
       const playTapFeedback = function () {
+        if (logoZoomEnabled && hasLogo) return;
         tile.classList.remove("k-tile--tap-feedback");
+        tile.classList.remove("k-tile--tap-feedback-subtle");
         void tile.offsetWidth;
-        tile.classList.add("k-tile--tap-feedback");
+        tile.classList.add(logoZoomEnabled ? "k-tile--tap-feedback" : "k-tile--tap-feedback-subtle");
+      };
+      const animateLogoAndNavigate = function (event) {
+        if (
+          navigationStarted ||
+          event.defaultPrevented ||
+          event.button > 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey ||
+          !logoZoomEnabled ||
+          prefersReducedMotion
+        ) {
+          return;
+        }
+        const logo = tile.querySelector(".k-tile__logo");
+        if (!logo) return;
+        event.preventDefault();
+        navigationStarted = true;
+        tile.classList.add("k-tile--flight-active");
+
+        const rect = logo.getBoundingClientRect();
+        const clone = logo.cloneNode(true);
+        clone.className = "k-tile-logo-flight";
+        clone.removeAttribute("loading");
+        clone.style.left = rect.left + "px";
+        clone.style.top = rect.top + "px";
+        clone.style.width = rect.width + "px";
+        clone.style.height = rect.height + "px";
+        clone.style.opacity = "1";
+        clone.style.transform = "translate3d(0, 0, 0) scale(1)";
+        clone.style.transition =
+          "transform " +
+          animationSpeed.flight +
+          "ms cubic-bezier(0.18, 0.9, 0.2, 1), filter " +
+          animationSpeed.flight +
+          "ms ease, opacity " +
+          animationSpeed.fade +
+          "ms ease " +
+          animationSpeed.fadeDelay +
+          "ms";
+        document.body.appendChild(clone);
+
+        const targetSize = Math.min(window.innerWidth, window.innerHeight) * 0.46;
+        const scale = Math.max(1.8, targetSize / Math.max(rect.width, rect.height));
+        const targetX = (window.innerWidth - rect.width) / 2 - rect.left;
+        const targetY = (window.innerHeight - rect.height) / 2 - rect.top;
+
+        window.requestAnimationFrame(function () {
+          clone.style.transform = "translate3d(" + targetX + "px, " + targetY + "px, 0) scale(" + scale + ")";
+          clone.style.filter =
+            "drop-shadow(0 22px 46px rgba(0, 0, 0, 0.58)) drop-shadow(0 0 72px rgba(232, 188, 46, 0.88))";
+          clone.style.opacity = "0";
+        });
+
+        window.setTimeout(function () {
+          window.location.href = tile.href;
+        }, animationSpeed.navigate);
+        window.setTimeout(function () {
+          tile.classList.remove("k-tile--flight-active");
+          if (clone.parentNode) clone.parentNode.removeChild(clone);
+        }, animationSpeed.cleanup);
       };
       tile.addEventListener("pointerdown", playTapFeedback, { passive: true });
+      tile.addEventListener("click", animateLogoAndNavigate);
       tile.addEventListener("keydown", function (event) {
         if (event.key === "Enter" || event.key === " ") playTapFeedback();
       });
       tile.addEventListener("animationend", function () {
         tile.classList.remove("k-tile--tap-feedback");
+        tile.classList.remove("k-tile--tap-feedback-subtle");
       });
     });
   })();

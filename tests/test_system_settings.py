@@ -93,6 +93,10 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
         assert re.search(r'name="kiosk_preisliste_seconds"[^>]*value="60"', page.text)
         assert re.search(r'name="kiosk_home_seconds"[^>]*value="30"', page.text)
         assert 'name="kiosk_preisliste_enabled"' in page.text
+        assert 'name="kiosk_group_logo_zoom_enabled"' in page.text
+        assert 'name="kiosk_group_logo_animation_speed"' in page.text
+        assert 'value="very_fast"' in page.text
+        assert "Systemeinstellungen" in page.text
 
         save = client.post(
             "/admin/system-settings",
@@ -101,6 +105,8 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
                 "kiosk_preisliste_seconds": "75",
                 "kiosk_home_seconds": "45",
                 "kiosk_preisliste_enabled": "1",
+                "kiosk_group_logo_zoom_enabled": "1",
+                "kiosk_group_logo_animation_speed": "slow",
             },
             follow_redirects=False,
         )
@@ -113,6 +119,8 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
                 "kiosk_preisliste_seconds": 75,
                 "kiosk_home_seconds": 45,
                 "kiosk_preisliste_enabled": True,
+                "kiosk_group_logo_zoom_enabled": True,
+                "kiosk_group_logo_animation_speed": "slow",
             }
 
         admin_page = client.get("/admin")
@@ -121,6 +129,7 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
         assert "kioskPreislisteSeconds: 75" in admin_page.text
         assert "kioskHomeSeconds: 45" in admin_page.text
         assert "kioskPreislisteEnabled: true" in admin_page.text
+        assert "Systemeinstellungen" in admin_page.text
 
 
 def test_admin_system_settings_can_disable_pricelist_screensaver() -> None:
@@ -142,10 +151,14 @@ def test_admin_system_settings_can_disable_pricelist_screensaver() -> None:
         with db.get_connection() as conn:
             settings = system_settings.get_timeout_settings(conn)
         assert settings["kiosk_preisliste_enabled"] is False
+        assert settings["kiosk_group_logo_zoom_enabled"] is False
+        assert settings["kiosk_group_logo_animation_speed"] == "normal"
 
         home = client.get("/")
         assert home.status_code == 200
         assert "kioskPreislisteEnabled: false" in home.text
+        assert 'tileContainer.dataset.logoZoomEnabled !== "0"' in home.text
+        assert "tileContainer.dataset.logoAnimationSpeed" in home.text
         assert "if (!(isHomePage && !APP_TIMEOUTS.kioskPreislisteEnabled))" in home.text
         assert 'document.getElementById("site-repo-link")' in home.text
 
