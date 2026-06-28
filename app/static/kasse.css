@@ -669,7 +669,9 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   border-radius: var(--kas-radius);
   /* Vertikal etwas weniger Padding, damit bei 6rem Kachelhöhe ein 4.5rem-Logo passt */
   padding: 0.75rem 1.35rem;
-  box-shadow: var(--kas-shadow);
+  box-shadow:
+    var(--kas-shadow),
+    0 0 18px rgba(232, 188, 46, 0.18);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   height: 6rem;
   min-height: 6rem;
@@ -679,7 +681,9 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
 .k-tile:hover {
   transform: translateY(-2px);
-  box-shadow: var(--kas-shadow-hover);
+  box-shadow:
+    var(--kas-shadow-hover),
+    0 0 18px rgba(232, 188, 46, 0.18);
   border-color: var(--kas-accent);
 }
 
@@ -688,21 +692,22 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 }
 
 .k-tile--tap-feedback {
-  animation: k-tile-tap-feedback 260ms ease-out;
+  animation: k-tile-tap-feedback 430ms ease-out;
   border-color: var(--kas-accent-bright);
   box-shadow:
-    0 0 0 0.22rem rgba(232, 188, 46, 0.32),
-    0 14px 34px rgba(0, 0, 0, 0.32);
+    0 0 0 0.34rem rgba(232, 188, 46, 0.38),
+    0 0 34px rgba(232, 188, 46, 0.42),
+    0 16px 40px rgba(0, 0, 0, 0.36);
 }
 
 .k-tile--logo-only.k-tile--tap-feedback {
-  animation: k-tile-logo-only-tap-feedback 280ms ease-out;
+  animation: k-tile-logo-only-tap-feedback 460ms ease-out;
   border-color: transparent;
   box-shadow: none;
 }
 
 .k-tile--logo-only.k-tile--tap-feedback .k-tile__logo {
-  animation: k-tile-logo-tap-feedback 320ms ease-out;
+  animation: k-tile-logo-tap-feedback 520ms ease-out;
 }
 
 @keyframes k-tile-tap-feedback {
@@ -710,7 +715,10 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
     transform: scale(1);
   }
   42% {
-    transform: scale(0.965);
+    transform: scale(0.94);
+  }
+  70% {
+    transform: scale(1.035);
   }
   100% {
     transform: scale(1);
@@ -722,7 +730,10 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
     transform: scale(1);
   }
   45% {
-    transform: scale(0.95);
+    transform: scale(0.92);
+  }
+  72% {
+    transform: scale(1.045);
   }
   100% {
     transform: scale(1);
@@ -733,17 +744,17 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   0% {
     filter:
       drop-shadow(0 12px 24px rgba(0, 0, 0, 0.52))
-      drop-shadow(0 0 18px rgba(232, 188, 46, 0.25));
+      drop-shadow(0 0 24px rgba(232, 188, 46, 0.42));
   }
   45% {
     filter:
       drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45))
-      drop-shadow(0 0 30px rgba(232, 188, 46, 0.62));
+      drop-shadow(0 0 46px rgba(232, 188, 46, 0.82));
   }
   100% {
     filter:
       drop-shadow(0 12px 24px rgba(0, 0, 0, 0.52))
-      drop-shadow(0 0 18px rgba(232, 188, 46, 0.25));
+      drop-shadow(0 0 24px rgba(232, 188, 46, 0.42));
   }
 }
 
@@ -835,7 +846,7 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 .k-tile--logo-only .k-tile__logo {
   filter:
     drop-shadow(0 12px 24px rgba(0, 0, 0, 0.52))
-    drop-shadow(0 0 18px rgba(232, 188, 46, 0.25));
+    drop-shadow(0 0 24px rgba(232, 188, 46, 0.42));
 }
 
 .k-tile--logo-only.k-tile--logo-small .k-tile__logo {
