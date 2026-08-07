@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html
   lang="de"
-  {% if request.state.system_timeouts.get('ui_scale_percent', 100)|int != 100 %}style="zoom: {{ request.state.system_timeouts.get('ui_scale_percent', 100)|int / 100.0 }};"{% endif %}
+  style="--ui-scale: {{ '%.4g'|format(request.state.system_timeouts.get('ui_scale_percent', 100)|int / 100.0) }};"
 >
 <head>
   <meta charset="utf-8" />
