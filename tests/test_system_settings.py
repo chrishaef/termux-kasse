@@ -134,6 +134,7 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
         assert home.status_code == 200
         assert 'class="ui-scaled"' in home.text or "ui-scaled" in home.text
         assert "transform:scale(0.9)" in home.text.replace(" ", "")
+        assert "min-height:111.1vh" in home.text.replace(" ", "") or "min-height:111.11vh" in home.text.replace(" ", "")
         assert "initial-scale=1" in home.text.replace(" ", "")
 
         admin_page = client.get("/admin")

@@ -56,6 +56,12 @@ html {
   background-position: 0 0, 0 0;
 }
 
+html.ui-scaled {
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 body {
   min-height: 100%;
   min-height: 100vh;
@@ -74,12 +80,13 @@ body {
   background-position: 0 0, 0 0;
 }
 
-/* Darstellungsskala: transform (zuverlässig in Android-WebView), kein CSS-zoom / Viewport-Hack */
+/* Darstellungsskala: transform + feste Fill-Maße inline am body (WebView-sicher) */
 body.ui-scaled {
   box-sizing: border-box;
-  width: calc(100% / var(--ui-scale));
-  min-height: calc(100vh / var(--ui-scale));
-  min-height: calc(100dvh / var(--ui-scale));
+}
+
+body.ui-scaled .site-main {
+  flex: 1 1 auto;
 }
 
 /* Pico an dunkles Portal anbinden */
