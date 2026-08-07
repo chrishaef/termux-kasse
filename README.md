@@ -459,7 +459,7 @@ Nach dem Login (`/admin`):
 - **Statistik** (`/admin/statistics`): Zeitraum + Nutzergruppe filtern, Toplisten sehen, PDF/XLSX herunterladen  
 - **Warnstufen** (`/admin/debt-thresholds`): Schwellen, Meldungstexte, Warnton-Lautstärken und austauschbare MP3-Sounds (Warnstufen + Buchungsklick) für Kiosk-Warnungen pflegen  
 - **Kiosk-Nachricht** (`/admin/news`): Text oben auf der Gruppenauswahl mit Ausrichtung, Größe und PNG-Icon konfigurieren  
-- **Systemeinstellungen** (`/admin/system-settings`): Timeouts, Bildschirmschoner, Gruppenlogo-Animation, optional Gruppenauswahl überspringen, Darstellungsskala, Shop-Logo und Anzeigename  
+- **Systemeinstellungen** (`/admin/system-settings`): Timeouts, Bildschirmschoner, Gruppenlogo-Animation, optional Gruppenauswahl überspringen, Shop-Logo und Anzeigename  
 - **Backup & Recovery & Reset** (`/admin/backup`): Backup erstellen (Archiv), Import mit Vorschau, Archivliste, optional **System Reset** (Master-Passwort)  
 - **System-Update** (`/admin/system-update`): Online-/Versionscheck, Pre-Update-Backup, Start nur mit Master-Passwort, Update-Neustart, Protokoll und Rollback auf den Stand vor dem letzten geführten Update
 - **Syslogs** (`/admin/syslogs`): rotierende System-/App-Logs im Adminbereich einsehen

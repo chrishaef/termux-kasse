@@ -1522,7 +1522,6 @@ def admin_system_settings_post(
     kiosk_group_logo_zoom_enabled: str | None = Form(default=None),
     kiosk_skip_group_selection: str | None = Form(default=None),
     kiosk_group_logo_animation_speed: str = Form(default="normal"),
-    ui_scale_percent: str = Form(default="100"),
     remove_logo: str = Form(default="0"),
     logo_png: Optional[UploadFile] = File(default=None),
 ) -> RedirectResponse:
@@ -1532,7 +1531,6 @@ def admin_system_settings_post(
         admin_seconds = int((admin_logout_seconds or "").strip())
         preisliste_seconds = int((kiosk_preisliste_seconds or "").strip())
         home_seconds = int((kiosk_home_seconds or "").strip())
-        scale_percent = int((ui_scale_percent or "").strip())
     except ValueError:
         return RedirectResponse("/admin/system-settings?err=invalid", status_code=303)
 
@@ -1562,7 +1560,6 @@ def admin_system_settings_post(
             kiosk_group_logo_zoom_enabled=logo_zoom_on,
             kiosk_group_logo_animation_speed=kiosk_group_logo_animation_speed,
             kiosk_skip_group_selection=skip_group,
-            ui_scale_percent=scale_percent,
         )
         display_name = branding.save_display_name(conn, shop_display_name)
         if raw_logo is not None:
@@ -1584,7 +1581,6 @@ def admin_system_settings_post(
         kiosk_group_logo_zoom_enabled=logo_zoom_on,
         kiosk_group_logo_animation_speed=kiosk_group_logo_animation_speed,
         kiosk_skip_group_selection=skip_group,
-        ui_scale_percent=scale_percent,
         shop_display_name=display_name,
     )
     return RedirectResponse("/admin/system-settings?saved=1", status_code=303)

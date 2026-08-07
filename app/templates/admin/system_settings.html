@@ -118,21 +118,6 @@
 
     <section class="system-settings-section">
       <div class="system-settings-section__head">
-        <h3>Darstellung</h3>
-        <p class="secondary">Gesamte Shop-Oberfläche skalieren (für Tablets mit anderer WebView-Auflösung). Standard 100 % lässt bestehende Installationen unverändert.</p>
-      </div>
-      <label>
-        Darstellungsskala
-        <select name="ui_scale_percent">
-          {% for scale in [70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130] %}
-          <option value="{{ scale }}" {% if timeouts['ui_scale_percent'] == scale %}selected{% endif %}>{{ scale }}%</option>
-          {% endfor %}
-        </select>
-      </label>
-    </section>
-
-    <section class="system-settings-section">
-      <div class="system-settings-section__head">
         <h3>Gruppenauswahl</h3>
         <p class="secondary">Startnavigation und Reaktion der Gruppenlogos beim Antippen.</p>
       </div>

@@ -6,7 +6,6 @@
 - Added system setting `kiosk_skip_group_selection` so `/` lists all users across groups with a letter filter (instead of group tiles); existing installs keep the classic group flow by default.
 - Extended admin system settings with branding upload/remove and the skip-group-selection toggle for multi-shop deployments on one codebase.
 - Added admin uploads for kiosk warn sounds (levels 1–3) and the purchase click sound, with fallback to the shipped `/static` MP3 defaults.
-- Added optional UI scale (`ui_scale_percent`, default 100%) under system settings so lower-resolution tablets can shrink the whole shop UI without changing WSG defaults.
 
 ## v1.5.1 - 2026-06-28
 

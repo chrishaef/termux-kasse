@@ -1,13 +1,5 @@
 <!DOCTYPE html>
-{% set ui_scale_percent = request.state.system_timeouts.get('ui_scale_percent', 100)|int %}
-{% set ui_scale = ui_scale_percent / 100.0 %}
-{% set ui_scale_attr = '%.4g'|format(ui_scale) %}
-{% set ui_fill_attr = '%.4g'|format(10000.0 / ui_scale_percent) %}
-{% set ui_scaled = ui_scale_percent != 100 %}
-<html
-  lang="de"
-  class="{% if ui_scaled %}ui-scaled{% endif %}"
->
+<html lang="de">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
@@ -16,10 +8,7 @@
   <link rel="stylesheet" href="/static/pico.min.css" />
   <link rel="stylesheet" href="/static/kasse.css" />
 </head>
-<body
-  class="{% block body_class %}app-kiosk{% endblock %}{% if ui_scaled %} ui-scaled{% endif %}"
-  {% if ui_scaled %}style="transform: scale({{ ui_scale_attr }}); transform-origin: 0 0; width: {{ ui_fill_attr }}%; min-height: {{ ui_fill_attr }}vh;"{% endif %}
->
+<body class="{% block body_class %}app-kiosk{% endblock %}">
   <header class="site-header">
     <div class="site-header__inner container">
       <div class="site-brand-wrap">

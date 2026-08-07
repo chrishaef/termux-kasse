@@ -44,22 +44,7 @@
 
 html {
   min-height: 100%;
-  overflow-x: hidden;
   background-color: var(--kas-bg-deep);
-  /* Gleicher Hintergrund wie body, falls nach Skalierung am Rand Fläche sichtbar wird */
-  background-image:
-    linear-gradient(rgba(12, 15, 11, 0.68), rgba(18, 22, 17, 0.82)),
-    url("/static/camo-tile.png");
-  background-repeat: repeat, repeat;
-  background-size: auto, auto;
-  background-attachment: scroll, scroll;
-  background-position: 0 0, 0 0;
-}
-
-html.ui-scaled {
-  height: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
 }
 
 body {
@@ -78,15 +63,6 @@ body {
   background-size: auto, auto;
   background-attachment: scroll, scroll;
   background-position: 0 0, 0 0;
-}
-
-/* Darstellungsskala: transform + feste Fill-Maße inline am body (WebView-sicher) */
-body.ui-scaled {
-  box-sizing: border-box;
-}
-
-body.ui-scaled .site-main {
-  flex: 1 1 auto;
 }
 
 /* Pico an dunkles Portal anbinden */
