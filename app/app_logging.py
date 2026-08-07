@@ -41,6 +41,9 @@ EVENT_LABELS = {
     "group_logo_invalid": "Gruppenlogo ungueltig",
     "group_logo_saved": "Gruppenlogo gespeichert",
     "group_logo_removed": "Gruppenlogo entfernt",
+    "branding_logo_invalid": "Shop-Logo ungueltig",
+    "branding_logo_saved": "Shop-Logo gespeichert",
+    "branding_logo_removed": "Shop-Logo entfernt",
 }
 
 

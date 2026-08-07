@@ -10,6 +10,7 @@ KEY_KIOSK_HOME_SECONDS = "kiosk_home_seconds"
 KEY_KIOSK_PREISLISTE_ENABLED = "kiosk_preisliste_enabled"
 KEY_KIOSK_GROUP_LOGO_ZOOM_ENABLED = "kiosk_group_logo_zoom_enabled"
 KEY_KIOSK_GROUP_LOGO_ANIMATION_SPEED = "kiosk_group_logo_animation_speed"
+KEY_KIOSK_SKIP_GROUP_SELECTION = "kiosk_skip_group_selection"
 
 DEFAULT_ADMIN_LOGOUT_SECONDS = 25
 DEFAULT_KIOSK_PREISLISTE_SECONDS = 60
@@ -17,6 +18,7 @@ DEFAULT_KIOSK_HOME_SECONDS = 30
 DEFAULT_KIOSK_PREISLISTE_ENABLED = True
 DEFAULT_KIOSK_GROUP_LOGO_ZOOM_ENABLED = True
 DEFAULT_KIOSK_GROUP_LOGO_ANIMATION_SPEED = "normal"
+DEFAULT_KIOSK_SKIP_GROUP_SELECTION = False
 
 MIN_TIMEOUT_SECONDS = 5
 MAX_TIMEOUT_SECONDS = 3600
@@ -108,6 +110,7 @@ def default_timeout_settings() -> dict[str, int | bool | str]:
         "kiosk_preisliste_enabled": DEFAULT_KIOSK_PREISLISTE_ENABLED,
         "kiosk_group_logo_zoom_enabled": DEFAULT_KIOSK_GROUP_LOGO_ZOOM_ENABLED,
         "kiosk_group_logo_animation_speed": DEFAULT_KIOSK_GROUP_LOGO_ANIMATION_SPEED,
+        "kiosk_skip_group_selection": DEFAULT_KIOSK_SKIP_GROUP_SELECTION,
     }
 
 
@@ -116,6 +119,7 @@ def get_timeout_settings(conn: sqlite3.Connection) -> dict[str, int | bool | str
     preisliste_enabled = _read_bool(conn, KEY_KIOSK_PREISLISTE_ENABLED)
     logo_zoom_enabled = _read_bool(conn, KEY_KIOSK_GROUP_LOGO_ZOOM_ENABLED)
     logo_animation_speed = _read_animation_speed(conn, KEY_KIOSK_GROUP_LOGO_ANIMATION_SPEED)
+    skip_group_selection = _read_bool(conn, KEY_KIOSK_SKIP_GROUP_SELECTION)
     return {
         "admin_logout_seconds": _normalize_timeout(
             _read_int(conn, KEY_ADMIN_LOGOUT_SECONDS),
@@ -144,6 +148,11 @@ def get_timeout_settings(conn: sqlite3.Connection) -> dict[str, int | bool | str
             if logo_animation_speed is not None
             else str(defaults["kiosk_group_logo_animation_speed"])
         ),
+        "kiosk_skip_group_selection": (
+            skip_group_selection
+            if skip_group_selection is not None
+            else bool(defaults["kiosk_skip_group_selection"])
+        ),
     }
 
 
@@ -156,6 +165,7 @@ def save_timeout_settings(
     kiosk_preisliste_enabled: bool = DEFAULT_KIOSK_PREISLISTE_ENABLED,
     kiosk_group_logo_zoom_enabled: bool = DEFAULT_KIOSK_GROUP_LOGO_ZOOM_ENABLED,
     kiosk_group_logo_animation_speed: str = DEFAULT_KIOSK_GROUP_LOGO_ANIMATION_SPEED,
+    kiosk_skip_group_selection: bool = DEFAULT_KIOSK_SKIP_GROUP_SELECTION,
 ) -> dict[str, int | bool | str]:
     admin_seconds = _normalize_timeout(admin_logout_seconds, DEFAULT_ADMIN_LOGOUT_SECONDS)
     preisliste_seconds = _normalize_timeout(
@@ -181,6 +191,11 @@ def save_timeout_settings(
         KEY_KIOSK_GROUP_LOGO_ANIMATION_SPEED,
         kiosk_group_logo_animation_speed,
     )
+    skip_group_selection = _save_bool(
+        conn,
+        KEY_KIOSK_SKIP_GROUP_SELECTION,
+        kiosk_skip_group_selection,
+    )
     return {
         "admin_logout_seconds": admin_seconds,
         "kiosk_preisliste_seconds": preisliste_seconds,
@@ -188,4 +203,5 @@ def save_timeout_settings(
         "kiosk_preisliste_enabled": preisliste_enabled,
         "kiosk_group_logo_zoom_enabled": logo_zoom_enabled,
         "kiosk_group_logo_animation_speed": logo_animation_speed,
+        "kiosk_skip_group_selection": skip_group_selection,
     }

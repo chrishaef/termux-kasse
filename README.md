@@ -55,7 +55,7 @@ Die **Shopkasse** ist eine **Vertrauenskasse auf Kontobasis**: Es gibt keine War
 
 **Ablauf am Kiosk**
 
-1. **Startseite** (`/`): Nutzergruppen zur Auswahl (Reihenfolge wie im Adminpanel unter Gruppen).
+1. **Startseite** (`/`): Nutzergruppen zur Auswahl (Reihenfolge wie im Adminpanel unter Gruppen). Mit aktivierter Option „Gruppenauswahl überspringen“ und genau einer Gruppe wird direkt zur Nutzerliste dieser Gruppe weitergeleitet.
 2. **Gruppe** (`/g/<id>`): Mitglieder dieser Gruppe (Sortierung wie im Adminpanel).
 3. **Nutzer** (`/u/<id>`): Kopfbereich mit **Kontostand**, Kurzinfo zur **letzten Abrechnung** (Datum, optional Notiz), ggf. **Warnbanner** nach den konfigurierten Schwellen. Darunter erscheinen nur **aktive** Artikel als große Buttons; inaktive Artikel sind im Kiosk unsichtbar.
 
@@ -80,7 +80,7 @@ Die **Shopkasse** ist eine **Vertrauenskasse auf Kontobasis**: Es gibt keine War
 - **Preisliste** (`/preisliste`): Alle **aktiven** Artikel mit Preis; geeignet als Schaukasten am Kiosk.
 - **Ruhemodus**: Ohne Bedienung springt die Anzeige von Kiosk-Seiten zurück zur **Gruppenauswahl** (`/`). Optional kann die Startseite nach der eingestellten Preisliste-Zeit auf die **Preisliste** wechseln — wirkt wie ein einfacher Bildschirmschoner mit Preisen.
 - Auf der Preisliste führt ein **Tipp auf den freien Bereich** (oder eine Taste) zurück zum **Kiosk-Start**.
-- Die Timeouts/Zeiten, die Preisliste-Bildschirmschoner-Funktion und die Gruppenkachel-Animationen lassen sich unter **Admin → Systemeinstellungen** einstellen.
+- Die Timeouts/Zeiten, die Preisliste-Bildschirmschoner-Funktion, die Gruppenkachel-Animationen, optional das Überspringen der Gruppenauswahl sowie Logo/Anzeigename lassen sich unter **Admin → Systemeinstellungen** einstellen.
 - 
 **Hinweise für Betreuer**
 
@@ -446,6 +446,8 @@ Wenn aus dem LAN nichts antwortet: **Firewall** auf dem Gerät, VPN oder Router 
 | **Jahresabschluss-Archive** | Ordner **`jahresabschluss/`** unter `KASSE_DATA_DIR` (neben `kasse.db`): gespeicherte PDF-, XLSX- und ZIP-Dateien des zuletzt erzeugten Jahresabschlusses |
 | **System-Backup-Archiv** | Ordner **`system_backups/`** unter `KASSE_DATA_DIR` |
 
+**Zweiter Shop / mehrere Installationen:** Derselbe Code und Release-Kanal, getrennte Deployments mit eigener `data/`-Datenbank. Pro Instanz Logo und Anzeigename unter Systemeinstellungen setzen; bei einer Nutzergruppe optional „Gruppenauswahl überspringen“ aktivieren.
+
 ---
 
 ## Admin-Bereich
@@ -457,6 +459,7 @@ Nach dem Login (`/admin`):
 - **Statistik** (`/admin/statistics`): Zeitraum + Nutzergruppe filtern, Toplisten sehen, PDF/XLSX herunterladen  
 - **Warnstufen** (`/admin/debt-thresholds`): Schwellen, Meldungstexte und Warnton-Lautstärken für Kiosk-Warnungen pflegen  
 - **Kiosk-Nachricht** (`/admin/news`): Text oben auf der Gruppenauswahl mit Ausrichtung, Größe und PNG-Icon konfigurieren  
+- **Systemeinstellungen** (`/admin/system-settings`): Timeouts, Bildschirmschoner, Gruppenlogo-Animation, optional Gruppenauswahl überspringen, Shop-Logo und Anzeigename  
 - **Backup & Recovery & Reset** (`/admin/backup`): Backup erstellen (Archiv), Import mit Vorschau, Archivliste, optional **System Reset** (Master-Passwort)  
 - **System-Update** (`/admin/system-update`): Online-/Versionscheck, Pre-Update-Backup, Start nur mit Master-Passwort, Update-Neustart, Protokoll und Rollback auf den Stand vor dem letzten geführten Update
 - **Syslogs** (`/admin/syslogs`): rotierende System-/App-Logs im Adminbereich einsehen

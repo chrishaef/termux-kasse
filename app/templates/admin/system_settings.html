@@ -5,13 +5,51 @@
 {% if saved %}
 <article class="contrast"><strong>Gespeichert.</strong> Die Systemeinstellungen wurden aktualisiert.</article>
 {% endif %}
-{% if error %}
+{% if error == 'invalid' %}
 <article class="contrast" style="border-color:#b33"><strong>Ungültige Eingabe.</strong> Bitte ganze Sekundenwerte eingeben.</article>
+{% endif %}
+{% if error == 'logo_invalid' %}
+<article class="contrast" style="border-color:#b33"><strong>Logo ungültig.</strong> Bitte eine gültige PNG-Datei (max. 8&nbsp;MB, Bild max. 8192&nbsp;px Kantenlänge).</article>
 {% endif %}
 
 <article class="k-panel">
   <h2 class="system-settings-title">Systemeinstellungen</h2>
-  <form method="post" action="/admin/system-settings" class="system-settings-grid">
+  <form method="post" action="/admin/system-settings" class="system-settings-grid" enctype="multipart/form-data">
+    <section class="system-settings-section">
+      <div class="system-settings-section__head">
+        <h3>Branding</h3>
+        <p class="secondary">Logo und Anzeigename dieser Installation (Header, Preisliste, PDF).</p>
+      </div>
+      <label>
+        Anzeigename
+        <input
+          type="text"
+          name="shop_display_name"
+          maxlength="64"
+          value="{{ branding['display_name'] }}"
+          required
+        />
+      </label>
+      {% if branding['has_custom_logo'] %}
+      <p style="margin:0.5rem 0">
+        <img
+          src="{{ branding['logo_url'] }}"
+          alt="Aktuelles Logo"
+          style="max-width:120px;max-height:120px;vertical-align:middle;border:1px solid #ccc;border-radius:4px"
+        />
+      </p>
+      <label class="admin-toggle-row">
+        <input type="hidden" name="remove_logo" value="0" />
+        <input type="checkbox" name="remove_logo" value="1" />
+        Eigenes Logo entfernen (Standard-Logo)
+      </label>
+      {% endif %}
+      <label>
+        Logo (PNG)
+        <input type="file" name="logo_png" accept="image/png" />
+      </label>
+    </section>
+
     <section class="system-settings-section">
       <div class="system-settings-section__head">
         <h3>Admin</h3>
@@ -81,8 +119,17 @@
     <section class="system-settings-section">
       <div class="system-settings-section__head">
         <h3>Gruppenauswahl</h3>
-        <p class="secondary">Legt fest, wie Gruppenlogos beim Antippen reagieren.</p>
+        <p class="secondary">Startnavigation und Reaktion der Gruppenlogos beim Antippen.</p>
       </div>
+      <label class="admin-toggle-row">
+        <input
+          type="checkbox"
+          name="kiosk_skip_group_selection"
+          value="1"
+          {% if timeouts['kiosk_skip_group_selection'] %}checked{% endif %}
+        />
+        Gruppenauswahl überspringen (nur bei genau einer Gruppe)
+      </label>
       <div class="system-settings-section__fields">
         <label>
           Animationsgeschwindigkeit

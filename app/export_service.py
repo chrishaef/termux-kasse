@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import io
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from fpdf import FPDF
@@ -15,12 +14,14 @@ from app.dates import format_date_de
 
 
 def _try_add_pdf_logo(pdf: FPDF, width_mm: float = 26.0, y_mm: float = 10.0) -> float | None:
-    """Platziert das WSG-Logo oben rechts auf der aktuellen PDF-Seite.
+    """Platziert das Instanz-Logo oben rechts auf der aktuellen PDF-Seite.
 
     Returns bottom y-position (mm) of reserved logo area, or None if logo wasn't drawn.
     """
     try:
-        logo = Path(__file__).resolve().parent / "static" / "wsg-logo.png"
+        from app import branding
+
+        logo = branding.resolve_logo_file_path()
         if not logo.exists():
             return None
         x_mm = float(pdf.w) - float(pdf.r_margin) - width_mm

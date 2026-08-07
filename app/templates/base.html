@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#252b23" />
-  <title>{{ title }} · Shopkasse</title>
+  <title>{{ title }} · {{ request.state.branding.display_name }}</title>
   <link rel="stylesheet" href="/static/pico.min.css" />
   <link rel="stylesheet" href="/static/kasse.css" />
 </head>
@@ -13,14 +13,14 @@
     <div class="site-header__inner container">
       <div class="site-brand-wrap">
         <img
-          src="/static/wsg-logo.png"
+          src="{{ request.state.branding.logo_url }}"
           alt=""
           id="secret-admin-trigger"
           class="secret-admin-logo"
           aria-label="Geheimer Adminzugang"
         />
         <div class="site-brand-text">
-          <a href="/" class="site-brand">Shopkasse</a>
+          <a href="/" class="site-brand">{{ request.state.branding.display_name }}</a>
           <div class="site-brand-subtitle" id="footer-flappy-egg">
             <strong class="site-brand-subtitle__line"><span class="site-brand-subtitle__prefix">powered by</span><span class="site-brand-subtitle__name">OF Hünger</span></strong>
             <strong class="site-brand-subtitle__line"><span class="site-brand-subtitle__prefix">coded by</span><span class="site-brand-subtitle__name">OF Häfner</span></strong>

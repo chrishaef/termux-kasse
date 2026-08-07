@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 
 from app import db
 from app import debt_thresholds
 from app import group_logo_util
 from app import ledger_service
+from app import system_settings
 from app.ledger_service import add_purchase, last_settlement, oldest_open_age_days, user_balance_cents
 from app.templates_env import TEMPLATES
 
@@ -14,8 +15,9 @@ router = APIRouter(tags=["kiosk"])
 
 
 @router.get("/", response_class=HTMLResponse)
-def kiosk_home(request: Request) -> HTMLResponse:
+def kiosk_home(request: Request) -> Response:
     with db.get_connection() as conn:
+        settings = system_settings.get_timeout_settings(conn)
         groups = db.fetch_all(
             conn,
             """
@@ -24,6 +26,8 @@ def kiosk_home(request: Request) -> HTMLResponse:
             ORDER BY sort_order, name COLLATE NOCASE
             """,
         )
+        if bool(settings.get("kiosk_skip_group_selection")) and len(groups) == 1:
+            return RedirectResponse(f"/g/{int(groups[0]['id'])}", status_code=303)
     return TEMPLATES.TemplateResponse(
         request,
         "kiosk/groups.html",

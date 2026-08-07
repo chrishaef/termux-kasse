@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Made the shop branding configurable per installation (display name + optional PNG logo) with fallback to the default WSG logo.
+- Added system setting `kiosk_skip_group_selection` to open the single-group user list directly from `/` (safe fallback when zero or multiple groups exist).
+- Extended admin system settings with branding upload/remove and the skip-group-selection toggle for multi-shop deployments on one codebase.
+
 ## v1.5.1 - 2026-06-28
 
 - Added configurable group-logo zoom animation for the kiosk group selection, including speed presets from "Sehr schnell" to "Langsam".

@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 from app import admin_auth
 from app import app_logging
 from app import backup_service
+from app import branding
 from app import db
 from app import debt_thresholds
 from app import group_logo_util
@@ -1494,14 +1495,17 @@ def admin_system_settings_get(request: Request) -> Response:
         return r
     with db.get_connection() as conn:
         timeouts = system_settings.get_timeout_settings(conn)
+        shop_branding = branding.get_branding(conn)
+    err = (request.query_params.get("err") or "").strip()
     return TEMPLATES.TemplateResponse(
         request,
         "admin/system_settings.html",
         {
             "title": "Systemeinstellungen",
             "timeouts": timeouts,
+            "branding": shop_branding,
             "saved": request.query_params.get("saved") == "1",
-            "error": request.query_params.get("err") == "invalid",
+            "error": err if err in ("invalid", "logo_invalid") else "",
         },
     )
 
@@ -1512,9 +1516,13 @@ def admin_system_settings_post(
     admin_logout_seconds: str = Form(...),
     kiosk_preisliste_seconds: str = Form(...),
     kiosk_home_seconds: str = Form(...),
+    shop_display_name: str = Form(default="Shopkasse"),
     kiosk_preisliste_enabled: str | None = Form(default=None),
     kiosk_group_logo_zoom_enabled: str | None = Form(default=None),
+    kiosk_skip_group_selection: str | None = Form(default=None),
     kiosk_group_logo_animation_speed: str = Form(default="normal"),
+    remove_logo: str = Form(default="0"),
+    logo_png: Optional[UploadFile] = File(default=None),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
@@ -1524,17 +1532,42 @@ def admin_system_settings_post(
         home_seconds = int((kiosk_home_seconds or "").strip())
     except ValueError:
         return RedirectResponse("/admin/system-settings?err=invalid", status_code=303)
+
+    raw_logo: bytes | None = None
+    if logo_png is not None and (logo_png.filename or "").strip():
+        raw = logo_png.file.read()
+        if raw:
+            raw_logo = raw
+    if raw_logo is not None:
+        try:
+            group_logo_util.validate_png_bytes(raw_logo)
+        except ValueError:
+            app_logging.log_event(ADMIN_LOG, 30, "branding_logo_invalid", request)
+            return RedirectResponse("/admin/system-settings?err=logo_invalid", status_code=303)
+
+    skip_group = kiosk_skip_group_selection in ("1", "on", "yes", "true")
+    preisliste_on = kiosk_preisliste_enabled in ("1", "on", "yes", "true")
+    logo_zoom_on = kiosk_group_logo_zoom_enabled in ("1", "on", "yes", "true")
+
     with db.get_connection() as conn:
         system_settings.save_timeout_settings(
             conn,
             admin_logout_seconds=admin_seconds,
             kiosk_preisliste_seconds=preisliste_seconds,
             kiosk_home_seconds=home_seconds,
-            kiosk_preisliste_enabled=kiosk_preisliste_enabled in ("1", "on", "yes", "true"),
-            kiosk_group_logo_zoom_enabled=kiosk_group_logo_zoom_enabled
-            in ("1", "on", "yes", "true"),
+            kiosk_preisliste_enabled=preisliste_on,
+            kiosk_group_logo_zoom_enabled=logo_zoom_on,
             kiosk_group_logo_animation_speed=kiosk_group_logo_animation_speed,
+            kiosk_skip_group_selection=skip_group,
         )
+        display_name = branding.save_display_name(conn, shop_display_name)
+        if raw_logo is not None:
+            branding.save_logo_png(raw_logo)
+            app_logging.log_event(ADMIN_LOG, 20, "branding_logo_saved", request)
+        elif remove_logo.strip() == "1":
+            branding.delete_custom_logo()
+            app_logging.log_event(ADMIN_LOG, 20, "branding_logo_removed", request)
+
     app_logging.log_event(
         ADMIN_LOG,
         20,
@@ -1543,10 +1576,11 @@ def admin_system_settings_post(
         admin_logout_seconds=admin_seconds,
         kiosk_preisliste_seconds=preisliste_seconds,
         kiosk_home_seconds=home_seconds,
-        kiosk_preisliste_enabled=kiosk_preisliste_enabled in ("1", "on", "yes", "true"),
-        kiosk_group_logo_zoom_enabled=kiosk_group_logo_zoom_enabled
-        in ("1", "on", "yes", "true"),
+        kiosk_preisliste_enabled=preisliste_on,
+        kiosk_group_logo_zoom_enabled=logo_zoom_on,
         kiosk_group_logo_animation_speed=kiosk_group_logo_animation_speed,
+        kiosk_skip_group_selection=skip_group,
+        shop_display_name=display_name,
     )
     return RedirectResponse("/admin/system-settings?saved=1", status_code=303)
 

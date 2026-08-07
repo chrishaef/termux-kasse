@@ -10,7 +10,7 @@ import time
 
 import qrcode
 from fastapi import FastAPI, Request
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from qrcode.image.svg import SvgPathImage
 from starlette.middleware.sessions import SessionMiddleware
@@ -18,6 +18,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.config import get_secret_key
 from app import app_logging
 from app import backup_service
+from app import branding
 from app import db
 from app import debt_thresholds
 from app import kiosk_notice
@@ -330,8 +331,10 @@ async def attach_system_timeouts(request: Request, call_next):
     try:
         with db.get_connection() as conn:
             request.state.system_timeouts = system_settings.get_timeout_settings(conn)
+            request.state.branding = branding.get_branding(conn)
     except Exception:
         request.state.system_timeouts = system_settings.default_timeout_settings()
+        request.state.branding = branding.default_branding()
     return await call_next(request)
 
 
@@ -403,6 +406,14 @@ app.add_middleware(
 
 static_dir = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+
+@app.get("/branding/logo")
+def branding_logo() -> FileResponse:
+    path = branding.resolve_logo_file_path()
+    if not path.is_file():
+        return FileResponse(branding.default_static_logo_path(), media_type="image/png")
+    return FileResponse(path, media_type="image/png", filename="logo.png")
 
 
 @app.get("/repo/qr.svg")

@@ -9,7 +9,7 @@ from app.dates import format_date_de
 
 
 class KasseTemplates(Jinja2Templates):
-    """Starlette 0.27: TemplateResponse(name, context) mit Pflicht-Key request — gleiche Signatur wie früheres FastAPI (request zuerst)."""
+    """Compat: call sites use TemplateResponse(request, name, context)."""
 
     def TemplateResponse(  # type: ignore[override]
         self,
@@ -21,10 +21,10 @@ class KasseTemplates(Jinja2Templates):
         media_type: str | None = None,
         background: Any = None,
     ) -> Any:
-        merged = {"request": request, **context}
         return super().TemplateResponse(
+            request,
             name,
-            merged,
+            context,
             status_code=status_code,
             headers=headers,
             media_type=media_type,
