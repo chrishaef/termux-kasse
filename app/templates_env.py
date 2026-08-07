@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Any
+import inspect
 
 from fastapi.templating import Jinja2Templates
 from markupsafe import Markup, escape
@@ -7,9 +8,18 @@ from starlette.requests import Request
 
 from app.dates import format_date_de
 
+# FastAPI 0.99 / Starlette 0.27 (Termux): TemplateResponse(name, context)
+# Newer Starlette: TemplateResponse(request, name, context)
+_SUPER_TEMPLATE_PARAMS = tuple(
+    name
+    for name in inspect.signature(Jinja2Templates.TemplateResponse).parameters
+    if name != "self"
+)
+_SUPER_USES_REQUEST_FIRST = bool(_SUPER_TEMPLATE_PARAMS) and _SUPER_TEMPLATE_PARAMS[0] == "request"
+
 
 class KasseTemplates(Jinja2Templates):
-    """Compat: call sites use TemplateResponse(request, name, context)."""
+    """Call sites use TemplateResponse(request, name, context) on both Starlette APIs."""
 
     def TemplateResponse(  # type: ignore[override]
         self,
@@ -21,10 +31,20 @@ class KasseTemplates(Jinja2Templates):
         media_type: str | None = None,
         background: Any = None,
     ) -> Any:
+        if _SUPER_USES_REQUEST_FIRST:
+            return super().TemplateResponse(
+                request,
+                name,
+                context,
+                status_code=status_code,
+                headers=headers,
+                media_type=media_type,
+                background=background,
+            )
+        merged = {"request": request, **context}
         return super().TemplateResponse(
-            request,
             name,
-            context,
+            merged,
             status_code=status_code,
             headers=headers,
             media_type=media_type,
