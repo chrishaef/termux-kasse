@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 {% set ui_scale = (request.state.system_timeouts.get('ui_scale_percent', 100)|int / 100.0) %}
-<html
-  lang="de"
-  style="--ui-scale: {{ '%.4g'|format(ui_scale) }}; zoom: {{ '%.4g'|format(ui_scale) }};"
->
+{% set ui_scale_attr = '%.4g'|format(ui_scale) %}
+<html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale={{ ui_scale_attr }}, maximum-scale={{ ui_scale_attr }}, user-scalable=no, viewport-fit=cover"
+  />
   <meta name="theme-color" content="#252b23" />
   <title>{{ title }} · {{ request.state.branding.display_name }}</title>
   <link rel="stylesheet" href="/static/pico.min.css" />

@@ -43,19 +43,14 @@
 }
 
 html {
-  --ui-scale: 1;
-  /* zoom kommt als konkreter Inline-Wert (Android-WebView kann zoom:var(...) ignorieren). */
-  /* Bei zoom < 1 Layout größer halten, damit der Viewport nach dem Zoom voll gefüllt bleibt. */
-  min-height: calc(100% / var(--ui-scale));
-  min-width: calc(100% / var(--ui-scale));
+  min-height: 100%;
   background-color: var(--kas-bg-deep);
 }
 
 body {
-  min-height: calc(100% / var(--ui-scale));
-  min-height: calc(100vh / var(--ui-scale));
-  min-height: calc(100dvh / var(--ui-scale));
-  min-width: calc(100vw / var(--ui-scale));
+  min-height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   color: var(--kas-page-fg);

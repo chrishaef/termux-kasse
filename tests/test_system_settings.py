@@ -132,8 +132,9 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
 
         home = client.get("/")
         assert home.status_code == 200
-        assert "--ui-scale:0.9" in home.text.replace(" ", "")
-        assert "zoom:0.9" in home.text.replace(" ", "")
+        assert "initial-scale=0.9" in home.text.replace(" ", "")
+        assert "maximum-scale=0.9" in home.text.replace(" ", "")
+        assert "zoom:" not in home.text
 
         admin_page = client.get("/admin")
         assert admin_page.status_code == 200
@@ -170,7 +171,8 @@ def test_admin_system_settings_can_disable_pricelist_screensaver() -> None:
 
         home = client.get("/")
         assert home.status_code == 200
-        assert "--ui-scale:1" in home.text.replace(" ", "")
+        assert "initial-scale=1" in home.text.replace(" ", "")
+        assert "maximum-scale=1" in home.text.replace(" ", "")
         assert "kioskPreislisteEnabled: false" in home.text
         assert 'tileContainer.dataset.logoZoomEnabled !== "0"' in home.text
         assert "tileContainer.dataset.logoAnimationSpeed" in home.text
