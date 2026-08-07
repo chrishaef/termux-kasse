@@ -1,7 +1,8 @@
 <!DOCTYPE html>
+{% set ui_scale = (request.state.system_timeouts.get('ui_scale_percent', 100)|int / 100.0) %}
 <html
   lang="de"
-  style="--ui-scale: {{ '%.4g'|format(request.state.system_timeouts.get('ui_scale_percent', 100)|int / 100.0) }};"
+  style="--ui-scale: {{ '%.4g'|format(ui_scale) }}; zoom: {{ '%.4g'|format(ui_scale) }};"
 >
 <head>
   <meta charset="utf-8" />

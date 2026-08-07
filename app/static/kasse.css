@@ -44,7 +44,7 @@
 
 html {
   --ui-scale: 1;
-  zoom: var(--ui-scale);
+  /* zoom kommt als konkreter Inline-Wert (Android-WebView kann zoom:var(...) ignorieren). */
   /* Bei zoom < 1 Layout größer halten, damit der Viewport nach dem Zoom voll gefüllt bleibt. */
   min-height: calc(100% / var(--ui-scale));
   min-width: calc(100% / var(--ui-scale));
