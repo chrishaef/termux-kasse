@@ -26,31 +26,17 @@ def test_kiosk_home_defaults_to_group_selection() -> None:
         assert "Shopkasse" in home.text
 
 
-def test_kiosk_home_skips_group_selection_with_exactly_one_group() -> None:
-    with TestClient(app) as client:
-        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
-        client.post("/admin/groups", data={"name": "Solo"})
-        with db.get_connection() as conn:
-            gid = int(conn.execute("SELECT id FROM user_groups WHERE name='Solo'").fetchone()[0])
-            system_settings.save_timeout_settings(
-                conn,
-                admin_logout_seconds=25,
-                kiosk_preisliste_seconds=60,
-                kiosk_home_seconds=30,
-                kiosk_skip_group_selection=True,
-            )
-
-        home = client.get("/", follow_redirects=False)
-        assert home.status_code == 303
-        assert home.headers["location"] == f"/g/{gid}"
-
-
-def test_kiosk_home_skip_falls_back_with_multiple_groups() -> None:
+def test_kiosk_home_skip_shows_all_users_with_letter_filter() -> None:
     with TestClient(app) as client:
         client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
         client.post("/admin/groups", data={"name": "A"})
         client.post("/admin/groups", data={"name": "B"})
         with db.get_connection() as conn:
+            gid_a = int(conn.execute("SELECT id FROM user_groups WHERE name='A'").fetchone()[0])
+            gid_b = int(conn.execute("SELECT id FROM user_groups WHERE name='B'").fetchone()[0])
+        client.post("/admin/users", data={"name": "Anna", "group_id": str(gid_a)})
+        client.post("/admin/users", data={"name": "Bernd", "group_id": str(gid_b)})
+        with db.get_connection() as conn:
             system_settings.save_timeout_settings(
                 conn,
                 admin_logout_seconds=25,
@@ -58,10 +44,39 @@ def test_kiosk_home_skip_falls_back_with_multiple_groups() -> None:
                 kiosk_home_seconds=30,
                 kiosk_skip_group_selection=True,
             )
+            uid = int(conn.execute("SELECT id FROM users WHERE name='Anna'").fetchone()[0])
 
         home = client.get("/", follow_redirects=False)
         assert home.status_code == 200
-        assert "A" in home.text and "B" in home.text
+        assert "Anna" in home.text
+        assert "Bernd" in home.text
+        assert 'data-letter-filter' in home.text
+        assert 'data-letter="A"' in home.text
+        assert 'data-letter="B"' in home.text
+        assert "← Zurück" not in home.text
+        assert "data-letter-filter" in home.text
+        assert "Anna" in home.text and "Bernd" in home.text
+        # Flat home has no group back link in the member header.
+        assert 'class="admin-back"' not in home.text
+
+        user_page = client.get(f"/u/{uid}")
+        assert user_page.status_code == 200
+        assert 'href="/"' in user_page.text
+        assert "← Zurück" in user_page.text
+
+
+def test_kiosk_group_page_keeps_back_button_when_skip_disabled() -> None:
+    with TestClient(app) as client:
+        client.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        client.post("/admin/groups", data={"name": "Team"})
+        with db.get_connection() as conn:
+            gid = int(conn.execute("SELECT id FROM user_groups WHERE name='Team'").fetchone()[0])
+        client.post("/admin/users", data={"name": "Chris", "group_id": str(gid)})
+        page = client.get(f"/g/{gid}")
+        assert page.status_code == 200
+        assert "← Zurück" in page.text
+        assert "Team" in page.text
+        assert "Chris" in page.text
 
 
 def test_admin_branding_display_name_and_logo_upload() -> None:

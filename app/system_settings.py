@@ -11,6 +11,7 @@ KEY_KIOSK_PREISLISTE_ENABLED = "kiosk_preisliste_enabled"
 KEY_KIOSK_GROUP_LOGO_ZOOM_ENABLED = "kiosk_group_logo_zoom_enabled"
 KEY_KIOSK_GROUP_LOGO_ANIMATION_SPEED = "kiosk_group_logo_animation_speed"
 KEY_KIOSK_SKIP_GROUP_SELECTION = "kiosk_skip_group_selection"
+KEY_UI_SCALE_PERCENT = "ui_scale_percent"
 
 DEFAULT_ADMIN_LOGOUT_SECONDS = 25
 DEFAULT_KIOSK_PREISLISTE_SECONDS = 60
@@ -19,10 +20,14 @@ DEFAULT_KIOSK_PREISLISTE_ENABLED = True
 DEFAULT_KIOSK_GROUP_LOGO_ZOOM_ENABLED = True
 DEFAULT_KIOSK_GROUP_LOGO_ANIMATION_SPEED = "normal"
 DEFAULT_KIOSK_SKIP_GROUP_SELECTION = False
+DEFAULT_UI_SCALE_PERCENT = 100
 
 MIN_TIMEOUT_SECONDS = 5
 MAX_TIMEOUT_SECONDS = 3600
+MIN_UI_SCALE_PERCENT = 70
+MAX_UI_SCALE_PERCENT = 130
 VALID_GROUP_LOGO_ANIMATION_SPEEDS = {"slow", "normal", "fast", "very_fast"}
+VALID_UI_SCALE_PERCENTS = (70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130)
 
 
 def _read_int(conn: sqlite3.Connection, key: str) -> int | None:
@@ -102,6 +107,25 @@ def _save_animation_speed(conn: sqlite3.Connection, key: str, value: str) -> str
     return normalized
 
 
+def _normalize_ui_scale_percent(value: int | None, default: int = DEFAULT_UI_SCALE_PERCENT) -> int:
+    if value is None:
+        return default
+    raw = max(MIN_UI_SCALE_PERCENT, min(MAX_UI_SCALE_PERCENT, int(value)))
+    return min(VALID_UI_SCALE_PERCENTS, key=lambda option: abs(option - raw))
+
+
+def _save_ui_scale_percent(conn: sqlite3.Connection, key: str, value: int) -> int:
+    normalized = _normalize_ui_scale_percent(value)
+    conn.execute(
+        """
+        INSERT INTO app_settings (key, value) VALUES (?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+        """,
+        (key, str(normalized)),
+    )
+    return normalized
+
+
 def default_timeout_settings() -> dict[str, int | bool | str]:
     return {
         "admin_logout_seconds": DEFAULT_ADMIN_LOGOUT_SECONDS,
@@ -111,6 +135,7 @@ def default_timeout_settings() -> dict[str, int | bool | str]:
         "kiosk_group_logo_zoom_enabled": DEFAULT_KIOSK_GROUP_LOGO_ZOOM_ENABLED,
         "kiosk_group_logo_animation_speed": DEFAULT_KIOSK_GROUP_LOGO_ANIMATION_SPEED,
         "kiosk_skip_group_selection": DEFAULT_KIOSK_SKIP_GROUP_SELECTION,
+        "ui_scale_percent": DEFAULT_UI_SCALE_PERCENT,
     }
 
 
@@ -153,6 +178,10 @@ def get_timeout_settings(conn: sqlite3.Connection) -> dict[str, int | bool | str
             if skip_group_selection is not None
             else bool(defaults["kiosk_skip_group_selection"])
         ),
+        "ui_scale_percent": _normalize_ui_scale_percent(
+            _read_int(conn, KEY_UI_SCALE_PERCENT),
+            int(defaults["ui_scale_percent"]),
+        ),
     }
 
 
@@ -166,6 +195,7 @@ def save_timeout_settings(
     kiosk_group_logo_zoom_enabled: bool = DEFAULT_KIOSK_GROUP_LOGO_ZOOM_ENABLED,
     kiosk_group_logo_animation_speed: str = DEFAULT_KIOSK_GROUP_LOGO_ANIMATION_SPEED,
     kiosk_skip_group_selection: bool = DEFAULT_KIOSK_SKIP_GROUP_SELECTION,
+    ui_scale_percent: int = DEFAULT_UI_SCALE_PERCENT,
 ) -> dict[str, int | bool | str]:
     admin_seconds = _normalize_timeout(admin_logout_seconds, DEFAULT_ADMIN_LOGOUT_SECONDS)
     preisliste_seconds = _normalize_timeout(
@@ -196,6 +226,7 @@ def save_timeout_settings(
         KEY_KIOSK_SKIP_GROUP_SELECTION,
         kiosk_skip_group_selection,
     )
+    scale_percent = _save_ui_scale_percent(conn, KEY_UI_SCALE_PERCENT, ui_scale_percent)
     return {
         "admin_logout_seconds": admin_seconds,
         "kiosk_preisliste_seconds": preisliste_seconds,
@@ -204,4 +235,5 @@ def save_timeout_settings(
         "kiosk_group_logo_zoom_enabled": logo_zoom_enabled,
         "kiosk_group_logo_animation_speed": logo_animation_speed,
         "kiosk_skip_group_selection": skip_group_selection,
+        "ui_scale_percent": scale_percent,
     }

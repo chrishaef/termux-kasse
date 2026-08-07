@@ -55,7 +55,7 @@ Die **Shopkasse** ist eine **Vertrauenskasse auf Kontobasis**: Es gibt keine War
 
 **Ablauf am Kiosk**
 
-1. **Startseite** (`/`): Nutzergruppen zur Auswahl (Reihenfolge wie im Adminpanel unter Gruppen). Mit aktivierter Option „Gruppenauswahl überspringen“ und genau einer Gruppe wird direkt zur Nutzerliste dieser Gruppe weitergeleitet.
+1. **Startseite** (`/`): Nutzergruppen zur Auswahl (Reihenfolge wie im Adminpanel unter Gruppen). Mit aktivierter Option „Gruppenauswahl überspringen“ erscheinen direkt alle Nutzer aller Gruppen; oben kann nach Anfangsbuchstaben gefiltert werden.
 2. **Gruppe** (`/g/<id>`): Mitglieder dieser Gruppe (Sortierung wie im Adminpanel).
 3. **Nutzer** (`/u/<id>`): Kopfbereich mit **Kontostand**, Kurzinfo zur **letzten Abrechnung** (Datum, optional Notiz), ggf. **Warnbanner** nach den konfigurierten Schwellen. Darunter erscheinen nur **aktive** Artikel als große Buttons; inaktive Artikel sind im Kiosk unsichtbar.
 
@@ -446,7 +446,7 @@ Wenn aus dem LAN nichts antwortet: **Firewall** auf dem Gerät, VPN oder Router 
 | **Jahresabschluss-Archive** | Ordner **`jahresabschluss/`** unter `KASSE_DATA_DIR` (neben `kasse.db`): gespeicherte PDF-, XLSX- und ZIP-Dateien des zuletzt erzeugten Jahresabschlusses |
 | **System-Backup-Archiv** | Ordner **`system_backups/`** unter `KASSE_DATA_DIR` |
 
-**Zweiter Shop / mehrere Installationen:** Derselbe Code und Release-Kanal, getrennte Deployments mit eigener `data/`-Datenbank. Pro Instanz Logo und Anzeigename unter Systemeinstellungen setzen; bei einer Nutzergruppe optional „Gruppenauswahl überspringen“ aktivieren.
+**Zweiter Shop / mehrere Installationen:** Derselbe Code und Release-Kanal, getrennte Deployments mit eigener `data/`-Datenbank. Pro Instanz Logo und Anzeigename unter Systemeinstellungen setzen; optional „Gruppenauswahl überspringen“ für eine gemeinsame Nutzerliste mit Buchstabenfilter.
 
 ---
 
@@ -459,7 +459,7 @@ Nach dem Login (`/admin`):
 - **Statistik** (`/admin/statistics`): Zeitraum + Nutzergruppe filtern, Toplisten sehen, PDF/XLSX herunterladen  
 - **Warnstufen** (`/admin/debt-thresholds`): Schwellen, Meldungstexte, Warnton-Lautstärken und austauschbare MP3-Sounds (Warnstufen + Buchungsklick) für Kiosk-Warnungen pflegen  
 - **Kiosk-Nachricht** (`/admin/news`): Text oben auf der Gruppenauswahl mit Ausrichtung, Größe und PNG-Icon konfigurieren  
-- **Systemeinstellungen** (`/admin/system-settings`): Timeouts, Bildschirmschoner, Gruppenlogo-Animation, optional Gruppenauswahl überspringen, Shop-Logo und Anzeigename  
+- **Systemeinstellungen** (`/admin/system-settings`): Timeouts, Bildschirmschoner, Gruppenlogo-Animation, optional Gruppenauswahl überspringen, Darstellungsskala, Shop-Logo und Anzeigename  
 - **Backup & Recovery & Reset** (`/admin/backup`): Backup erstellen (Archiv), Import mit Vorschau, Archivliste, optional **System Reset** (Master-Passwort)  
 - **System-Update** (`/admin/system-update`): Online-/Versionscheck, Pre-Update-Backup, Start nur mit Master-Passwort, Update-Neustart, Protokoll und Rollback auf den Stand vor dem letzten geführten Update
 - **Syslogs** (`/admin/syslogs`): rotierende System-/App-Logs im Adminbereich einsehen

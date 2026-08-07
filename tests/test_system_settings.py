@@ -97,6 +97,7 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
         assert 'name="kiosk_group_logo_animation_speed"' in page.text
         assert 'name="kiosk_skip_group_selection"' in page.text
         assert 'name="shop_display_name"' in page.text
+        assert 'name="ui_scale_percent"' in page.text
         assert 'value="very_fast"' in page.text
         assert "Systemeinstellungen" in page.text
 
@@ -110,6 +111,7 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
                 "kiosk_group_logo_zoom_enabled": "1",
                 "kiosk_group_logo_animation_speed": "slow",
                 "shop_display_name": "Shopkasse",
+                "ui_scale_percent": "90",
             },
             follow_redirects=False,
         )
@@ -125,7 +127,12 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
                 "kiosk_group_logo_zoom_enabled": True,
                 "kiosk_group_logo_animation_speed": "slow",
                 "kiosk_skip_group_selection": False,
+                "ui_scale_percent": 90,
             }
+
+        home = client.get("/")
+        assert home.status_code == 200
+        assert "zoom:0.9" in home.text.replace(" ", "")
 
         admin_page = client.get("/admin")
         assert admin_page.status_code == 200
@@ -158,9 +165,11 @@ def test_admin_system_settings_can_disable_pricelist_screensaver() -> None:
         assert settings["kiosk_group_logo_zoom_enabled"] is False
         assert settings["kiosk_group_logo_animation_speed"] == "normal"
         assert settings["kiosk_skip_group_selection"] is False
+        assert settings["ui_scale_percent"] == 100
 
         home = client.get("/")
         assert home.status_code == 200
+        assert "style=\"zoom:" not in home.text
         assert "kioskPreislisteEnabled: false" in home.text
         assert 'tileContainer.dataset.logoZoomEnabled !== "0"' in home.text
         assert "tileContainer.dataset.logoAnimationSpeed" in home.text

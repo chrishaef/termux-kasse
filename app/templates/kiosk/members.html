@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
-<header class="page-head k-member-head">
+{% set all_users_mode = all_users_mode|default(false) %}
+<header class="page-head k-member-head{% if all_users_mode %} k-member-head--all-users{% endif %}">
+  {% if not all_users_mode %}
   <div class="k-member-head__actions">
     <a href="/" class="admin-back">← Zurück</a>
   </div>
@@ -8,18 +10,64 @@
     <h1 class="page-head__title">{{ group['name'] }}</h1>
   </div>
   <div class="k-member-head__spacer" aria-hidden="true"></div>
+  {% else %}
+  <div class="k-member-head__main k-member-head__main--letters">
+    <nav class="k-letter-filter" aria-label="Nutzer nach Anfangsbuchstabe filtern" data-letter-filter>
+      <button type="button" class="k-letter-filter__btn k-letter-filter__btn--active" data-letter="">Alle</button>
+      {% for letter in letters %}
+      <button type="button" class="k-letter-filter__btn" data-letter="{{ letter }}">{{ letter }}</button>
+      {% endfor %}
+    </nav>
+  </div>
+  {% endif %}
 </header>
 {% if users %}
-<div class="k-tiles">
+<div class="k-tiles" id="kiosk-member-tiles">
   {% for u in users %}
-  <a class="k-tile" href="/u/{{ u['id'] }}">
+  <a
+    class="k-tile"
+    href="/u/{{ u['id'] }}"
+    data-letter="{{ (u['name']|string)[:1]|upper }}"
+    {% if all_users_mode and u['group_name'] %}title="{{ u['group_name'] }}"{% endif %}
+  >
     <span class="k-tile__inner">
       <span class="k-tile__title">{{ u['name'] }}</span>
     </span>
   </a>
   {% endfor %}
 </div>
+<p class="k-empty" id="kiosk-member-empty-filter" hidden>Keine Nutzer für diesen Buchstaben.</p>
 {% else %}
-<p class="k-empty">Keine Mitglieder in dieser Gruppe.</p>
+<p class="k-empty">{% if all_users_mode %}Keine Nutzer vorhanden.{% else %}Keine Mitglieder in dieser Gruppe.{% endif %}</p>
+{% endif %}
+{% if all_users_mode and users %}
+<script>
+  (function () {
+    const nav = document.querySelector("[data-letter-filter]");
+    const tiles = Array.from(document.querySelectorAll("#kiosk-member-tiles .k-tile"));
+    const empty = document.getElementById("kiosk-member-empty-filter");
+    if (!nav || !tiles.length) return;
+
+    const setFilter = function (letter) {
+      let visible = 0;
+      tiles.forEach(function (tile) {
+        const match = !letter || tile.getAttribute("data-letter") === letter;
+        tile.hidden = !match;
+        if (match) visible += 1;
+      });
+      if (empty) empty.hidden = visible > 0;
+      nav.querySelectorAll(".k-letter-filter__btn").forEach(function (btn) {
+        const active = (btn.getAttribute("data-letter") || "") === letter;
+        btn.classList.toggle("k-letter-filter__btn--active", active);
+      });
+    };
+
+    nav.addEventListener("click", function (ev) {
+      const btn = ev.target.closest(".k-letter-filter__btn");
+      if (!btn || !nav.contains(btn)) return;
+      setFilter(btn.getAttribute("data-letter") || "");
+    });
+  })();
+</script>
 {% endif %}
 {% endblock %}

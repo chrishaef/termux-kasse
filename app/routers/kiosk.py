@@ -19,6 +19,37 @@ router = APIRouter(tags=["kiosk"])
 def kiosk_home(request: Request) -> Response:
     with db.get_connection() as conn:
         settings = system_settings.get_timeout_settings(conn)
+        if bool(settings.get("kiosk_skip_group_selection")):
+            users = db.fetch_all(
+                conn,
+                """
+                SELECT u.id, u.name, g.name AS group_name
+                FROM users u
+                JOIN user_groups g ON g.id = u.group_id
+                ORDER BY u.name COLLATE NOCASE, g.name COLLATE NOCASE
+                """,
+            )
+            letters: list[str] = []
+            seen: set[str] = set()
+            for row in users:
+                name = str(row["name"] or "").strip()
+                if not name:
+                    continue
+                letter = name[0].upper()
+                if letter not in seen:
+                    seen.add(letter)
+                    letters.append(letter)
+            return TEMPLATES.TemplateResponse(
+                request,
+                "kiosk/members.html",
+                {
+                    "group": None,
+                    "users": users,
+                    "letters": letters,
+                    "all_users_mode": True,
+                    "title": "Nutzer",
+                },
+            )
         groups = db.fetch_all(
             conn,
             """
@@ -27,8 +58,6 @@ def kiosk_home(request: Request) -> Response:
             ORDER BY sort_order, name COLLATE NOCASE
             """,
         )
-        if bool(settings.get("kiosk_skip_group_selection")) and len(groups) == 1:
-            return RedirectResponse(f"/g/{int(groups[0]['id'])}", status_code=303)
     return TEMPLATES.TemplateResponse(
         request,
         "kiosk/groups.html",
@@ -106,7 +135,13 @@ def kiosk_group(request: Request, group_id: int) -> HTMLResponse:
     return TEMPLATES.TemplateResponse(
         request,
         "kiosk/members.html",
-        {"group": g, "users": users, "title": g["name"]},
+        {
+            "group": g,
+            "users": users,
+            "letters": [],
+            "all_users_mode": False,
+            "title": g["name"],
+        },
     )
 
 

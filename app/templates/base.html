@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="de">
+<html
+  lang="de"
+  {% if request.state.system_timeouts.get('ui_scale_percent', 100)|int != 100 %}style="zoom: {{ request.state.system_timeouts.get('ui_scale_percent', 100)|int / 100.0 }};"{% endif %}
+>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />

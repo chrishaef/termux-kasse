@@ -6,7 +6,10 @@
     <div class="k-user-head__main">
       <div class="k-user-head__title-row">
         <h1 class="page-head__title">{{ user['name'] }}</h1>
-        <a href="/g/{{ user['group_id'] }}" class="k-user-head__inline-back">← {{ user['group_name'] }}</a>
+        <a
+          href="{% if request.state.system_timeouts['kiosk_skip_group_selection'] %}/{% else %}/g/{{ user['group_id'] }}{% endif %}"
+          class="k-user-head__inline-back"
+        >← {% if request.state.system_timeouts['kiosk_skip_group_selection'] %}Zurück{% else %}{{ user['group_name'] }}{% endif %}</a>
       </div>
     </div>
     <div class="k-user-head__status">

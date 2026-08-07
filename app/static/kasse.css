@@ -622,6 +622,46 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
   grid-column: 3;
 }
 
+.page-head.k-member-head--all-users {
+  grid-template-columns: 1fr;
+  justify-items: stretch;
+}
+
+.k-member-head--all-users .k-member-head__main--letters {
+  grid-column: 1;
+  width: 100%;
+}
+
+.k-letter-filter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.k-letter-filter__btn {
+  min-width: 2.1rem;
+  min-height: 2.1rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--kas-gold, #c6a15b) 45%, transparent);
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, #1d241c 88%, #000);
+  color: #e8ecd8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.k-letter-filter__btn--active,
+.k-letter-filter__btn:hover {
+  background: color-mix(in srgb, var(--kas-gold, #c6a15b) 28%, #1d241c);
+  border-color: var(--kas-gold, #c6a15b);
+  color: #fff8e7;
+}
+
 @media (max-width: 40rem) {
   .page-head.k-member-head {
     grid-template-columns: 1fr;
@@ -636,6 +676,10 @@ body.app-admin .table-wrap a:not([role="button"]):hover {
 
   .k-member-head__actions {
     justify-self: center;
+  }
+
+  .k-member-head--all-users .k-member-head__main--letters {
+    justify-self: stretch;
   }
 }
 
