@@ -9,7 +9,7 @@ import subprocess
 import time
 
 import qrcode
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from qrcode.image.svg import SvgPathImage
@@ -22,6 +22,7 @@ from app import branding
 from app import db
 from app import debt_thresholds
 from app import kiosk_notice
+from app import kiosk_sounds
 from app import ledger_service
 from app import system_settings
 from app.db import init_db
@@ -414,6 +415,17 @@ def branding_logo() -> FileResponse:
     if not path.is_file():
         return FileResponse(branding.default_static_logo_path(), media_type="image/png")
     return FileResponse(path, media_type="image/png", filename="logo.png")
+
+
+@app.get("/kiosk-sound/{key}")
+def kiosk_sound(key: str) -> FileResponse:
+    try:
+        path = kiosk_sounds.resolve_sound_file_path(key)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Sound nicht gefunden") from exc
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Sound nicht gefunden")
+    return FileResponse(path, media_type="audio/mpeg", filename=f"{key}.mp3")
 
 
 @app.get("/repo/qr.svg")

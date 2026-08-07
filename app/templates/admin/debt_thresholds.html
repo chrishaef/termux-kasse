@@ -4,8 +4,11 @@
 {% if saved %}
 <article class="contrast"><strong>Gespeichert.</strong> Die Warnstufen gelten sofort für Kiosk und Admin-Hinweis.</article>
 {% endif %}
-{% if error %}
+{% if error == 'invalid' %}
 <article class="contrast" style="border-color:#b33"><strong>Eingabe ungültig.</strong> Bitte drei gültige Beträge (z. B. 5 oder 5,50) verwenden.</article>
+{% endif %}
+{% if error == 'sound_invalid' %}
+<article class="contrast" style="border-color:#b33"><strong>Audiodatei ungültig.</strong> Bitte eine MP3-Datei (max. 2&nbsp;MB) hochladen.</article>
 {% endif %}
 <article class="k-panel">
   <h2 style="margin-top:0;font-size:1.05rem">Stufen</h2>
@@ -13,11 +16,11 @@
     Smart aktiv: Die Warnstufe wird aus <strong>Betrag</strong> und <strong>Alter offener Buchungen (Tage)</strong> bestimmt.
     Es gilt jeweils die höhere Stufe.
   </p>
-  <form method="post" action="/admin/debt-thresholds" class="debt-thresholds-grid">
+  <form method="post" action="/admin/debt-thresholds" class="debt-thresholds-grid" enctype="multipart/form-data">
     <div class="debt-thresholds-grid__full debt-tabs" role="tablist" aria-label="Warnstufen Einstellungen">
       <button type="button" class="debt-tabs__btn debt-tabs__btn--active" data-tab-target="debt-tab-thresholds" role="tab" aria-selected="true">Warnstufen</button>
       <button type="button" class="debt-tabs__btn" data-tab-target="debt-tab-messages" role="tab" aria-selected="false">Warntexte</button>
-      <button type="button" class="debt-tabs__btn" data-tab-target="debt-tab-audio" role="tab" aria-selected="false">Audio-Warnung</button>
+      <button type="button" class="debt-tabs__btn" data-tab-target="debt-tab-audio" role="tab" aria-selected="false">Audio</button>
     </div>
 
     <section id="debt-tab-thresholds" class="debt-tab-panel debt-tab-panel--active debt-thresholds-grid__full" role="tabpanel" aria-label="Warnstufen">
@@ -45,17 +48,69 @@
       </div>
     </section>
 
-    <section id="debt-tab-audio" class="debt-tab-panel debt-thresholds-grid__full" role="tabpanel" aria-label="Audio-Warnung" hidden>
+    <section id="debt-tab-audio" class="debt-tab-panel debt-thresholds-grid__full" role="tabpanel" aria-label="Audio" hidden>
       <div class="debt-thresholds-tab-audio">
-        <label>Warnstufe 1 Lautstärke (%)
-          <input type="number" min="0" max="100" step="1" name="volume_1_percent" value="{{ v1 }}" required inputmode="numeric" />
-        </label>
-        <label>Warnstufe 2 Lautstärke (%)
-          <input type="number" min="0" max="100" step="1" name="volume_2_percent" value="{{ v2 }}" required inputmode="numeric" />
-        </label>
-        <label>Warnstufe 3 Lautstärke (%)
-          <input type="number" min="0" max="100" step="1" name="volume_3_percent" value="{{ v3 }}" required inputmode="numeric" />
-        </label>
+        <div class="debt-sound-block">
+          <h3 class="debt-sound-block__title">Warnstufe 1</h3>
+          <label>Lautstärke (%)
+            <input type="number" min="0" max="100" step="1" name="volume_1_percent" value="{{ v1 }}" required inputmode="numeric" />
+          </label>
+          <audio class="debt-sound-preview" controls preload="none" src="{{ sounds['warn1']['url'] }}"></audio>
+          <label>MP3 hochladen <input type="file" name="warn_sound_1" accept="audio/mpeg,.mp3" /></label>
+          {% if sounds['warn1']['has_custom'] %}
+          <label class="admin-toggle-row">
+            <input type="hidden" name="remove_warn1" value="0" />
+            <input type="checkbox" name="remove_warn1" value="1" />
+            Standard-Sound wiederherstellen
+          </label>
+          {% endif %}
+        </div>
+
+        <div class="debt-sound-block">
+          <h3 class="debt-sound-block__title">Warnstufe 2</h3>
+          <label>Lautstärke (%)
+            <input type="number" min="0" max="100" step="1" name="volume_2_percent" value="{{ v2 }}" required inputmode="numeric" />
+          </label>
+          <audio class="debt-sound-preview" controls preload="none" src="{{ sounds['warn2']['url'] }}"></audio>
+          <label>MP3 hochladen <input type="file" name="warn_sound_2" accept="audio/mpeg,.mp3" /></label>
+          {% if sounds['warn2']['has_custom'] %}
+          <label class="admin-toggle-row">
+            <input type="hidden" name="remove_warn2" value="0" />
+            <input type="checkbox" name="remove_warn2" value="1" />
+            Standard-Sound wiederherstellen
+          </label>
+          {% endif %}
+        </div>
+
+        <div class="debt-sound-block">
+          <h3 class="debt-sound-block__title">Warnstufe 3</h3>
+          <label>Lautstärke (%)
+            <input type="number" min="0" max="100" step="1" name="volume_3_percent" value="{{ v3 }}" required inputmode="numeric" />
+          </label>
+          <audio class="debt-sound-preview" controls preload="none" src="{{ sounds['warn3']['url'] }}"></audio>
+          <label>MP3 hochladen <input type="file" name="warn_sound_3" accept="audio/mpeg,.mp3" /></label>
+          {% if sounds['warn3']['has_custom'] %}
+          <label class="admin-toggle-row">
+            <input type="hidden" name="remove_warn3" value="0" />
+            <input type="checkbox" name="remove_warn3" value="1" />
+            Standard-Sound wiederherstellen
+          </label>
+          {% endif %}
+        </div>
+
+        <div class="debt-sound-block">
+          <h3 class="debt-sound-block__title">Buchungs-Sound</h3>
+          <p class="secondary" style="margin:0 0 0.5rem;font-size:0.9rem">Wird bei einer normalen Buchung abgespielt (ohne Warnstufen-Wechsel).</p>
+          <audio class="debt-sound-preview" controls preload="none" src="{{ sounds['click']['url'] }}"></audio>
+          <label>MP3 hochladen <input type="file" name="click_sound" accept="audio/mpeg,.mp3" /></label>
+          {% if sounds['click']['has_custom'] %}
+          <label class="admin-toggle-row">
+            <input type="hidden" name="remove_click" value="0" />
+            <input type="checkbox" name="remove_click" value="1" />
+            Standard-Sound wiederherstellen
+          </label>
+          {% endif %}
+        </div>
       </div>
     </section>
 

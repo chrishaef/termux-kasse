@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Resp
 from app import db
 from app import debt_thresholds
 from app import group_logo_util
+from app import kiosk_sounds
 from app import ledger_service
 from app import system_settings
 from app.ledger_service import add_purchase, last_settlement, oldest_open_age_days, user_balance_cents
@@ -153,6 +154,7 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
             """,
             (int(u["group_id"]),),
         )
+    sound_urls = kiosk_sounds.get_sound_urls()
     return TEMPLATES.TemplateResponse(
         request,
         "kiosk/user.html",
@@ -168,6 +170,10 @@ def kiosk_user(request: Request, user_id: int) -> HTMLResponse:
             "warn_volume_1": v1 / 100.0,
             "warn_volume_2": v2 / 100.0,
             "warn_volume_3": v3 / 100.0,
+            "sound_click_url": sound_urls["click"],
+            "sound_warn1_url": sound_urls["warn1"],
+            "sound_warn2_url": sound_urls["warn2"],
+            "sound_warn3_url": sound_urls["warn3"],
             "last_settlement": last_s,
             "products": products,
             "title": u["name"],

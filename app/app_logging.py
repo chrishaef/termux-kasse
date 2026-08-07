@@ -44,6 +44,9 @@ EVENT_LABELS = {
     "branding_logo_invalid": "Shop-Logo ungueltig",
     "branding_logo_saved": "Shop-Logo gespeichert",
     "branding_logo_removed": "Shop-Logo entfernt",
+    "kiosk_sound_invalid": "Kiosk-Sound ungueltig",
+    "kiosk_sound_saved": "Kiosk-Sound gespeichert",
+    "kiosk_sound_removed": "Kiosk-Sound entfernt",
 }
 
 

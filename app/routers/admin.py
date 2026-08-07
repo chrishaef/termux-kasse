@@ -24,6 +24,7 @@ from app import db
 from app import debt_thresholds
 from app import group_logo_util
 from app import kiosk_notice
+from app import kiosk_sounds
 from app import ledger_service
 from app import sort_order_util
 from app import system_settings
@@ -1594,6 +1595,7 @@ def admin_debt_thresholds_get(request: Request) -> Response:
         d1, d2, d3 = debt_thresholds.get_age_thresholds(conn)
         m1, m2, m3 = debt_thresholds.get_threshold_messages(conn)
         v1, v2, v3 = debt_thresholds.get_warn_volumes_percent(conn)
+    err = (request.query_params.get("err") or "").strip()
     return TEMPLATES.TemplateResponse(
         request,
         "admin/debt_thresholds.html",
@@ -1614,8 +1616,9 @@ def admin_debt_thresholds_get(request: Request) -> Response:
             "v1": v1,
             "v2": v2,
             "v3": v3,
+            "sounds": kiosk_sounds.get_sounds_admin_state(),
             "saved": request.query_params.get("saved") == "1",
-            "error": request.query_params.get("err") == "invalid",
+            "error": err if err in ("invalid", "sound_invalid") else "",
         },
     )
 
@@ -1635,6 +1638,14 @@ def admin_debt_thresholds_post(
     volume_1_percent: str = Form(""),
     volume_2_percent: str = Form(""),
     volume_3_percent: str = Form(""),
+    remove_warn1: str = Form(default="0"),
+    remove_warn2: str = Form(default="0"),
+    remove_warn3: str = Form(default="0"),
+    remove_click: str = Form(default="0"),
+    warn_sound_1: Optional[UploadFile] = File(default=None),
+    warn_sound_2: Optional[UploadFile] = File(default=None),
+    warn_sound_3: Optional[UploadFile] = File(default=None),
+    click_sound: Optional[UploadFile] = File(default=None),
 ) -> RedirectResponse:
     if (r := _redirect_login(request)):
         return r
@@ -1647,6 +1658,28 @@ def admin_debt_thresholds_post(
         dc = int((age_threshold_c_days or "").strip())
     except ValueError:
         return RedirectResponse("/admin/debt-thresholds?err=invalid", status_code=303)
+
+    uploads: list[tuple[str, bytes]] = []
+    for key, upload in (
+        ("warn1", warn_sound_1),
+        ("warn2", warn_sound_2),
+        ("warn3", warn_sound_3),
+        ("click", click_sound),
+    ):
+        if upload is not None and (upload.filename or "").strip():
+            raw = upload.file.read()
+            if raw:
+                try:
+                    kiosk_sounds.validate_mp3_bytes(raw)
+                except ValueError:
+                    app_logging.log_event(
+                        ADMIN_LOG, 30, "kiosk_sound_invalid", request, sound_key=key
+                    )
+                    return RedirectResponse(
+                        "/admin/debt-thresholds?err=sound_invalid", status_code=303
+                    )
+                uploads.append((key, raw))
+
     with db.get_connection() as conn:
         current_v1, current_v2, current_v3 = debt_thresholds.get_warn_volumes_percent(conn)
         try:
@@ -1665,6 +1698,21 @@ def admin_debt_thresholds_post(
             message_3.strip() or current_m3,
         )
         debt_thresholds.save_warn_volumes_percent(conn, v1, v2, v3)
+
+    for key, raw in uploads:
+        kiosk_sounds.save_sound_mp3(key, raw)
+        app_logging.log_event(ADMIN_LOG, 20, "kiosk_sound_saved", request, sound_key=key)
+
+    for key, remove_flag in (
+        ("warn1", remove_warn1),
+        ("warn2", remove_warn2),
+        ("warn3", remove_warn3),
+        ("click", remove_click),
+    ):
+        if remove_flag.strip() == "1" and not any(k == key for k, _ in uploads):
+            kiosk_sounds.delete_custom_sound(key)
+            app_logging.log_event(ADMIN_LOG, 20, "kiosk_sound_removed", request, sound_key=key)
+
     return RedirectResponse("/admin/debt-thresholds?saved=1", status_code=303)
 
 

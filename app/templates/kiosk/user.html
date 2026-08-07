@@ -52,10 +52,10 @@
 {% else %}
 <p class="k-empty">Keine aktiven Artikel. Bitte im Admin-Panel unter „Artikel“ anlegen.</p>
 {% endif %}
-<audio id="payment-sound" preload="auto" src="/static/click.mp3"></audio>
-<audio id="warn-sound-1" preload="auto" src="/static/warn1.mp3"></audio>
-<audio id="warn-sound-2" preload="auto" src="/static/warn2.mp3"></audio>
-<audio id="warn-sound-3" preload="auto" src="/static/warn3.mp3"></audio>
+<audio id="payment-sound" preload="auto" src="{{ sound_click_url }}"></audio>
+<audio id="warn-sound-1" preload="auto" src="{{ sound_warn1_url }}"></audio>
+<audio id="warn-sound-2" preload="auto" src="{{ sound_warn2_url }}"></audio>
+<audio id="warn-sound-3" preload="auto" src="{{ sound_warn3_url }}"></audio>
 <script>
   (function () {
     const forms = document.querySelectorAll(".k-product-grid form");

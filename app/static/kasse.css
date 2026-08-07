@@ -2438,12 +2438,29 @@ body.app-admin .k-panel .debt-thresholds-tab-single {
 
 body.app-admin .k-panel .debt-thresholds-tab-audio {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem 0.9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1rem;
 }
 
-body.app-admin .k-panel .debt-thresholds-tab-audio input {
+body.app-admin .k-panel .debt-thresholds-tab-audio input[type="number"] {
   text-align: right;
+}
+
+body.app-admin .k-panel .debt-sound-block {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+}
+
+body.app-admin .k-panel .debt-sound-block__title {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+body.app-admin .k-panel .debt-sound-preview {
+  width: 100%;
+  max-width: 100%;
+  height: 2.2rem;
 }
 
 body.app-admin .k-panel form.system-settings-grid .system-settings-grid__full,

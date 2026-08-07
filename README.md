@@ -36,7 +36,7 @@ Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **S
 |--------|-------------------|
 | **Kiosk** | Gruppe wählen → Nutzer → Kontostand, letzte Abrechnung, Artikel mit einem Tipp buchen (Klicksound + visuelles Feedback) |
 | **Kiosk Extra** | Top-Ten-Seite (umschaltbare Sortierung nach Buchungen oder Zahlungen), Preisliste, optionaler Preisliste-Bildschirmschoner bei Inaktivität, konfigurierbare Gruppenkachel-Animationen |
-| **Warnstufen** | 3 konfigurierbare Schwellen mit individuellen Texten und Sounds pro Stufe (einmalig beim Erreichen der nächsten Stufe) |
+| **Warnstufen** | 3 konfigurierbare Schwellen mit individuellen Texten und Sounds pro Stufe (einmalig beim Erreichen der nächsten Stufe); Sounds und Buchungs-Klick im Admin austauschbar |
 | **Admin** | Login, Gruppen, Nutzer, Artikel inkl. Sortierung und Bearbeiten, Kiosk-Nachricht |
 | **Abrechnung** | Geführter Ablauf: Gruppe/Nutzer wählen → offene Posten prüfen → Zahlungseingang bestätigen → Konten begleichen, **PDF** und **XLSX** exportieren |
 | **Jahresabschluss** | Admin unter Abrechnungen: erstellt **PDF**, **XLSX** und **ZIP** im Archiv `data/jahresabschluss/` (neueste Abschluss bleibt gespeichert); löscht nur **beglichene** Abrechnungen inkl. zugehöriger Buchungszeilen (**offene Posten und Kontostände bleiben**). Erfordert **Master-Passwort** |
@@ -457,7 +457,7 @@ Nach dem Login (`/admin`):
 - **Gruppen, Nutzer, Artikel** pflegen (inkl. manueller Reihenfolge via Pfeile und Bearbeiten-Ansichten)  
 - **Abrechnungen** (`/admin/settlements`): Liste vergangener Abrechnungen mit XLS/PDF; neue Abrechnung über **„Neue Abrechnung starten“** (Gruppe/Nutzer wählen → Beträge prüfen → Zahlungseingang bestätigen → PDF); **Jahresabschluss** mit Archivdownload (Master-Passwort)  
 - **Statistik** (`/admin/statistics`): Zeitraum + Nutzergruppe filtern, Toplisten sehen, PDF/XLSX herunterladen  
-- **Warnstufen** (`/admin/debt-thresholds`): Schwellen, Meldungstexte und Warnton-Lautstärken für Kiosk-Warnungen pflegen  
+- **Warnstufen** (`/admin/debt-thresholds`): Schwellen, Meldungstexte, Warnton-Lautstärken und austauschbare MP3-Sounds (Warnstufen + Buchungsklick) für Kiosk-Warnungen pflegen  
 - **Kiosk-Nachricht** (`/admin/news`): Text oben auf der Gruppenauswahl mit Ausrichtung, Größe und PNG-Icon konfigurieren  
 - **Systemeinstellungen** (`/admin/system-settings`): Timeouts, Bildschirmschoner, Gruppenlogo-Animation, optional Gruppenauswahl überspringen, Shop-Logo und Anzeigename  
 - **Backup & Recovery & Reset** (`/admin/backup`): Backup erstellen (Archiv), Import mit Vorschau, Archivliste, optional **System Reset** (Master-Passwort)  
