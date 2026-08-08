@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Hardened `run.sh` against double starts: a run lock plus PID/port checks skip starting a second uvicorn when the shop is already up and no code update happened.
+- Updated the Termux start widget so a second tap exits early and opens SBrowser instead of launching another full start cycle (re-run `install.sh` once to refresh `~/.shortcuts/`).
 - Made the shop branding configurable per installation (display name + optional PNG logo) with fallback to the default WSG logo.
 - Added system setting `kiosk_skip_group_selection` so `/` lists all users across groups with a letter filter (instead of group tiles); existing installs keep the classic group flow by default.
 - Extended admin system settings with branding upload/remove and the skip-group-selection toggle for multi-shop deployments on one codebase.

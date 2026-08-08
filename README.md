@@ -403,7 +403,8 @@ bash install.sh
 
 ### 3) Betrieb im Alltag
 
-- Starten (falls nicht per Boot aktiv): `bash run.sh`
+- Starten (falls nicht per Boot aktiv): `bash run.sh`  
+  Mehrfaches Starten ist unproblematisch: Läuft der Server bereits und es gab kein Code-Update, wird **kein** zweiter Prozess gestartet. Das Widget-Skript bricht in dem Fall früh ab und wechselt zur SBrowser-App. Nach Änderungen an den Widget-Skripten einmal `bash install.sh` erneut ausführen (oder die Dateien unter `~/.shortcuts/` aktualisieren).
 - Stoppen: `bash stop.sh`
 - Admin: `http://127.0.0.1:8000/admin/login`
 - Backups regelmaessig in `/admin/backup` erstellen

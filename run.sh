@@ -168,6 +168,66 @@ ensure_master_password_files() {
   fi
 }
 
+acquire_run_lock() {
+  local LOCK_FILE="$ROOT/.run.lock"
+  exec 9>"$LOCK_FILE"
+  if command -v flock >/dev/null 2>&1; then
+    if ! flock -n 9; then
+      echo ">>> Start/Update läuft bereits in einer anderen Session — Abbruch."
+      exit 0
+    fi
+    return 0
+  fi
+  # Fallback ohne flock: atomarer Lock-Ordner
+  if ! mkdir "$ROOT/.run.lock.dir" 2>/dev/null; then
+    echo ">>> Start/Update läuft bereits in einer anderen Session — Abbruch."
+    exit 0
+  fi
+  trap 'rmdir "$ROOT/.run.lock.dir" 2>/dev/null || true' EXIT
+}
+
+server_pid_alive() {
+  local PID_FILE="$ROOT/.server.pid"
+  local PID=""
+  if [[ ! -f "$PID_FILE" ]]; then
+    return 1
+  fi
+  PID="$(cat "$PID_FILE" 2>/dev/null || true)"
+  [[ -n "${PID:-}" ]] && kill -0 "$PID" 2>/dev/null
+}
+
+server_port_open() {
+  local py
+  py="$ROOT/.venv/bin/python"
+  if [[ ! -x "$py" ]]; then
+    if command -v python3 >/dev/null 2>&1; then
+      py=python3
+    elif command -v python >/dev/null 2>&1; then
+      py=python
+    else
+      return 1
+    fi
+  fi
+  "$py" - "$PORT" <<'PY' >/dev/null 2>&1
+import socket
+import sys
+
+port = int(sys.argv[1])
+sock = socket.socket()
+sock.settimeout(2)
+try:
+    sock.connect(("127.0.0.1", port))
+except OSError:
+    raise SystemExit(1)
+finally:
+    sock.close()
+PY
+}
+
+server_already_running() {
+  server_pid_alive && server_port_open
+}
+
 stop_old() {
   PID_FILE="$ROOT/.server.pid"
   if [[ -f "$PID_FILE" ]]; then
@@ -224,26 +284,39 @@ start_server() {
 }
 
 echo ">>> Projekt: $ROOT"
+acquire_run_lock
 ensure_system_packages
 pick_python
 ensure_venv
 ensure_master_password_files
 echo ">>> Verwende Python: $(${PYTHON} --version 2>&1)"
 
+DID_UPDATE=0
 if [[ -d .git ]] && is_origin_reachable; then
   echo ">>> Verbindung zu GitHub erkannt: Update wird durchgeführt (Modus: $UPDATE_MODE)"
   echo ">>> Hole Remote-Referenzen"
   git fetch --tags --prune origin "+refs/heads/*:refs/remotes/origin/*"
+  BEFORE_HEAD="$(git rev-parse HEAD 2>/dev/null || true)"
   if [[ "$UPDATE_MODE" == "commit" ]]; then
     sync_to_latest_commit
   else
     sync_to_latest_release
   fi
+  AFTER_HEAD="$(git rev-parse HEAD 2>/dev/null || true)"
   echo ">>> pip install -r requirements.txt"
   pip install -q -r requirements.txt
   date +"%Y-%m-%d %H:%M:%S" > "$ROOT/.last_sync"
+  if [[ -n "$BEFORE_HEAD" && -n "$AFTER_HEAD" && "$BEFORE_HEAD" != "$AFTER_HEAD" ]]; then
+    DID_UPDATE=1
+  fi
 else
   echo ">>> Keine Verbindung zu GitHub: Starte ohne Update."
+fi
+
+if [[ "$DID_UPDATE" -eq 0 ]] && server_already_running; then
+  echo ">>> Server läuft bereits (PID $(cat "$ROOT/.server.pid")) — kein erneuter Start."
+  echo "lokal:  http://127.0.0.1:${PORT}"
+  exit 0
 fi
 
 stop_old

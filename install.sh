@@ -143,10 +143,67 @@ cat >"$START_WIDGET" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
 cd "$ROOT"
+PID_FILE="$ROOT/.server.pid"
+PORT="\${PORT:-8000}"
+
 echo "=== Shopkasse: Start/Update ==="
 echo "Projekt: $ROOT"
 echo "Zeit: \$(date '+%Y-%m-%d %H:%M:%S')"
 echo
+
+server_pid_alive() {
+  local pid=""
+  [[ -f "\$PID_FILE" ]] || return 1
+  pid="\$(cat "\$PID_FILE" 2>/dev/null || true)"
+  [[ -n "\${pid:-}" ]] && kill -0 "\$pid" 2>/dev/null
+}
+
+server_port_open() {
+  local py="$ROOT/.venv/bin/python"
+  if [[ ! -x "\$py" ]]; then
+    if command -v python3 >/dev/null 2>&1; then
+      py=python3
+    elif command -v python >/dev/null 2>&1; then
+      py=python
+    else
+      return 1
+    fi
+  fi
+  "\$py" - "\$PORT" <<'PY' >/dev/null 2>&1
+import socket
+import sys
+sock = socket.socket()
+sock.settimeout(2)
+try:
+    sock.connect(("127.0.0.1", int(sys.argv[1])))
+except OSError:
+    raise SystemExit(1)
+finally:
+    sock.close()
+PY
+}
+
+server_already_running() {
+  server_pid_alive && server_port_open
+}
+
+open_sbrowser() {
+  echo "Wechsle zur SBrowser-App..."
+  if command -v am >/dev/null 2>&1; then
+    am start -n com.example.s_browser/.MainActivity >/dev/null 2>&1 || \\
+      monkey -p com.example.s_browser -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
+  fi
+}
+
+if server_already_running; then
+  echo "Server läuft bereits — kein zweiter Start."
+  echo "Ergebnis: bereits aktiv."
+  echo
+  sleep 1
+  open_sbrowser
+  exit 0
+fi
+
 if bash "$ROOT/run.sh"; then
   echo
   echo "Ergebnis: Start/Update erfolgreich."
@@ -155,12 +212,8 @@ else
   echo "Ergebnis: Start/Update fehlgeschlagen."
 fi
 echo
-echo "Wechsle zur SBrowser-App in 3 Sekunden..."
-sleep 3
-if command -v am >/dev/null 2>&1; then
-  am start -n com.example.s_browser/.MainActivity >/dev/null 2>&1 || \
-    monkey -p com.example.s_browser -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
-fi
+sleep 2
+open_sbrowser
 EOF
 chmod 700 "$START_WIDGET"
 
