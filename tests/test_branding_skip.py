@@ -24,6 +24,7 @@ def test_kiosk_home_defaults_to_group_selection() -> None:
         assert "k-tiles" in home.text or "NurEine" in home.text
         assert "/static/wsg-logo.png" in home.text
         assert "Shopkasse" in home.text
+        assert "OF Hünger" in home.text
 
 
 def test_kiosk_home_skip_shows_all_users_with_letter_filter() -> None:
@@ -92,6 +93,7 @@ def test_admin_branding_display_name_and_logo_upload() -> None:
                 "kiosk_group_logo_zoom_enabled": "1",
                 "kiosk_group_logo_animation_speed": "normal",
                 "shop_display_name": "Zweiter Shop",
+                "shop_powered_by": "Team Nord",
                 "kiosk_skip_group_selection": "1",
             },
             files={"logo_png": ("logo.png", io.BytesIO(_MINI_PNG), "image/png")},
@@ -104,6 +106,7 @@ def test_admin_branding_display_name_and_logo_upload() -> None:
             info = branding.get_branding(conn)
             settings = system_settings.get_timeout_settings(conn)
         assert info["display_name"] == "Zweiter Shop"
+        assert info["powered_by"] == "Team Nord"
         assert info["has_custom_logo"] is True
         assert str(info["logo_url"]).startswith("/branding/logo")
         assert settings["kiosk_skip_group_selection"] is True
@@ -111,6 +114,8 @@ def test_admin_branding_display_name_and_logo_upload() -> None:
         home = client.get("/")
         assert home.status_code == 200
         assert "Zweiter Shop" in home.text
+        assert "Team Nord" in home.text
+        assert "OF Hünger" not in home.text
         assert "/branding/logo" in home.text
 
         logo = client.get("/branding/logo")

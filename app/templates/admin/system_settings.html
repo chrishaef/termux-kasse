@@ -18,7 +18,7 @@
     <section class="system-settings-section">
       <div class="system-settings-section__head">
         <h3>Branding</h3>
-        <p class="secondary">Logo und Anzeigename dieser Installation (Header, Preisliste, PDF).</p>
+        <p class="secondary">Logo, Anzeigename und Credit dieser Installation (Header, Preisliste, PDF).</p>
       </div>
       <label>
         Anzeigename
@@ -27,6 +27,16 @@
           name="shop_display_name"
           maxlength="64"
           value="{{ branding['display_name'] }}"
+          required
+        />
+      </label>
+      <label>
+        Powered by
+        <input
+          type="text"
+          name="shop_powered_by"
+          maxlength="64"
+          value="{{ branding['powered_by'] }}"
           required
         />
       </label>

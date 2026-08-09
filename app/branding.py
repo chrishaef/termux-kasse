@@ -1,4 +1,4 @@
-"""Instanz-Branding (Logo + Anzeigename) mit Fallback auf das Standard-WSG-Logo."""
+"""Instanz-Branding (Logo + Anzeigename + Credit) mit Fallback auf WSG-Defaults."""
 
 from __future__ import annotations
 
@@ -10,10 +10,13 @@ from app import group_logo_util
 from app.config import data_dir
 
 KEY_SHOP_DISPLAY_NAME = "shop_display_name"
+KEY_SHOP_POWERED_BY = "shop_powered_by"
 DEFAULT_SHOP_DISPLAY_NAME = "Shopkasse"
+DEFAULT_SHOP_POWERED_BY = "OF Hünger"
 DEFAULT_LOGO_URL = "/static/wsg-logo.png"
 LOGO_FILENAME = "logo.png"
 _MAX_DISPLAY_NAME_LEN = 64
+_MAX_POWERED_BY_LEN = 64
 
 
 def branding_dir() -> Path:
@@ -78,6 +81,32 @@ def save_display_name(conn: sqlite3.Connection, value: str | None) -> str:
     return normalized
 
 
+def _normalize_powered_by(raw: str | None) -> str:
+    text = (raw or "").strip()
+    if not text:
+        return DEFAULT_SHOP_POWERED_BY
+    return text[:_MAX_POWERED_BY_LEN]
+
+
+def _read_powered_by(conn: sqlite3.Connection) -> str:
+    row = db.fetch_one(conn, "SELECT value FROM app_settings WHERE key = ?", (KEY_SHOP_POWERED_BY,))
+    if not row or row["value"] is None:
+        return DEFAULT_SHOP_POWERED_BY
+    return _normalize_powered_by(str(row["value"]))
+
+
+def save_powered_by(conn: sqlite3.Connection, value: str | None) -> str:
+    normalized = _normalize_powered_by(value)
+    conn.execute(
+        """
+        INSERT INTO app_settings (key, value) VALUES (?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+        """,
+        (KEY_SHOP_POWERED_BY, normalized),
+    )
+    return normalized
+
+
 def save_logo_png(data: bytes) -> Path:
     group_logo_util.validate_png_bytes(data)
     normalized = group_logo_util.normalize_logo_png(data)
@@ -98,6 +127,7 @@ def get_branding(conn: sqlite3.Connection | None = None) -> dict[str, str | bool
             return get_branding(owned)
     return {
         "display_name": _read_display_name(conn),
+        "powered_by": _read_powered_by(conn),
         "logo_url": logo_url(),
         "has_custom_logo": has_custom_logo(),
     }
@@ -106,6 +136,7 @@ def get_branding(conn: sqlite3.Connection | None = None) -> dict[str, str | bool
 def default_branding() -> dict[str, str | bool]:
     return {
         "display_name": DEFAULT_SHOP_DISPLAY_NAME,
+        "powered_by": DEFAULT_SHOP_POWERED_BY,
         "logo_url": DEFAULT_LOGO_URL,
         "has_custom_logo": False,
     }

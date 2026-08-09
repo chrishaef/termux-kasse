@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Made the header „powered by“ credit configurable per installation (admin branding); default remains „OF Hünger“ so existing shops including WSG3 stay unchanged until edited.
 - Hardened `run.sh` against double starts: a run lock plus PID/port checks skip starting a second uvicorn when the shop is already up and no code update happened.
 - Updated the Termux start widget so a second tap exits early and opens SBrowser instead of launching another full start cycle (re-run `install.sh` once to refresh `~/.shortcuts/`).
 - Made the shop branding configurable per installation (display name + optional PNG logo) with fallback to the default WSG logo.

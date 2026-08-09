@@ -1518,6 +1518,7 @@ def admin_system_settings_post(
     kiosk_preisliste_seconds: str = Form(...),
     kiosk_home_seconds: str = Form(...),
     shop_display_name: str = Form(default="Shopkasse"),
+    shop_powered_by: str = Form(default="OF Hünger"),
     kiosk_preisliste_enabled: str | None = Form(default=None),
     kiosk_group_logo_zoom_enabled: str | None = Form(default=None),
     kiosk_skip_group_selection: str | None = Form(default=None),
@@ -1562,6 +1563,7 @@ def admin_system_settings_post(
             kiosk_skip_group_selection=skip_group,
         )
         display_name = branding.save_display_name(conn, shop_display_name)
+        powered_by = branding.save_powered_by(conn, shop_powered_by)
         if raw_logo is not None:
             branding.save_logo_png(raw_logo)
             app_logging.log_event(ADMIN_LOG, 20, "branding_logo_saved", request)
@@ -1582,6 +1584,7 @@ def admin_system_settings_post(
         kiosk_group_logo_animation_speed=kiosk_group_logo_animation_speed,
         kiosk_skip_group_selection=skip_group,
         shop_display_name=display_name,
+        shop_powered_by=powered_by,
     )
     return RedirectResponse("/admin/system-settings?saved=1", status_code=303)
 

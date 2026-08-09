@@ -97,6 +97,7 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
         assert 'name="kiosk_group_logo_animation_speed"' in page.text
         assert 'name="kiosk_skip_group_selection"' in page.text
         assert 'name="shop_display_name"' in page.text
+        assert 'name="shop_powered_by"' in page.text
         assert 'value="very_fast"' in page.text
         assert "Systemeinstellungen" in page.text
 
@@ -110,6 +111,7 @@ def test_admin_system_settings_can_be_saved_and_are_used_in_base_template() -> N
                 "kiosk_group_logo_zoom_enabled": "1",
                 "kiosk_group_logo_animation_speed": "slow",
                 "shop_display_name": "Shopkasse",
+                "shop_powered_by": "OF Hünger",
             },
             follow_redirects=False,
         )
