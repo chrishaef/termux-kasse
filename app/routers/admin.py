@@ -1512,13 +1512,13 @@ def admin_system_settings_get(request: Request) -> Response:
 
 
 @router.post("/system-settings")
-def admin_system_settings_post(
+async def admin_system_settings_post(
     request: Request,
     admin_logout_seconds: str = Form(...),
     kiosk_preisliste_seconds: str = Form(...),
     kiosk_home_seconds: str = Form(...),
     shop_display_name: str = Form(default="Shopkasse"),
-    shop_powered_by: str = Form(default="OF Hünger"),
+    shop_powered_by: str = Form(default=""),
     kiosk_preisliste_enabled: str | None = Form(default=None),
     kiosk_group_logo_zoom_enabled: str | None = Form(default=None),
     kiosk_skip_group_selection: str | None = Form(default=None),
@@ -1535,9 +1535,25 @@ def admin_system_settings_post(
     except ValueError:
         return RedirectResponse("/admin/system-settings?err=invalid", status_code=303)
 
+    # Re-read branding fields from multipart form. Some Android WebView / older
+    # python-multipart stacks skip Form() defaults that contain non-ASCII and can
+    # drop the posted value; reading the parsed form is reliable.
+    form = await request.form()
+
+    def _form_text(key: str, fallback: str = "") -> str:
+        raw = form.get(key)
+        if raw is None:
+            return fallback
+        if hasattr(raw, "filename"):
+            return fallback
+        return str(raw)
+
+    shop_display_name = _form_text("shop_display_name", shop_display_name)
+    shop_powered_by = _form_text("shop_powered_by", shop_powered_by)
+
     raw_logo: bytes | None = None
     if logo_png is not None and (logo_png.filename or "").strip():
-        raw = logo_png.file.read()
+        raw = await logo_png.read()
         if raw:
             raw_logo = raw
     if raw_logo is not None:
@@ -1567,7 +1583,7 @@ def admin_system_settings_post(
         if raw_logo is not None:
             branding.save_logo_png(raw_logo)
             app_logging.log_event(ADMIN_LOG, 20, "branding_logo_saved", request)
-        elif remove_logo.strip() == "1":
+        elif str(remove_logo).strip() == "1":
             branding.delete_custom_logo()
             app_logging.log_event(ADMIN_LOG, 20, "branding_logo_removed", request)
 
