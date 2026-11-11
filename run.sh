@@ -168,22 +168,39 @@ ensure_master_password_files() {
   fi
 }
 
+release_run_lock() {
+  rm -rf "$ROOT/.run.lock.dir" 2>/dev/null || true
+}
+
 acquire_run_lock() {
-  local LOCK_FILE="$ROOT/.run.lock"
-  exec 9>"$LOCK_FILE"
-  if command -v flock >/dev/null 2>&1; then
-    if ! flock -n 9; then
-      echo ">>> Start/Update läuft bereits in einer anderen Session — Abbruch."
+  # PID-based mkdir lock (not flock): older flock locks were inherited by
+  # uvicorn via fd 9 and blocked every later admin update / run.sh forever.
+  local LOCK_DIR="$ROOT/.run.lock.dir"
+  local LOCK_PID_FILE="$LOCK_DIR/pid"
+  local old_pid=""
+  local i=0
+
+  # Drop leftover flock file from older run.sh versions; it is unused now.
+  rm -f "$ROOT/.run.lock" 2>/dev/null || true
+
+  while [[ "$i" -lt 2 ]]; do
+    if mkdir "$LOCK_DIR" 2>/dev/null; then
+      echo $$ >"$LOCK_PID_FILE"
+      trap 'release_run_lock' EXIT
+      return 0
+    fi
+    old_pid="$(cat "$LOCK_PID_FILE" 2>/dev/null || true)"
+    if [[ -n "${old_pid:-}" ]] && kill -0 "$old_pid" 2>/dev/null; then
+      echo ">>> Start/Update läuft bereits in einer anderen Session (PID $old_pid) — Abbruch."
       exit 0
     fi
-    return 0
-  fi
-  # Fallback ohne flock: atomarer Lock-Ordner
-  if ! mkdir "$ROOT/.run.lock.dir" 2>/dev/null; then
-    echo ">>> Start/Update läuft bereits in einer anderen Session — Abbruch."
-    exit 0
-  fi
-  trap 'rmdir "$ROOT/.run.lock.dir" 2>/dev/null || true' EXIT
+    echo ">>> Entferne verwaisten Start-Lock..."
+    release_run_lock
+    i=$((i + 1))
+  done
+
+  echo ">>> Start/Update läuft bereits in einer anderen Session — Abbruch."
+  exit 0
 }
 
 server_pid_alive() {
@@ -271,7 +288,8 @@ start_server() {
   LOG_FILE="$ROOT/server.log"
   rotate_log_file "$LOG_FILE" 2000000 5
   echo ">>> Starte Server (Hintergrund), Host ${HOST}, Port ${PORT}"
-  nohup "$ROOT/.venv/bin/uvicorn" app.main:app --host "${HOST}" --port "${PORT}" --no-access-log >>"$LOG_FILE" 2>&1 &
+  # Close inherited fds 9/10 so a future lock never sticks on the daemon.
+  nohup "$ROOT/.venv/bin/uvicorn" app.main:app --host "${HOST}" --port "${PORT}" --no-access-log 9>&- 10>&- >>"$LOG_FILE" 2>&1 &
   echo $! >"$PID_FILE"
   echo "Log: $LOG_FILE"
   echo "lokal:  http://127.0.0.1:${PORT}"

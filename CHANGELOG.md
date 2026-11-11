@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.6.1 - 2026-11-11
+
+- Fixed admin/`run.sh` updates blocked by a stuck start lock: older flock locks were inherited by uvicorn and aborted every later update with „Start/Update läuft bereits“.
+
 ## v1.6.0 - 2026-11-11
 
 - Made the shop branding configurable per installation (display name, optional PNG logo, and „powered by“ credit) with fallback to the default WSG logo and „OF Hünger“ so existing shops including WSG3 stay unchanged until edited.

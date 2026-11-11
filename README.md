@@ -6,7 +6,7 @@ Das System ist für Touchscreen Bildschirme ab 10" optimiert.
 
 Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — Buchungen, Kontostände und Abrechnungen laufen lokal; Styles und Skripte kommen aus dem Projekt (`/static`). Eine Internet Verbindung wird nur für die Installation, Updates und den optionalen Online-/Versionscheck genutzt.
 
-**Aktuelle Version:** **1.6.0** (Git-Tag [`v1.6.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.6.0))
+**Aktuelle Version:** **1.6.1** (Git-Tag [`v1.6.1`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.6.1))
 
 **Zugehörige Android-Kiosk-App:** [`chrishaef/kiosk-app`](https://github.com/chrishaef/kiosk-app) (WebView-Wrapper, Vollbild/Kiosk-Steuerung, PIN/Admin-Menü).
 
@@ -572,13 +572,14 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ### Versionierung und Releases
 
-- Aktueller Git-Tag: **v1.6.0** — Übersicht: [Tag v1.6.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.6.0).
-- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.6.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.6.0) öffnen, Titel z. B. `Termux-Shopkasse 1.6.0`, Beschreibung einfügen, *Publish release*.
+- Aktueller Git-Tag: **v1.6.1** — Übersicht: [Tag v1.6.1](https://github.com/chrishaef/termux-kasse/releases/tag/v1.6.1).
+- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.6.1](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.6.1) öffnen, Titel z. B. `Termux-Shopkasse 1.6.1`, Beschreibung einfügen, *Publish release*.
 - **GitHub CLI** (einmalig `gh auth login`):  
-  `gh release create v1.6.0 --title "Termux-Shopkasse 1.6.0" --generate-notes`
+  `gh release create v1.6.1 --title "Termux-Shopkasse 1.6.1" --generate-notes`
 - Änderungsübersicht im Repo: [`CHANGELOG.md`](./CHANGELOG.md)
 
-**v1.6.0** (Kurzüberblick): Konfigurierbares Shop-Branding (Logo, Name, Powered by), optionale Nutzerliste ohne Gruppenauswahl, austauschbare Kiosk-Sounds und zuverlässigere Sofort-Buchungen ohne Wartezeit auf den Kassensound.
+**v1.6.1** (Kurzüberblick): Admin-/`run.sh`-Updates funktionieren wieder, wenn ein alter Start-Lock am Server hängen geblieben war.  
+**v1.6.0**: Konfigurierbares Shop-Branding, optionale Nutzerliste ohne Gruppenauswahl, austauschbare Kiosk-Sounds und Sofort-Buchungen.
 
 ---
 

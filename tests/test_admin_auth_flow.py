@@ -174,9 +174,17 @@ def test_background_update_creates_backup_and_rollback_state(monkeypatch, tmp_pa
     monkeypatch.setattr(admin_router, "_git_head_full", lambda _root: commit)
     monkeypatch.setattr(admin_router.subprocess, "Popen", lambda *args, **kwargs: FakeProcess())
 
+    stale_lock = root / ".run.lock"
+    stale_lock_dir = root / ".run.lock.dir"
+    stale_lock.write_text("stale", encoding="utf-8")
+    stale_lock_dir.mkdir(exist_ok=True)
+    (stale_lock_dir / "pid").write_text("1", encoding="utf-8")
+
     try:
         with TestClient(app):
             admin_router._trigger_background_update("commit")
+        assert not stale_lock.exists()
+        assert not stale_lock_dir.exists()
     finally:
         if old_log is None:
             log_path.unlink(missing_ok=True)

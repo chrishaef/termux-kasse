@@ -327,6 +327,16 @@ def _trigger_background_update(update_channel: str = "release") -> None:
                 backup_path=backup_path,
             )
         log_file.flush()
+        # Older run.sh used flock and let uvicorn inherit the lock fd, which
+        # blocked every later update. Clear stale lock dirs before starting.
+        for stale_lock in (root / ".run.lock.dir", root / ".run.lock"):
+            try:
+                if stale_lock.is_dir():
+                    shutil.rmtree(stale_lock, ignore_errors=True)
+                elif stale_lock.exists():
+                    stale_lock.unlink()
+            except OSError as ex:
+                log_file.write(f">>> Hinweis: Lock konnte nicht geleert werden ({stale_lock.name}): {ex}\n")
         cmd = ["bash", str(run_script)]
         if update_channel == "commit":
             cmd.append("--update-mode=commit")
