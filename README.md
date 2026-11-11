@@ -6,7 +6,7 @@ Das System ist für Touchscreen Bildschirme ab 10" optimiert.
 
 Mitglieder buchen Artikel am Kiosk, Saldo und Abrechnungen laufen über eine **SQLite**-Datenbank. **Keine Cloud** — Buchungen, Kontostände und Abrechnungen laufen lokal; Styles und Skripte kommen aus dem Projekt (`/static`). Eine Internet Verbindung wird nur für die Installation, Updates und den optionalen Online-/Versionscheck genutzt.
 
-**Aktuelle Version:** **1.5.1** (Git-Tag [`v1.5.1`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.5.1))
+**Aktuelle Version:** **1.6.0** (Git-Tag [`v1.6.0`](https://github.com/chrishaef/termux-kasse/releases/tag/v1.6.0))
 
 **Zugehörige Android-Kiosk-App:** [`chrishaef/kiosk-app`](https://github.com/chrishaef/kiosk-app) (WebView-Wrapper, Vollbild/Kiosk-Steuerung, PIN/Admin-Menü).
 
@@ -80,7 +80,7 @@ Die **Shopkasse** ist eine **Vertrauenskasse auf Kontobasis**: Es gibt keine War
 - **Preisliste** (`/preisliste`): Alle **aktiven** Artikel mit Preis; geeignet als Schaukasten am Kiosk.
 - **Ruhemodus**: Ohne Bedienung springt die Anzeige von Kiosk-Seiten zurück zur **Gruppenauswahl** (`/`). Optional kann die Startseite nach der eingestellten Preisliste-Zeit auf die **Preisliste** wechseln — wirkt wie ein einfacher Bildschirmschoner mit Preisen.
 - Auf der Preisliste führt ein **Tipp auf den freien Bereich** (oder eine Taste) zurück zum **Kiosk-Start**.
-- Die Timeouts/Zeiten, die Preisliste-Bildschirmschoner-Funktion, die Gruppenkachel-Animationen, optional das Überspringen der Gruppenauswahl sowie Logo/Anzeigename lassen sich unter **Admin → Systemeinstellungen** einstellen.
+- Die Timeouts/Zeiten, die Preisliste-Bildschirmschoner-Funktion, die Gruppenkachel-Animationen, optional das Überspringen der Gruppenauswahl sowie Logo/Anzeigename/„Powered by“ lassen sich unter **Admin → Systemeinstellungen** einstellen.
 - 
 **Hinweise für Betreuer**
 
@@ -447,7 +447,7 @@ Wenn aus dem LAN nichts antwortet: **Firewall** auf dem Gerät, VPN oder Router 
 | **Jahresabschluss-Archive** | Ordner **`jahresabschluss/`** unter `KASSE_DATA_DIR` (neben `kasse.db`): gespeicherte PDF-, XLSX- und ZIP-Dateien des zuletzt erzeugten Jahresabschlusses |
 | **System-Backup-Archiv** | Ordner **`system_backups/`** unter `KASSE_DATA_DIR` |
 
-**Zweiter Shop / mehrere Installationen:** Derselbe Code und Release-Kanal, getrennte Deployments mit eigener `data/`-Datenbank. Pro Instanz Logo und Anzeigename unter Systemeinstellungen setzen; optional „Gruppenauswahl überspringen“ für eine gemeinsame Nutzerliste mit Buchstabenfilter.
+**Zweiter Shop / mehrere Installationen:** Derselbe Code und Release-Kanal, getrennte Deployments mit eigener `data/`-Datenbank. Pro Instanz Logo, Anzeigename und „Powered by“ unter Systemeinstellungen setzen; optional „Gruppenauswahl überspringen“ für eine gemeinsame Nutzerliste mit Buchstabenfilter.
 
 ---
 
@@ -460,7 +460,7 @@ Nach dem Login (`/admin`):
 - **Statistik** (`/admin/statistics`): Zeitraum + Nutzergruppe filtern, Toplisten sehen, PDF/XLSX herunterladen  
 - **Warnstufen** (`/admin/debt-thresholds`): Schwellen, Meldungstexte, Warnton-Lautstärken und austauschbare MP3-Sounds (Warnstufen + Buchungsklick) für Kiosk-Warnungen pflegen  
 - **Kiosk-Nachricht** (`/admin/news`): Text oben auf der Gruppenauswahl mit Ausrichtung, Größe und PNG-Icon konfigurieren  
-- **Systemeinstellungen** (`/admin/system-settings`): Timeouts, Bildschirmschoner, Gruppenlogo-Animation, optional Gruppenauswahl überspringen, Shop-Logo und Anzeigename  
+- **Systemeinstellungen** (`/admin/system-settings`): Timeouts, Bildschirmschoner, Gruppenlogo-Animation, optional Gruppenauswahl überspringen, Shop-Logo, Anzeigename und „Powered by“  
 - **Backup & Recovery & Reset** (`/admin/backup`): Backup erstellen (Archiv), Import mit Vorschau, Archivliste, optional **System Reset** (Master-Passwort)  
 - **System-Update** (`/admin/system-update`): Online-/Versionscheck, Pre-Update-Backup, Start nur mit Master-Passwort, Update-Neustart, Protokoll und Rollback auf den Stand vor dem letzten geführten Update
 - **Syslogs** (`/admin/syslogs`): rotierende System-/App-Logs im Adminbereich einsehen
@@ -572,13 +572,13 @@ Branchname ggf. an euren Standard anpassen (`main` / `master`).
 
 ### Versionierung und Releases
 
-- Aktueller Git-Tag: **v1.5.1** — Übersicht: [Tag v1.5.1](https://github.com/chrishaef/termux-kasse/releases/tag/v1.5.1).
-- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.5.1](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.5.1) öffnen, Titel z. B. `Termux-Shopkasse 1.5.1`, Beschreibung einfügen, *Publish release*.
+- Aktueller Git-Tag: **v1.6.0** — Übersicht: [Tag v1.6.0](https://github.com/chrishaef/termux-kasse/releases/tag/v1.6.0).
+- **GitHub-Release** (Titel + Release Notes im UI): [Neues Release mit Tag v1.6.0](https://github.com/chrishaef/termux-kasse/releases/new?tag=v1.6.0) öffnen, Titel z. B. `Termux-Shopkasse 1.6.0`, Beschreibung einfügen, *Publish release*.
 - **GitHub CLI** (einmalig `gh auth login`):  
-  `gh release create v1.5.1 --title "Termux-Shopkasse 1.5.1" --generate-notes`
+  `gh release create v1.6.0 --title "Termux-Shopkasse 1.6.0" --generate-notes`
 - Änderungsübersicht im Repo: [`CHANGELOG.md`](./CHANGELOG.md)
 
-**v1.5.1** (Kurzüberblick): Konfigurierbarer Gruppenlogo-Zoom mit Geschwindigkeit, dezenter Fallback-Animation und übersichtlichere Systemeinstellungen.
+**v1.6.0** (Kurzüberblick): Konfigurierbares Shop-Branding (Logo, Name, Powered by), optionale Nutzerliste ohne Gruppenauswahl, austauschbare Kiosk-Sounds und zuverlässigere Sofort-Buchungen ohne Wartezeit auf den Kassensound.
 
 ---
 

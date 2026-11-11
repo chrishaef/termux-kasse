@@ -2,15 +2,17 @@
 
 ## Unreleased
 
+## v1.6.0 - 2026-11-11
+
+- Made the shop branding configurable per installation (display name, optional PNG logo, and „powered by“ credit) with fallback to the default WSG logo and „OF Hünger“ so existing shops including WSG3 stay unchanged until edited.
+- Added system setting `kiosk_skip_group_selection` so `/` lists all users across groups with a letter filter (instead of group tiles); existing installs keep the classic group flow by default.
+- Extended admin system settings with branding upload/remove, powered-by text, and the skip-group-selection toggle for multi-shop deployments on one codebase.
+- Added admin uploads for kiosk warn sounds (levels 1–3) and the purchase click sound, with fallback to the shipped `/static` MP3 defaults.
 - Fixed kiosk purchases so booking happens immediately via fetch and no longer waits for the cash-register sound to finish; rapid multi-item taps and leaving the page mid-sound no longer drop bookings.
 - Fixed saving the configurable „powered by“ credit from admin system settings (multipart form binding on Android/Termux).
-- Made the header „powered by“ credit configurable per installation (admin branding); default remains „OF Hünger“ so existing shops including WSG3 stay unchanged until edited.
 - Hardened `run.sh` against double starts: a run lock plus PID/port checks skip starting a second uvicorn when the shop is already up and no code update happened.
 - Updated the Termux start widget so a second tap exits early and opens SBrowser instead of launching another full start cycle (re-run `install.sh` once to refresh `~/.shortcuts/`).
-- Made the shop branding configurable per installation (display name + optional PNG logo) with fallback to the default WSG logo.
-- Added system setting `kiosk_skip_group_selection` so `/` lists all users across groups with a letter filter (instead of group tiles); existing installs keep the classic group flow by default.
-- Extended admin system settings with branding upload/remove and the skip-group-selection toggle for multi-shop deployments on one codebase.
-- Added admin uploads for kiosk warn sounds (levels 1–3) and the purchase click sound, with fallback to the shipped `/static` MP3 defaults.
+- Fixed TemplateResponse compatibility for Termux FastAPI/Starlette stacks after guided updates.
 
 ## v1.5.1 - 2026-06-28
 
