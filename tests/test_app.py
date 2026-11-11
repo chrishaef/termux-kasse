@@ -25,6 +25,48 @@ def test_kiosk_add_purchase_redirects_back_to_user_page() -> None:
             n = int(conn.execute("SELECT COUNT(*) FROM ledger_entries WHERE user_id = ?", (uid,)).fetchone()[0])
             assert n == 1
 
+        page = c.get(f"/u/{uid}")
+        assert page.status_code == 200
+        assert "keepalive: true" in page.text
+        assert "playThen" not in page.text
+        assert 'Accept: "application/json"' in page.text
+
+
+def test_kiosk_add_purchase_json_books_immediately_without_redirect() -> None:
+    with TestClient(app) as c:
+        c.post("/admin/login", data={"password": "admin"}, follow_redirects=False)
+        c.post("/admin/groups", data={"name": "G1"})
+        with db.get_connection() as conn:
+            gid = int(conn.execute("SELECT id FROM user_groups LIMIT 1").fetchone()[0])
+        c.post("/admin/users", data={"name": "U1", "group_id": str(gid)})
+        c.post("/admin/products", data={"name": "P1", "price_eur": "2.00"})
+        with db.get_connection() as conn:
+            uid = int(conn.execute("SELECT id FROM users LIMIT 1").fetchone()[0])
+            pid = int(conn.execute("SELECT id FROM products LIMIT 1").fetchone()[0])
+
+        first = c.post(
+            f"/u/{uid}/add",
+            data={"product_id": str(pid)},
+            headers={"Accept": "application/json"},
+        )
+        assert first.status_code == 200
+        payload = first.json()
+        assert payload["ok"] is True
+        assert payload["balance_cents"] == 200
+        assert payload["display_balance_cents"] == -200
+
+        second = c.post(
+            f"/u/{uid}/add",
+            data={"product_id": str(pid)},
+            headers={"Accept": "application/json"},
+        )
+        assert second.status_code == 200
+        assert second.json()["balance_cents"] == 400
+
+        with db.get_connection() as conn:
+            n = int(conn.execute("SELECT COUNT(*) FROM ledger_entries WHERE user_id = ?", (uid,)).fetchone()[0])
+            assert n == 2
+
 
 def test_kiosk_home() -> None:
     with TestClient(app) as c:

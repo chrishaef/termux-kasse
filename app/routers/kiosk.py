@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 
 from app import db
 from app import debt_thresholds
@@ -221,7 +221,7 @@ def kiosk_add(
     request: Request,
     user_id: int,
     product_id: int = Form(...),
-) -> RedirectResponse:
+) -> Response:
     with db.get_connection() as conn:
         u = db.fetch_one(conn, "SELECT id FROM users WHERE id = ?", (user_id,))
         if not u:
@@ -245,6 +245,33 @@ def kiosk_add(
             raise HTTPException(status_code=400, detail="Artikel ungültig")
         desc = f'{p["name"]} (x1)'
         add_purchase(conn, user_id, int(p["id"]), desc, int(p["price_cents"]))
+        balance = user_balance_cents(conn, user_id)
+        t1, t2, t3 = debt_thresholds.get_thresholds(conn)
+        d1, d2, d3 = debt_thresholds.get_age_thresholds(conn)
+        m1, m2, m3 = debt_thresholds.get_threshold_messages(conn)
+        age_days = oldest_open_age_days(conn, user_id)
+        debt_reminder_level = debt_thresholds.reminder_level(
+            balance, t1, t2, t3, age_days, d1, d2, d3
+        )
+        debt_message = ""
+        if debt_reminder_level == 1:
+            debt_message = m1
+        elif debt_reminder_level == 2:
+            debt_message = m2
+        elif debt_reminder_level == 3:
+            debt_message = m3
+
+    accept = (request.headers.get("accept") or "").lower()
+    if "application/json" in accept:
+        return JSONResponse(
+            {
+                "ok": True,
+                "balance_cents": balance,
+                "display_balance_cents": -balance,
+                "debt_reminder_level": debt_reminder_level,
+                "debt_message": debt_message,
+            }
+        )
     return RedirectResponse(url=f"/u/{user_id}", status_code=303)
 
 

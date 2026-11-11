@@ -81,8 +81,8 @@
       const vol = Number.isFinite(raw) ? Math.max(0, Math.min(1, raw)) : 1;
       sound.volume = vol;
     });
-    const currentWarnLevel = {{ debt_reminder_level }};
-    const currentBalance = {{ balance_cents }};
+    let currentWarnLevel = {{ debt_reminder_level }};
+    let currentBalance = {{ balance_cents }};
     const thresholds = [{{ debt_threshold_1 }}, {{ debt_threshold_2 }}, {{ debt_threshold_3 }}];
     const warnStateKey = "kasse_warn_level_user_{{ user['id'] }}";
 
@@ -94,23 +94,62 @@
       return 3;
     }
 
-    function playThen(sound, cb) {
-      if (!sound || typeof sound.play !== "function") { cb(); return; }
-      let done = false;
-      const finish = function () {
-        if (done) return;
-        done = true;
-        sound.removeEventListener("ended", onEnded);
-        cb();
-      };
-      const onEnded = function () { finish(); };
-      try { sound.currentTime = 0; } catch (_e) {}
-      sound.addEventListener("ended", onEnded);
-      const p = sound.play();
-      if (p && typeof p.catch === "function") {
-        p.catch(function () { finish(); });
+    function playSound(sound) {
+      if (!sound || typeof sound.play !== "function") return;
+      try {
+        const node = sound.cloneNode(true);
+        node.volume = sound.volume;
+        const p = node.play();
+        if (p && typeof p.catch === "function") p.catch(function () {});
+      } catch (_e) {
+        try {
+          sound.currentTime = 0;
+          const p = sound.play();
+          if (p && typeof p.catch === "function") p.catch(function () {});
+        } catch (__e) {}
       }
-      window.setTimeout(finish, 4000);
+    }
+
+    function formatDisplayBalance(displayCents) {
+      const n = Number(displayCents) || 0;
+      const prefix = n > 0 ? "+" : "";
+      return prefix + (n / 100).toFixed(2).replace(".", ",") + " €";
+    }
+
+    function updateBalanceUi(displayCents) {
+      const balanceEl = document.getElementById("k-user-balance-value");
+      if (!balanceEl) return;
+      const n = Number(displayCents) || 0;
+      balanceEl.textContent = formatDisplayBalance(n);
+      balanceEl.classList.toggle("k-user-head__balance-value--debt", n < 0);
+      balanceEl.classList.toggle("k-user-head__balance-value--credit", n > 0);
+    }
+
+    function updateDebtBanner(level, message) {
+      let banner = document.querySelector(".k-debt-banner");
+      if (level <= 0) {
+        if (banner) banner.remove();
+        return;
+      }
+      const grid = document.querySelector(".k-product-grid");
+      const head = document.querySelector(".page-head.k-user-head");
+      if (!banner) {
+        banner = document.createElement("div");
+        banner.setAttribute("role", "status");
+        const text = document.createElement("p");
+        text.className = "k-debt-banner__text";
+        banner.appendChild(text);
+        if (grid && grid.parentNode) {
+          grid.parentNode.insertBefore(banner, grid);
+        } else if (head && head.parentNode) {
+          head.parentNode.insertBefore(banner, head.nextSibling);
+        }
+      }
+      banner.className = "k-debt-banner k-debt-banner--level" + level;
+      const text = banner.querySelector(".k-debt-banner__text");
+      if (text && typeof message === "string" && message) {
+        text.textContent = message;
+      }
     }
 
     // Fallback: play warn sound on load if this page was reached without
@@ -120,22 +159,7 @@
       lastWarnLevel = parseInt(window.localStorage.getItem(warnStateKey) || "0", 10) || 0;
     } catch (_e) {}
     if (currentWarnLevel > 0 && currentWarnLevel > lastWarnLevel) {
-      const onLoadSound = warnSounds[currentWarnLevel];
-      if (onLoadSound && typeof onLoadSound.play === "function") {
-        try { onLoadSound.currentTime = 0; } catch (_e) {}
-        const playPromise = onLoadSound.play();
-        if (playPromise && typeof playPromise.catch === "function") {
-          playPromise.catch(function () {
-            const retry = function () {
-              try { onLoadSound.currentTime = 0; } catch (_e) {}
-              const p2 = onLoadSound.play();
-              if (p2 && typeof p2.catch === "function") p2.catch(function () {});
-            };
-            document.addEventListener("pointerdown", retry, { once: true });
-            document.addEventListener("keydown", retry, { once: true });
-          });
-        }
-      }
+      playSound(warnSounds[currentWarnLevel]);
     }
     try { window.localStorage.setItem(warnStateKey, String(currentWarnLevel)); } catch (_e) {}
 
@@ -182,23 +206,59 @@
         event.preventDefault();
         button.dataset.submitting = "1";
         button.classList.add("k-product-btn--flash");
+        window.setTimeout(function () {
+          button.classList.remove("k-product-btn--flash");
+        }, 280);
 
         const price = parseInt(button.dataset.priceCents || "0", 10) || 0;
-        const newLevel = computeLevel(currentBalance + price);
+        const previousLevel = currentWarnLevel;
+        currentBalance += price;
+        const newLevel = computeLevel(currentBalance);
+        if (newLevel > currentWarnLevel) currentWarnLevel = newLevel;
 
-        const submitNow = function () {
-          if (button.dataset.submitted === "1") return;
-          button.dataset.submitted = "1";
-          form.submit();
-        };
-
-        if (newLevel > currentWarnLevel && warnSounds[newLevel]) {
-          // Persist new level now so the target page won't replay the sound.
+        if (newLevel > previousLevel && warnSounds[newLevel]) {
           try { window.localStorage.setItem(warnStateKey, String(newLevel)); } catch (_e) {}
-          playThen(warnSounds[newLevel], submitNow);
+          playSound(warnSounds[newLevel]);
         } else {
-          playThen(paymentSound, submitNow);
+          playSound(paymentSound);
         }
+
+        updateBalanceUi(-currentBalance);
+
+        fetch(form.action, {
+          method: "POST",
+          body: new FormData(form),
+          headers: { Accept: "application/json" },
+          credentials: "same-origin",
+          keepalive: true,
+        })
+          .then(function (res) {
+            if (!res.ok) throw new Error("book-failed");
+            return res.json();
+          })
+          .then(function (data) {
+            if (typeof data.balance_cents === "number") {
+              currentBalance = data.balance_cents;
+            }
+            if (typeof data.debt_reminder_level === "number") {
+              currentWarnLevel = data.debt_reminder_level;
+              try {
+                window.localStorage.setItem(warnStateKey, String(currentWarnLevel));
+              } catch (_e) {}
+            }
+            const display =
+              typeof data.display_balance_cents === "number"
+                ? data.display_balance_cents
+                : -currentBalance;
+            updateBalanceUi(display);
+            updateDebtBanner(currentWarnLevel, data.debt_message || "");
+          })
+          .catch(function () {
+            window.location.reload();
+          })
+          .finally(function () {
+            button.dataset.submitting = "0";
+          });
       });
     });
   })();

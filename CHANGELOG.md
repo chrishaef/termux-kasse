@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed kiosk purchases so booking happens immediately via fetch and no longer waits for the cash-register sound to finish; rapid multi-item taps and leaving the page mid-sound no longer drop bookings.
 - Fixed saving the configurable „powered by“ credit from admin system settings (multipart form binding on Android/Termux).
 - Made the header „powered by“ credit configurable per installation (admin branding); default remains „OF Hünger“ so existing shops including WSG3 stay unchanged until edited.
 - Hardened `run.sh` against double starts: a run lock plus PID/port checks skip starting a second uvicorn when the shop is already up and no code update happened.
